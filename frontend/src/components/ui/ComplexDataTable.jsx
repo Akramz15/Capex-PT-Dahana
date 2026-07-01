@@ -14,7 +14,7 @@ import { Pencil, Trash2, Inbox, Search, Filter } from 'lucide-react';
  *   children: [ ... nested columns ... ] (optional)
  * }
  */
-export default function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emptyMessage = "Data belum tersedia", searchKeys = [], filterOptions = [], renderFooter = null, groupBy = null, renderGroupHeader = null, customToolbarContent = null }) {
+function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emptyMessage = "Data belum tersedia", searchKeys = [], filterOptions = [], renderFooter = null, groupBy = null, renderGroupHeader = null, customToolbarContent = null }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState({});
 
@@ -268,3 +268,5 @@ export default function ComplexDataTable({ columns, data, onEdit, onDelete, onCu
     </div>
   );
 }
+
+export default React.memo(ComplexDataTable, (prev, next) => prev.data === next.data);
