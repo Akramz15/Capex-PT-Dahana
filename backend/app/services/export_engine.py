@@ -246,3 +246,205 @@ def generate_export(tahun: int) -> BytesIO:
     wb.save(output)
     output.seek(0)
     return output
+
+
+def export_ytd_summary_excel(tahun: int, bulan: int) -> BytesIO:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from .dashboard import get_summary_table_ytd
+    
+    # Ambil data
+    data = get_summary_table_ytd(tahun, bulan)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"Summary YTD {tahun}"
+    
+    bulan_names = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+    bulan_name = bulan_names[bulan - 1] if 1 <= bulan <= 12 else str(bulan)
+    
+    # Styles
+    header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    header_font_sub = Font(color="FFFFFF", bold=True)
+    header_fill_sub = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    
+    kat_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    sum_fill = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
+    
+    bold_font = Font(bold=True)
+    
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    right_align = Alignment(horizontal="right", vertical="center")
+    
+    thin_border = Border(
+        left=Side(style='thin', color='334155'), 
+        right=Side(style='thin', color='334155'), 
+        top=Side(style='thin', color='334155'), 
+        bottom=Side(style='thin', color='334155')
+    )
+    
+    thin_border_body = Border(
+        left=Side(style='thin', color='E2E8F0'), 
+        right=Side(style='thin', color='E2E8F0'), 
+        top=Side(style='thin', color='E2E8F0'), 
+        bottom=Side(style='thin', color='E2E8F0')
+    )
+    
+    # Headers Row 1
+    headers_r1 = [
+        ("URAIAN", 1), 
+        (f"Budget RKAP {tahun}", 1), 
+        (f"RKAP sd {bulan_name} {tahun}", 1), 
+        (f"Realisasi sd {bulan_name}-{str(tahun)[-2:]}", 2), 
+        (f"% thd RKAP {bulan_name} {tahun}", 2)
+    ]
+    
+    col_idx = 1
+    for title, colspan in headers_r1:
+        cell = ws.cell(row=1, column=col_idx, value=title)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+        
+        if colspan > 1:
+            ws.merge_cells(start_row=1, start_column=col_idx, end_row=1, end_column=col_idx + colspan - 1)
+            for i in range(1, colspan):
+                c = ws.cell(row=1, column=col_idx + i)
+                c.fill = header_fill
+                c.border = thin_border
+        else:
+            ws.merge_cells(start_row=1, start_column=col_idx, end_row=2, end_column=col_idx)
+            c2 = ws.cell(row=2, column=col_idx)
+            c2.fill = header_fill
+            c2.border = thin_border
+            
+        col_idx += colspan
+        
+    # Headers Row 2
+    subheaders = ["By PO", "By BAST", "By PO", "By BAST"]
+    start_sub = 4
+    for i, title in enumerate(subheaders):
+        cell = ws.cell(row=2, column=start_sub + i, value=title)
+        cell.fill = header_fill_sub
+        cell.font = header_font_sub
+        cell.alignment = center_align
+        cell.border = thin_border
+        
+    # Data Rows
+    current_row = 3
+    num_format = '#,##0'
+    pct_format = '0.0%'
+    
+    grand_budget = 0
+    grand_rkap_ytd = 0
+    grand_po = 0
+    grand_bast = 0
+    
+    for kat in data:
+        # Kategori Row
+        kat_cell = ws.cell(row=current_row, column=1, value=kat["kategori"])
+        kat_cell.font = bold_font
+        kat_cell.fill = kat_fill
+        kat_cell.alignment = left_align
+        kat_cell.border = thin_border_body
+        ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+        for i in range(2, 8):
+            ws.cell(row=current_row, column=i).border = thin_border_body
+            ws.cell(row=current_row, column=i).fill = kat_fill
+        current_row += 1
+        
+        # Items
+        for item in kat["items"]:
+            row_data = [
+                item["uraian"],
+                item["budget"],
+                item["rkap_ytd"],
+                item["real_po"],
+                item["real_bast"],
+                item["pct_po"] / 100 if item["rkap_ytd"] > 0 else 0,
+                item["pct_bast"] / 100 if item["rkap_ytd"] > 0 else 0
+            ]
+            for i, val in enumerate(row_data):
+                c = ws.cell(row=current_row, column=i + 1, value=val)
+                c.border = thin_border_body
+                if i == 0:
+                    c.alignment = left_align
+                else:
+                    c.alignment = right_align
+                    if i in [1, 2, 3, 4]:
+                        c.number_format = num_format
+                    elif i in [5, 6]:
+                        c.number_format = pct_format
+            current_row += 1
+            
+        # Subtotal
+        sum_title = ws.cell(row=current_row, column=1, value=f"Jumlah {kat['kategori']}")
+        sum_title.font = bold_font
+        sum_title.fill = sum_fill
+        sum_title.border = thin_border_body
+        
+        sum_data = [
+            kat["subtotal_budget"],
+            kat["subtotal_rkap_ytd"],
+            kat["subtotal_real_po"],
+            kat["subtotal_real_bast"],
+            (kat["subtotal_real_po"] / kat["subtotal_rkap_ytd"]) if kat["subtotal_rkap_ytd"] > 0 else 0,
+            (kat["subtotal_real_bast"] / kat["subtotal_rkap_ytd"]) if kat["subtotal_rkap_ytd"] > 0 else 0
+        ]
+        for i, val in enumerate(sum_data):
+            c = ws.cell(row=current_row, column=i + 2, value=val)
+            c.font = bold_font
+            c.fill = sum_fill
+            c.border = thin_border_body
+            c.alignment = right_align
+            if i in [0, 1, 2, 3]:
+                c.number_format = num_format
+            else:
+                c.number_format = pct_format
+                
+        grand_budget += kat["subtotal_budget"]
+        grand_rkap_ytd += kat["subtotal_rkap_ytd"]
+        grand_po += kat["subtotal_real_po"]
+        grand_bast += kat["subtotal_real_bast"]
+        
+        current_row += 1
+        
+    # Grand Total
+    gt_title = ws.cell(row=current_row, column=1, value="Total Realisasi Aset")
+    gt_title.font = header_font
+    gt_title.fill = header_fill
+    gt_title.border = thin_border
+    
+    gt_data = [
+        grand_budget,
+        grand_rkap_ytd,
+        grand_po,
+        grand_bast,
+        (grand_po / grand_rkap_ytd) if grand_rkap_ytd > 0 else 0,
+        (grand_bast / grand_rkap_ytd) if grand_rkap_ytd > 0 else 0
+    ]
+    for i, val in enumerate(gt_data):
+        c = ws.cell(row=current_row, column=i + 2, value=val)
+        c.font = header_font
+        c.fill = header_fill
+        c.border = thin_border
+        c.alignment = right_align
+        if i in [0, 1, 2, 3]:
+            c.number_format = num_format
+        else:
+            c.number_format = pct_format
+            
+    # Resize columns
+    ws.column_dimensions['A'].width = 45
+    for l in ['B', 'C', 'D', 'E']:
+        ws.column_dimensions[l].width = 20
+    for l in ['F', 'G']:
+        ws.column_dimensions[l].width = 15
+        
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output

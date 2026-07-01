@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd } from '../api/capex'
+import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd, exportDashboardSummaryYtd } from '../api/capex'
 import { exportCapex } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
@@ -48,6 +48,7 @@ export default function DashboardPage({ tahun }) {
   const [ytdBulan,  setYtdBulan]  = useState(new Date().getMonth() + 1)
   const [loading,   setLoading]   = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [exportingYtd, setExportingYtd] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -94,6 +95,18 @@ export default function DashboardPage({ tahun }) {
       alert('Gagal mengekspor laporan. Coba lagi.')
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleExportYtd = async () => {
+    setExportingYtd(true)
+    try {
+      const res = await exportDashboardSummaryYtd(tahun, ytdBulan)
+      downloadBlob(res.data, `Ringkasan_YTD_${tahun}_${ytdBulan}.xlsx`)
+    } catch {
+      alert('Gagal mengekspor Ringkasan YTD. Coba lagi.')
+    } finally {
+      setExportingYtd(false)
     }
   }
 
@@ -204,6 +217,15 @@ export default function DashboardPage({ tahun }) {
               <option value={11}>November</option>
               <option value={12}>Desember</option>
             </select>
+            <button 
+              className="btn btn-outline" 
+              onClick={handleExportYtd} 
+              disabled={exportingYtd}
+              style={{ padding: '6px 12px', fontSize: '0.875rem' }}
+            >
+              <Download size={14} style={{ marginRight: 6 }} />
+              {exportingYtd ? 'Mengekspor...' : 'Unduh Excel'}
+            </button>
           </div>
         </div>
         <SummaryYTDTable data={ytdData} tahun={tahun} bulan={ytdBulan} />

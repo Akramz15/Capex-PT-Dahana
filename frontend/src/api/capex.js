@@ -5,6 +5,12 @@ export const getMonthlyChart      = (tahun) => client.get('/dashboard/monthly-ch
 export const getProgressTable     = (tahun) => client.get('/dashboard/progress-table', { params: { tahun } })
 export const getDashboardSummaryYtd = (tahun, bulan) => client.get('/dashboard/summary-ytd', { params: { tahun, bulan } })
 
+export const exportDashboardSummaryYtd = (tahun, bulan) => 
+  client.get('/dashboard/export-summary-ytd', { 
+    params: { tahun, bulan },
+    responseType: 'blob'
+  })
+
 export const listCapex    = (params = {}) => client.get('/capex',       { params })
 export const getCapex     = (id)          => client.get(`/capex/${id}`)
 export const createCapex  = (data)        => client.post('/capex',      data)
