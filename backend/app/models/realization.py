@@ -46,6 +46,7 @@ class StatusLogBase(BaseModel):
     total_realisasi: Optional[int] = Field(default=0, ge=0)
     keterangan: Optional[str] = None
     rekap_nilai: Optional[int] = Field(default=0, ge=0)
+    keterangan_rekap: Optional[str] = None
 
 
 class StatusLogCreate(StatusLogBase):
@@ -58,6 +59,7 @@ class StatusLogUpdate(BaseModel):
     total_realisasi: Optional[int] = Field(None, ge=0)
     keterangan: Optional[str] = None
     rekap_nilai: Optional[int] = Field(None, ge=0)
+    keterangan_rekap: Optional[str] = None
 
 
 class StatusLogResponse(StatusLogBase):

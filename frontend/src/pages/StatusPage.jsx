@@ -28,11 +28,11 @@ export default function StatusPage({ tahun }) {
       const [r, c] = await Promise.all([listStatus({ tahun }), listCapex({ tahun })])
       setData(r.data.map(item => {
         let ket = item.keterangan || ''
-        let ket_rekap = ''
+        let ket_rekap = item.keterangan_rekap || ''
         if (ket.includes('|||')) {
           const parts = ket.split('|||')
           ket = parts[0]
-          ket_rekap = parts[1] || ''
+          if (!ket_rekap) ket_rekap = parts[1] || ''
         }
         return { ...item, keterangan_parsed: ket, keterangan_rekap_parsed: ket_rekap }
       }))
@@ -64,7 +64,8 @@ export default function StatusPage({ tahun }) {
         anggaran_perubahan: Number(form.anggaran_perubahan),
         total_realisasi: Number(form.total_realisasi),
         rekap_nilai: Number(form.rekap_nilai),
-        keterangan: `${form.keterangan || ''}|||${form.keterangan_rekap || ''}`
+        keterangan: form.keterangan || '',
+        keterangan_rekap: form.keterangan_rekap || ''
       }
       
       if (modal === 'create') await createStatus(payload)
