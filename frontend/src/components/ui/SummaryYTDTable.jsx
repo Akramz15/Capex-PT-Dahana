@@ -31,7 +31,7 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'right' }}>
         <thead>
           <tr style={{ backgroundColor: '#0f172a', color: 'white' }}>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'left', border: '1px solid #334155', verticalAlign: 'middle' }}>URAIAN</th>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>URAIAN</th>
             <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>Budget RKAP {tahun}</th>
             <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>RKAP sd {bulanName} {tahun}</th>
             <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
