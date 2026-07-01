@@ -8,7 +8,9 @@ import CurrencyInput from '../components/ui/CurrencyInput'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah, fmtShort } from '../utils'
 
-const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {} }
+import { getRkapLockStatus, setRkapLockStatus } from '../api/settings'
+
+const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '' }
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
 export default function RKAPMasterPage({ tahun }) {
@@ -20,15 +22,19 @@ export default function RKAPMasterPage({ tahun }) {
   const [modal,   setModal]   = useState(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [saving,  setSaving]  = useState(false)
+  const [isLocked, setIsLocked] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [resCapex, resReal, resStatus] = await Promise.all([
+      const [resCapex, resReal, resStatus, lockRes] = await Promise.all([
         listCapex({ tahun }),
         listRealization({ tahun }),
-        listStatus({ tahun })
+        listStatus({ tahun }),
+        getRkapLockStatus(tahun)
       ])
+      
+      setIsLocked(lockRes.is_locked)
       
       const merged = resCapex.data.map(capex => {
         const row = { ...capex }
@@ -67,11 +73,29 @@ export default function RKAPMasterPage({ tahun }) {
   }
   const closeModal = () => { setModal(null); setForm(EMPTY_FORM) }
 
+  const handleToggleLock = async () => {
+    if (!window.confirm(`Anda yakin ingin ${isLocked ? 'MEMBUKA KUNCI' : 'MENGUNCI'} RKAP tahun ${tahun}?`)) return
+    try {
+      setLoading(true)
+      await setRkapLockStatus(tahun, !isLocked)
+      await fetchData()
+    } catch (e) {
+      alert('Gagal mengubah status kunci RKAP.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
       let capexId = form.id
       if (modal === 'create') {
+        if (isLocked && !form.source_capex_id) {
+          alert('Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana (Capex Lama) untuk pergeseran anggaran.')
+          setSaving(false)
+          return
+        }
         const res = await createCapex(form)
         capexId = res.id
       } else {
@@ -215,7 +239,10 @@ export default function RKAPMasterPage({ tahun }) {
           <p className="page-desc">Daftar rencana investasi Capex berdasarkan buku RKAP.</p>
         </div>
         {isAdmin && (
-          <div className="page-header-actions">
+          <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button className={`btn ${isLocked ? 'btn-danger' : 'btn-success'}`} onClick={handleToggleLock}>
+              {isLocked ? '🔒 Buka Kunci RKAP' : '🔓 Kunci RKAP ' + tahun}
+            </button>
             <button className="btn btn-primary" id="btn-tambah-capex" onClick={openCreate}>
               Tambah Capex
             </button>
@@ -288,12 +315,34 @@ export default function RKAPMasterPage({ tahun }) {
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" htmlFor="f-rkap">Anggaran RKAP (Rp)</label>
-              <CurrencyInput id="f-rkap" className="form-input" value={form.anggaran_rkap} onChange={set('anggaran_rkap')} />
+              <CurrencyInput id="f-rkap" className="form-input" value={isLocked && modal === 'create' ? 0 : form.anggaran_rkap} onChange={set('anggaran_rkap')} disabled={isLocked} />
+              {isLocked && <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>RKAP dikunci. Tidak dapat diubah.</div>}
             </div>
+            
             <div className="form-group">
-              <label className="form-label" htmlFor="f-perubahan">Anggaran Perubahan (Rp)</label>
-              <CurrencyInput id="f-perubahan" className="form-input" value={form.anggaran_perubahan} onChange={set('anggaran_perubahan')} />
+              {isLocked && modal === 'create' ? (
+                <>
+                  <label className="form-label" htmlFor="f-sumber" style={{ color: '#0284c7' }}>Sumber Dana (Geser Anggaran Dari) <span className="required">*</span></label>
+                  <select id="f-sumber" className="form-select" value={form.source_capex_id || ''} onChange={set('source_capex_id')} style={{ borderColor: '#0ea5e9' }}>
+                    <option value="">-- Pilih Capex Sumber --</option>
+                    {data.filter(d => d.anggaran_perubahan > 0).map(d => (
+                      <option key={d.id} value={d.id}>{d.kode ? `[${d.kode}]` : ''} {d.daftar_capex} (Sisa: {fmtShort(d.anggaran_perubahan)})</option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Wajib dipilih karena RKAP tahun ini sudah dikunci.</div>
+                </>
+              ) : null}
             </div>
+          </div>
+          
+          <div className="form-group" style={{ marginTop: '16px' }}>
+            <label className="form-label" htmlFor="f-perubahan">Anggaran Perubahan (Rp)</label>
+            <CurrencyInput id="f-perubahan" className="form-input" value={form.anggaran_perubahan} onChange={set('anggaran_perubahan')} />
+            {isLocked && modal === 'create' && form.source_capex_id && form.anggaran_perubahan > 0 && (
+              <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px', fontWeight: 500 }}>
+                ⚠️ Dana sebesar {fmtRupiah(form.anggaran_perubahan)} akan dipotong dari Capex Sumber.
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: '24px' }}>

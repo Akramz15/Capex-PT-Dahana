@@ -12,7 +12,7 @@ class CapexMasterBase(BaseModel):
     anggaran_rkap: int = Field(default=0, ge=0)
     anggaran_perubahan: int = Field(default=0, ge=0)
     pic: Optional[str] = Field(None, max_length=150)
-
+    source_capex_id: Optional[UUID] = None
 
 class CapexMasterCreate(CapexMasterBase):
     pass

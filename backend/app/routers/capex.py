@@ -48,9 +48,46 @@ async def create_capex(
     _admin: dict = Depends(require_admin),
 ):
     client = get_supabase_admin()
-    result = client.table(_TABLE).insert(payload.model_dump()).execute()
-    return result.data[0]
-
+    
+    # 1. Cek apakah RKAP tahun tersebut dikunci
+    lock_res = client.table("rkap_locks").select("is_locked").eq("tahun", payload.tahun).execute()
+    is_locked = False
+    if lock_res.data and lock_res.data[0]["is_locked"]:
+        is_locked = True
+        
+    if is_locked:
+        # Jika dikunci, pastikan RKAP 0 dan wajib ada sumber dana
+        if payload.anggaran_rkap > 0:
+            raise HTTPException(status_code=400, detail="RKAP sudah dikunci. Anggaran RKAP awal harus 0.")
+        if not payload.source_capex_id:
+            raise HTTPException(status_code=400, detail="RKAP sudah dikunci. Anda wajib memilih Sumber Dana (Capex Lama) untuk digeser anggarannya.")
+            
+        # Panggil RPC untuk memastikan transaksi aman (potong sumber, tambah baru)
+        try:
+            rpc_res = client.rpc(
+                "rpc_create_capex_reallocation", 
+                {
+                    "p_tahun": payload.tahun,
+                    "p_kode": payload.kode,
+                    "p_daftar_capex": payload.daftar_capex,
+                    "p_kategori": payload.kategori,
+                    "p_anggaran_perubahan": payload.anggaran_perubahan,
+                    "p_pic": payload.pic,
+                    "p_source_capex_id": str(payload.source_capex_id)
+                }
+            ).execute()
+            new_id = rpc_res.data
+            
+            # Fetch data baru untuk response
+            new_capex = client.table(_TABLE).select("*").eq("id", new_id).single().execute()
+            return new_capex.data
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Gagal melakukan pergeseran anggaran: {str(e)}")
+            
+    else:
+        # Jika belum dikunci, insert normal
+        result = client.table(_TABLE).insert(payload.model_dump(exclude_unset=True)).execute()
+        return result.data[0]
 
 @router.put("/{capex_id}", response_model=CapexMasterResponse)
 async def update_capex(
@@ -59,6 +96,20 @@ async def update_capex(
     _admin: dict = Depends(require_admin),
 ):
     client = get_supabase_admin()
+
+    # 1. Cek apakah ada perubahan pada anggaran_rkap
+    if payload.anggaran_rkap is not None:
+        # Cek tahun capex ini
+        existing = client.table(_TABLE).select("tahun").eq("id", str(capex_id)).single().execute()
+        if existing.data:
+            tahun = existing.data["tahun"]
+            lock_res = client.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
+            if lock_res.data and lock_res.data[0]["is_locked"]:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Tahun RKAP ini sudah dikunci! Anda tidak bisa mengubah Anggaran RKAP awal. Silakan Buka Kunci (Unlock) terlebih dahulu jika memang ada salah ketik."
+                )
+
     update_data = payload.model_dump(exclude_none=True)
     if not update_data:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Tidak ada field yang diupdate.")
