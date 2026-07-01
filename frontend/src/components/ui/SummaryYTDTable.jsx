@@ -1,5 +1,5 @@
 import React from 'react'
-import { fmtRupiah, BULAN_NAMES } from '../../utils'
+import { fmtShort, BULAN_NAMES } from '../../utils'
 
 export default function SummaryYTDTable({ data, tahun, bulan }) {
   if (!data || data.length === 0) {
@@ -23,6 +23,8 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
   const grandPctBast = grandRkapYtd > 0 ? ((grandRealBast / grandRkapYtd) * 100).toFixed(1) : '0.0'
 
   const bulanName = BULAN_NAMES[bulan - 1] || ''
+
+  const formatRp = (val) => val == null ? '—' : val === 0 ? 'Rp0' : 'Rp' + fmtShort(val)
 
   return (
     <div style={{ overflowX: 'auto', marginBottom: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -53,20 +55,20 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
               {kat.items.map(item => (
                 <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                   <td style={{ padding: '8px 12px', textAlign: 'left', border: '1px solid #e2e8f0' }}>{item.uraian}</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{fmtRupiah(item.budget)}</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{fmtRupiah(item.rkap_ytd)}</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: item.real_po > 0 ? '#16a34a' : 'inherit' }}>{fmtRupiah(item.real_po)}</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: item.real_bast > 0 ? '#0284c7' : 'inherit' }}>{fmtRupiah(item.real_bast)}</td>
+                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{formatRp(item.budget)}</td>
+                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{formatRp(item.rkap_ytd)}</td>
+                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: item.real_po > 0 ? '#16a34a' : 'inherit' }}>{formatRp(item.real_po)}</td>
+                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: item.real_bast > 0 ? '#0284c7' : 'inherit' }}>{formatRp(item.real_bast)}</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{item.pct_po.toFixed(1)}%</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{item.pct_bast.toFixed(1)}%</td>
                 </tr>
               ))}
               <tr style={{ backgroundColor: '#e2e8f0', fontWeight: 'bold' }}>
                 <td style={{ padding: '8px 12px', textAlign: 'left', border: '1px solid #cbd5e1' }}>Jumlah {kat.kategori}</td>
-                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{fmtRupiah(kat.subtotal_budget)}</td>
-                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{fmtRupiah(kat.subtotal_rkap_ytd)}</td>
-                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{fmtRupiah(kat.subtotal_real_po)}</td>
-                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{fmtRupiah(kat.subtotal_real_bast)}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{formatRp(kat.subtotal_budget)}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{formatRp(kat.subtotal_rkap_ytd)}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{formatRp(kat.subtotal_real_po)}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{formatRp(kat.subtotal_real_bast)}</td>
                 <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{kat.subtotal_pct_po.toFixed(1)}%</td>
                 <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>{kat.subtotal_pct_bast.toFixed(1)}%</td>
               </tr>
@@ -74,10 +76,10 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
           ))}
           <tr style={{ backgroundColor: '#0f172a', color: 'white', fontWeight: 'bold' }}>
             <td style={{ padding: '12px', textAlign: 'left', border: '1px solid #334155' }}>Total Realisasi Aset</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{fmtRupiah(grandBudget)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{fmtRupiah(grandRkapYtd)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{fmtRupiah(grandRealPo)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{fmtRupiah(grandRealBast)}</td>
+            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandBudget)}</td>
+            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandRkapYtd)}</td>
+            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandRealPo)}</td>
+            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandRealBast)}</td>
             <td style={{ padding: '12px', border: '1px solid #334155' }}>{grandPctPo}%</td>
             <td style={{ padding: '12px', border: '1px solid #334155' }}>{grandPctBast}%</td>
           </tr>
