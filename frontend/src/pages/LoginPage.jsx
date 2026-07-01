@@ -1,0 +1,89 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import { login } from '../api/auth'
+import { AlertTriangle } from 'lucide-react'
+import { Briefcase } from 'lucide-react'
+import logoUrl from '../assets/MONITORING CAPEX.png'
+
+export default function LoginPage() {
+  const navigate  = useNavigate()
+  const setAuth   = useAuthStore((s) => s.setAuth)
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await login(email, password)
+      setAuth(res.data.user, res.data.access_token)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.detail ?? 'Terjadi kesalahan. Coba lagi.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-header" style={{ textAlign: 'center' }}>
+          <img src={logoUrl} alt="Logo PT Dahana" style={{ height: '300px', width: 'auto', display: 'block', margin: '-100px auto -100px' }} />
+          {/* <h1 className="login-title" style={{ marginTop: 0 }}>Monitoring Capex</h1> */}
+          <p className="login-sub">PT Dahana Sistem Monitoring Investasi</p>
+        </div>
+
+        {error && <div className="login-error" role="alert"><AlertTriangle size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'4px'}} /> {error}</div>}
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="form-group">
+            <label className="form-label" htmlFor="email-input">
+              Email <span className="required">*</span>
+            </label>
+            <input
+              id="email-input"
+              type="email"
+              className="form-input"
+              placeholder="nama@dahana.id"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="password-input">
+              Password <span className="required">*</span>
+            </label>
+            <input
+              id="password-input"
+              type="password"
+              className="form-input"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary login-btn"
+            disabled={loading}
+            id="login-submit-btn"
+          >
+            {loading ? 'Masuk...' : 'Masuk'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}

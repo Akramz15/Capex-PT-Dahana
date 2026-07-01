@@ -1,0 +1,70 @@
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Optional
+from uuid import UUID
+
+from ..core.database import get_supabase_admin
+from ..core.security import get_current_user, require_admin
+from ..models.asset import LKUCreate, LKUUpdate, LKUResponse
+
+router = APIRouter(prefix="/lku", tags=["LKU"])
+
+_TABLE = "capex_lku"
+
+
+@router.get("", response_model=list[LKUResponse])
+async def list_lku(
+    tahun: Optional[int] = Query(None),
+    departemen: Optional[str] = Query(None),
+    _user: dict = Depends(get_current_user),
+):
+    client = get_supabase_admin()
+    query = client.table(_TABLE).select("*").order("tahun").order("departemen")
+
+    if tahun:
+        query = query.eq("tahun", tahun)
+    if departemen:
+        query = query.ilike("departemen", f"%{departemen}%")
+
+    result = query.execute()
+    return result.data
+
+
+@router.post("", response_model=LKUResponse, status_code=status.HTTP_201_CREATED)
+async def create_lku(
+    payload: LKUCreate,
+    _admin: dict = Depends(require_admin),
+):
+    client = get_supabase_admin()
+    data = payload.model_dump()
+    if data.get("capex_id"):
+        data["capex_id"] = str(data["capex_id"])
+    result = client.table(_TABLE).insert(data).execute()
+    return result.data[0]
+
+
+@router.put("/{lku_id}", response_model=LKUResponse)
+async def update_lku(
+    lku_id: UUID,
+    payload: LKUUpdate,
+    _admin: dict = Depends(require_admin),
+):
+    client = get_supabase_admin()
+    update_data = payload.model_dump(exclude_none=True)
+    if not update_data:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Tidak ada field yang diupdate.")
+
+    result = client.table(_TABLE).update(update_data).eq("id", str(lku_id)).execute()
+    if not result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data LKU tidak ditemukan.")
+    return result.data[0]
+
+
+@router.delete("/{lku_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_lku(
+    lku_id: UUID,
+    _admin: dict = Depends(require_admin),
+):
+    client = get_supabase_admin()
+    result = client.table(_TABLE).delete().eq("id", str(lku_id)).execute()
+    if not result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data LKU tidak ditemukan.")

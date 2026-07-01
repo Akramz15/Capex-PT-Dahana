@@ -1,0 +1,248 @@
+"""
+Smart Export Engine — Sistem Monitoring Capex PT Dahana
+=======================================================
+Memuat Template Monitoring Capex-R2.xlsx sebagai master template lalu menginjeksi
+data dari database ke sel yang tepat tanpa menghapus style, warna, font, atau
+merged cells yang sudah ada di template asli.
+"""
+
+import os
+from io import BytesIO
+from openpyxl import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
+from openpyxl.cell.cell import MergedCell
+
+from ..core.config import get_settings
+from ..core.database import get_supabase_admin
+
+BULAN_COLS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+              "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+
+SHEET_CONFIG = {
+    "RKAP": { "header_row": 4, "data_start_row": 6 },
+    "Real": { "header_row": 4, "data_start_row": 6 },
+    "PO": { "header_row": 4, "data_start_row": 5 },
+    "Tender": { "header_row": 4, "data_start_row": 5 },
+    "Kajian": { "header_row": 4, "data_start_row": 5 },
+    "BAADK": { "header_row": 4, "data_start_row": 5 },
+    "Lainnya": { "header_row": 4, "data_start_row": 5 },
+    "Timeline": { "header_row": 4, "data_start_row": 6 },
+    "LKU": { "header_row": 4, "data_start_row": 5 },
+    "Data Aset": { "header_row": 4, "data_start_row": 5 },
+}
+
+def _scan_header_columns(ws: Worksheet, header_row: int) -> dict[str, int]:
+    col_map: dict[str, int] = {}
+    for col_idx in range(1, ws.max_column + 1):
+        cell_val = ws.cell(row=header_row, column=col_idx).value
+        if cell_val and isinstance(cell_val, str):
+            val = cell_val.strip()
+            # Keterangan can appear twice in status sheets
+            if val == "Keterangan" and "Keterangan" in col_map:
+                col_map["Keterangan_Rekap"] = col_idx
+            else:
+                col_map[val] = col_idx
+    return col_map
+
+def _format_rupiah(value: int | None) -> int:
+    return value or 0
+
+def _set_value_safely(ws: Worksheet, row: int, col: int, value: any) -> None:
+    cell = ws.cell(row=row, column=col)
+    if isinstance(cell, MergedCell):
+        for merged_range in ws.merged_cells.ranges:
+            if merged_range.min_col <= col <= merged_range.max_col and merged_range.min_row <= row <= merged_range.max_row:
+                ws.cell(row=merged_range.min_row, column=merged_range.min_col).value = value
+                break
+    else:
+        cell.value = value
+
+def _inject_real_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start_row: int) -> None:
+    client = get_supabase_admin()
+    masters = client.table("capex_master").select("*").eq("tahun", tahun).order("kode").execute().data
+    reals = client.table("capex_realization").select("*").eq("tahun", tahun).execute().data
+    
+    real_map = {(r["capex_id"], r["bulan"]): r for r in reals}
+    row = start_row
+    
+    for m in masters:
+        cid = str(m["id"])
+        if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
+        if "Anggaran" in col_map:
+            _set_value_safely(ws, row, col_map["Anggaran"], _format_rupiah(m.get("anggaran_rkap")))
+            _set_value_safely(ws, row, col_map["Anggaran"] + 1, _format_rupiah(m.get("anggaran_perubahan")))
+        if "PIC" in col_map: _set_value_safely(ws, row, col_map["PIC"], m.get("pic"))
+
+        for b in range(1, 13):
+            b_name = BULAN_COLS[b - 1]
+            entry = real_map.get((cid, b), {})
+            if b_name in col_map:
+                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(entry.get("nilai_rkap", 0)))
+                _set_value_safely(ws, row, col_map[b_name] + 1, _format_rupiah(entry.get("nilai_realisasi", 0)))
+
+        status_entry = next((r for r in reals if r["capex_id"] == cid and r.get("status")), {})
+        if "Status" in col_map: _set_value_safely(ws, row, col_map["Status"], status_entry.get("status"))
+        if "Keterangan" in col_map: _set_value_safely(ws, row, col_map["Keterangan"], status_entry.get("keterangan"))
+        row += 1
+
+def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start_row: int) -> None:
+    client = get_supabase_admin()
+    masters = client.table("capex_master").select("*").eq("tahun", tahun).order("kode").execute().data
+    reals = client.table("capex_realization").select("*").eq("tahun", tahun).execute().data
+    
+    real_map = {(r["capex_id"], r["bulan"]): r for r in reals}
+    row = start_row
+    
+    for m in masters:
+        cid = str(m["id"])
+        if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
+
+        for b in range(1, 13):
+            b_name = BULAN_COLS[b - 1]
+            entry = real_map.get((cid, b), {})
+            if b_name in col_map:
+                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(entry.get("nilai_rkap", 0)))
+                _set_value_safely(ws, row, col_map[b_name] + 1, _format_rupiah(entry.get("nilai_realisasi", 0)))
+        row += 1
+
+def _inject_status_sheet(ws: Worksheet, tahun: int, status_type: str, col_map: dict[str, int], start_row: int) -> None:
+    client = get_supabase_admin()
+    masters = client.table("capex_master").select("*").eq("tahun", tahun).order("kode").execute().data
+    status_logs = client.table("capex_status_log").select("*").eq("tahun", tahun).eq("status_type", status_type).execute().data
+    
+    log_map = {s["capex_id"]: s for s in status_logs}
+    row = start_row
+    
+    for idx, m in enumerate(masters, start=1):
+        cid = str(m["id"])
+        log = log_map.get(cid, {})
+        
+        if "No" in col_map: _set_value_safely(ws, row, col_map["No"], idx)
+        if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
+        if "Anggaran" in col_map:
+            _set_value_safely(ws, row, col_map["Anggaran"], _format_rupiah(log.get("anggaran_rkap", 0)))
+            _set_value_safely(ws, row, col_map["Anggaran"] + 1, _format_rupiah(log.get("anggaran_perubahan", 0)))
+        
+        realisasi_col = f"Realisasi {status_type}"
+        if realisasi_col in col_map:
+            _set_value_safely(ws, row, col_map[realisasi_col], _format_rupiah(log.get("total_realisasi", 0)))
+            
+        ket_full = log.get("keterangan", "") or ""
+        ket_main = ket_full
+        ket_rekap = ""
+        if "|||" in ket_full:
+            parts = ket_full.split("|||")
+            ket_main = parts[0]
+            ket_rekap = parts[1] if len(parts) > 1 else ""
+            
+        if "Keterangan" in col_map: _set_value_safely(ws, row, col_map["Keterangan"], ket_main)
+        if "Keterangan_Rekap" in col_map: _set_value_safely(ws, row, col_map["Keterangan_Rekap"], ket_rekap)
+        elif "Rekap Nilai" in col_map:
+            _set_value_safely(ws, row, col_map["Rekap Nilai"], ket_rekap)
+            _set_value_safely(ws, row, col_map["Rekap Nilai"] + 1, _format_rupiah(log.get("rekap_nilai", 0)))
+            
+        row += 1
+
+def _inject_timeline_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start_row: int) -> None:
+    client = get_supabase_admin()
+    masters = client.table("capex_master").select("*").eq("tahun", tahun).order("kode").execute().data
+    timelines = client.table("capex_timeline").select("*").eq("tahun", tahun).execute().data
+    
+    time_map = {}
+    for t in timelines:
+        cid = str(t["capex_id"])
+        if cid not in time_map: time_map[cid] = {}
+        if t["bulan"] not in time_map[cid]: time_map[cid][t["bulan"]] = {}
+        time_map[cid][t["bulan"]][t["minggu"]] = t["kode_status"]
+        
+    row = start_row
+    for idx, m in enumerate(masters, start=1):
+        cid = str(m["id"])
+        tm = time_map.get(cid, {})
+        
+        if "No" in col_map: _set_value_safely(ws, row, col_map["No"], idx)
+        if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
+        if "Nilai" in col_map: _set_value_safely(ws, row, col_map["Nilai"], _format_rupiah(m.get("anggaran_rkap", 0)))
+        
+        for b in range(1, 13):
+            b_name = BULAN_COLS[b - 1]
+            if b_name in col_map:
+                base_col = col_map[b_name]
+                for minggu in range(1, 5):
+                    status = tm.get(b, {}).get(minggu, "")
+                    _set_value_safely(ws, row, base_col + minggu - 1, status)
+        row += 1
+
+def _inject_lku_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start_row: int) -> None:
+    client = get_supabase_admin()
+    lkus = client.table("capex_lku").select("*, capex_master(daftar_capex)").eq("tahun", tahun).execute().data
+    
+    row = start_row
+    for idx, lku in enumerate(lkus, start=1):
+        if "Uraian" in col_map:
+            uraian = lku.get("capex_master", {}).get("daftar_capex") if lku.get("capex_master") else ""
+            _set_value_safely(ws, row, col_map["Uraian"], uraian)
+        if "Departemen" in col_map: _set_value_safely(ws, row, col_map["Departemen"], lku.get("departemen"))
+        if "RKAP Nilai" in col_map: _set_value_safely(ws, row, col_map["RKAP Nilai"], _format_rupiah(lku.get("rkap_nilai")))
+        if "RKAP Target" in col_map: _set_value_safely(ws, row, col_map["RKAP Target"], _format_rupiah(lku.get("rkap_target")))
+        if "Rencana TWI" in col_map: _set_value_safely(ws, row, col_map["Rencana TWI"], _format_rupiah(lku.get("rencana_twi")))
+        if "Realisasi PO" in col_map: _set_value_safely(ws, row, col_map["Realisasi PO"], _format_rupiah(lku.get("realisasi_po")))
+        if "Realisasi BAST" in col_map: _set_value_safely(ws, row, col_map["Realisasi BAST"], _format_rupiah(lku.get("realisasi_bast")))
+        
+        rencana = lku.get("rencana_per_bulan", {}) or {}
+        for b in range(1, 13):
+            b_name = BULAN_COLS[b - 1]
+            if b_name in col_map:
+                val = rencana.get(str(b), 0)
+                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(val))
+        row += 1
+
+def _inject_aset_sheet(ws: Worksheet, col_map: dict[str, int], start_row: int) -> None:
+    client = get_supabase_admin()
+    assets = client.table("capex_assets").select("*").order("tanggal_po").execute().data
+
+    field_map = {
+        "no_po": "PO", "tanggal_po": "PO Date", "no_asset": "No. Asset", "sub_number": "SNo.",
+        "category": "Category", "capitalized_on": "Cap. Date", "asset_description": "Asset Description",
+        "acquis_val": "Acquis. val.", "accum_dep": "Accum. dep.", "book_val": "Book val.",
+        "currency": "Crcy", "location_code": "Loc", "lokasi": "LOKASI", "room": "Room", "keterangan": "Ket"
+    }
+
+    row = start_row
+    for idx, asset in enumerate(assets, start=1):
+        if "No" in col_map: _set_value_safely(ws, row, col_map["No"], idx)
+        for field, lbl in field_map.items():
+            if lbl in col_map: _set_value_safely(ws, row, col_map[lbl], asset.get(field))
+        row += 1
+
+def generate_export(tahun: int) -> BytesIO:
+    settings = get_settings()
+    template_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", settings.excel_template_path)
+    )
+
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template Excel tidak ditemukan: {template_path}")
+
+    wb = load_workbook(template_path)
+
+    for sheet_name, config in SHEET_CONFIG.items():
+        if sheet_name not in wb.sheetnames:
+            continue
+
+        ws: Worksheet = wb[sheet_name]
+        col_map = _scan_header_columns(ws, config["header_row"])
+        start_row = config["data_start_row"]
+
+        if sheet_name == "Real": _inject_real_sheet(ws, tahun, col_map, start_row)
+        elif sheet_name == "RKAP": _inject_rkap_sheet(ws, tahun, col_map, start_row)
+        elif sheet_name in ["PO", "Tender", "Kajian", "BAADK", "Lainnya"]:
+            _inject_status_sheet(ws, tahun, sheet_name, col_map, start_row)
+        elif sheet_name == "Timeline": _inject_timeline_sheet(ws, tahun, col_map, start_row)
+        elif sheet_name == "LKU": _inject_lku_sheet(ws, tahun, col_map, start_row)
+        elif sheet_name == "Data Aset": _inject_aset_sheet(ws, col_map, start_row)
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
