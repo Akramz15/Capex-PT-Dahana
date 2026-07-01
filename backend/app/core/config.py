@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
-    allowed_origins: str = "http://localhost:5173"
+    allowed_origins: str = "*"
 
     excel_template_path: str = "../Template Monitoring Capex-R2.xlsx"
 
