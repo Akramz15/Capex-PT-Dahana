@@ -101,19 +101,21 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
         if cid not in ytd_data:
             ytd_data[cid] = {
                 "rkap_ytd": 0,
-                "realisasi_po": 0,
-                "realisasi_bast": 0
+                "total_realisasi": 0,
+                "latest_status": None,
+                "latest_status_month": -1
             }
         
         ytd_data[cid]["rkap_ytd"] += r.get("nilai_rkap") or 0
+        ytd_data[cid]["total_realisasi"] += r.get("nilai_realisasi") or 0
         
-        val = r.get("nilai_realisasi") or 0
         st = r.get("status")
-        
-        if st == "PO":
-            ytd_data[cid]["realisasi_po"] += val
-        elif st == "BAADK":
-            ytd_data[cid]["realisasi_bast"] += val
+        mth = r.get("bulan") or 0
+        if st is not None and st != "":
+            # Update latest status if this month is >= the one we recorded
+            if mth > ytd_data[cid]["latest_status_month"]:
+                ytd_data[cid]["latest_status"] = st
+                ytd_data[cid]["latest_status_month"] = mth
             
     # Susun per Kategori
     kategori_map = {}
@@ -134,8 +136,19 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
         budget = m.get("anggaran_rkap") or 0
         ytd = ytd_data.get(cid, {})
         rkap_ytd = ytd.get("rkap_ytd", 0)
-        real_po = ytd.get("realisasi_po", 0)
-        real_bast = ytd.get("realisasi_bast", 0)
+        total_real = ytd.get("total_realisasi", 0)
+        overall_status = ytd.get("latest_status")
+        
+        real_po = 0
+        real_bast = 0
+        
+        # Determine where to put the realization based on overall status
+        if overall_status == "BAADK":
+            real_bast = total_real
+        else:
+            # If it's PO, Tender, Kajian, Lainnya, or None, put it in PO 
+            # (as PO acts as the catch-all for in-progress realization before BAST in their template)
+            real_po = total_real
         
         pct_po = round((real_po / rkap_ytd * 100), 2) if rkap_ytd > 0 else 0
         pct_bast = round((real_bast / rkap_ytd * 100), 2) if rkap_ytd > 0 else 0
