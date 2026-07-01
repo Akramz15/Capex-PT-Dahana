@@ -2,21 +2,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.routers import auth, capex, realization, status, timeline, lku, assets, export, dashboard, settings
+from app.routers import auth, capex, realization, status, timeline, lku, assets, export, dashboard
+from app.routers import settings as settings_router
 
-settings = get_settings()
+app_settings = get_settings()
 
 app = FastAPI(
     title="Sistem Monitoring Investasi (Capex) PT Dahana",
     version="1.0.0",
     description="API untuk monitoring investasi Capex PT Dahana — dikembangkan dengan FastAPI & Supabase.",
-    docs_url="/docs" if settings.app_env == "development" else None,
-    redoc_url="/redoc" if settings.app_env == "development" else None,
+    docs_url="/docs" if app_settings.app_env == "development" else None,
+    redoc_url="/redoc" if app_settings.app_env == "development" else None,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=app_settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,7 +34,7 @@ app.include_router(timeline.router,     prefix=API_PREFIX)
 app.include_router(lku.router,          prefix=API_PREFIX)
 app.include_router(assets.router,       prefix=API_PREFIX)
 app.include_router(export.router,       prefix=API_PREFIX)
-app.include_router(settings.router,     prefix=API_PREFIX)
+app.include_router(settings_router.router, prefix=API_PREFIX)
 
 
 @app.get("/", tags=["Health"])
