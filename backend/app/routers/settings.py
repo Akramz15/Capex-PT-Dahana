@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from app.core.database import get_supabase
-from app.core.security import get_current_user_profile
+from app.core.security import require_admin
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
@@ -25,16 +25,11 @@ async def get_rkap_lock(tahun: int):
 async def set_rkap_lock(
     tahun: int, 
     lock_data: LockStatus, 
-    user=Depends(get_current_user_profile)
+    _admin=Depends(require_admin)
 ):
     """Mengubah status penguncian RKAP (Hanya Admin)."""
-    if user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Hanya Admin yang dapat mengunci/membuka RKAP."
-        )
-
     sb = get_supabase()
+
     
     # Cek apakah sudah ada
     res = sb.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
@@ -43,7 +38,7 @@ async def set_rkap_lock(
         # Update
         update_res = sb.table("rkap_locks").update({
             "is_locked": lock_data.is_locked,
-            "updated_by": user.id
+            "updated_by": _admin["id"]
         }).eq("tahun", tahun).execute()
         return update_res.data[0]
     else:
@@ -51,6 +46,6 @@ async def set_rkap_lock(
         insert_res = sb.table("rkap_locks").insert({
             "tahun": tahun,
             "is_locked": lock_data.is_locked,
-            "updated_by": user.id
+            "updated_by": _admin["id"]
         }).execute()
         return insert_res.data[0]
