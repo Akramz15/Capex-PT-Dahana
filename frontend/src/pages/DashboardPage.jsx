@@ -218,7 +218,7 @@ export default function DashboardPage({ tahun }) {
               <option value={12}>Desember</option>
             </select>
             <button 
-              className="btn btn-outline" 
+              className="btn btn-success" 
               onClick={handleExportYtd} 
               disabled={exportingYtd}
               style={{ padding: '6px 12px', fontSize: '0.875rem' }}
