@@ -3,8 +3,10 @@ import { listCapex, createCapex, updateCapex, deleteCapex, listRealization, list
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
+import Badge from '../components/ui/Badge'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { fmtRupiah } from '../utils'
+import { fmtRupiah, fmtShort } from '../utils'
 
 const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {} }
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -286,11 +288,11 @@ export default function RKAPMasterPage({ tahun }) {
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" htmlFor="f-rkap">Anggaran RKAP (Rp)</label>
-              <input id="f-rkap" type="number" className="form-input" value={form.anggaran_rkap} onChange={set('anggaran_rkap')} />
+              <CurrencyInput id="f-rkap" className="form-input" value={form.anggaran_rkap} onChange={set('anggaran_rkap')} />
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="f-perubahan">Anggaran Perubahan (Rp)</label>
-              <input id="f-perubahan" type="number" className="form-input" value={form.anggaran_perubahan} onChange={set('anggaran_perubahan')} />
+              <CurrencyInput id="f-perubahan" className="form-input" value={form.anggaran_perubahan} onChange={set('anggaran_perubahan')} />
             </div>
           </div>
 
@@ -302,7 +304,7 @@ export default function RKAPMasterPage({ tahun }) {
                 return (
                   <div key={b} style={{ border: '1px solid var(--clr-border)', padding: '10px', borderRadius: '4px' }}>
                     <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '12px', textAlign: 'center' }}>{bulan}</div>
-                    <input type="number" className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
+                    <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
                       value={form.items?.[b]?.rkap ?? ''} 
                       onChange={(e) => {
                         const val = e.target.value

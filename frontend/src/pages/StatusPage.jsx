@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah } from '../utils'
 
 const STATUS_TABS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya']
@@ -173,18 +174,18 @@ export default function StatusPage({ tahun }) {
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label">Anggaran RKAP</label>
-              <input type="number" className="form-input" value={form.anggaran_rkap} onChange={setF('anggaran_rkap')} />
+              <CurrencyInput className="form-input" value={form.anggaran_rkap} onChange={setF('anggaran_rkap')} />
             </div>
             <div className="form-group">
               <label className="form-label">Anggaran Perubahan</label>
-              <input type="number" className="form-input" value={form.anggaran_perubahan} onChange={setF('anggaran_perubahan')} />
+              <CurrencyInput className="form-input" value={form.anggaran_perubahan} onChange={setF('anggaran_perubahan')} />
             </div>
           </div>
           
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label">Total Realisasi</label>
-              <input type="number" className="form-input" value={form.total_realisasi} onChange={setF('total_realisasi')} />
+              <CurrencyInput className="form-input" value={form.total_realisasi} onChange={setF('total_realisasi')} />
             </div>
             <div className="form-group">
               <label className="form-label">Status Tab</label>
@@ -208,7 +209,7 @@ export default function StatusPage({ tahun }) {
               </div>
               <div className="form-group">
                 <label className="form-label">Nilai Rekap</label>
-                <input type="number" className="form-input" value={form.rekap_nilai} onChange={setF('rekap_nilai')} />
+                <CurrencyInput className="form-input" value={form.rekap_nilai} onChange={setF('rekap_nilai')} />
               </div>
             </div>
           </div>

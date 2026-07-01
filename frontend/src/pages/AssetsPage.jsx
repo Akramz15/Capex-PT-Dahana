@@ -4,7 +4,8 @@ import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { fmtRupiah } from '../utils'
+import CurrencyInput from '../components/ui/CurrencyInput'
+import { fmtRupiah, fmtShort } from '../utils'
 import { Pencil, Trash2, Plus } from 'lucide-react'
 
 const EMPTY_FORM = {
@@ -170,11 +171,11 @@ export default function AssetsPage() {
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" htmlFor="f-acquis">Nilai Perolehan (Rp)</label>
-              <input id="f-acquis" type="number" className="form-input" value={form.acquis_val} onChange={set('acquis_val')} />
+              <CurrencyInput id="f-acquis" className="form-input" value={form.acquis_val} onChange={set('acquis_val')} />
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="f-dep">Akumulasi Depresiasi (Rp)</label>
-              <input id="f-dep" type="number" className="form-input" value={form.accum_dep} onChange={set('accum_dep')} />
+              <CurrencyInput id="f-dep" className="form-input" value={form.accum_dep} onChange={set('accum_dep')} />
             </div>
           </div>
           <div className="form-grid-2">

@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah } from '../utils'
 import { Plus } from 'lucide-react'
 
@@ -149,26 +150,26 @@ export default function LKUPage({ tahun }) {
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label">RKAP Nilai</label>
-              <input type="number" className="form-input" value={form.rkap_nilai} onChange={set('rkap_nilai')} />
+              <CurrencyInput className="form-input" value={form.rkap_nilai} onChange={set('rkap_nilai')} />
             </div>
             <div className="form-group">
               <label className="form-label">RKAP Target</label>
-              <input type="number" className="form-input" value={form.rkap_target} onChange={set('rkap_target')} />
+              <CurrencyInput className="form-input" value={form.rkap_target} onChange={set('rkap_target')} />
             </div>
           </div>
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label">Realisasi PO</label>
-              <input type="number" className="form-input" value={form.realisasi_po} onChange={set('realisasi_po')} />
+              <CurrencyInput className="form-input" value={form.realisasi_po} onChange={set('realisasi_po')} />
             </div>
             <div className="form-group">
               <label className="form-label">Realisasi BAST</label>
-              <input type="number" className="form-input" value={form.realisasi_bast} onChange={set('realisasi_bast')} />
+              <CurrencyInput className="form-input" value={form.realisasi_bast} onChange={set('realisasi_bast')} />
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Rencana TWI</label>
-            <input type="number" className="form-input" value={form.rencana_twi} onChange={set('rencana_twi')} />
+            <CurrencyInput className="form-input" value={form.rencana_twi} onChange={set('rencana_twi')} />
           </div>
 
           <div style={{ marginTop: '24px' }}>
@@ -179,8 +180,7 @@ export default function LKUPage({ tahun }) {
                 return (
                   <div className="form-group" key={bulan}>
                     <label className="form-label">{bulan}</label>
-                    <input
-                      type="number"
+                    <CurrencyInput
                       className="form-input"
                       value={form.rencana_per_bulan[monthStr] || 0}
                       onChange={(e) => setBulan(monthStr, e.target.value)}

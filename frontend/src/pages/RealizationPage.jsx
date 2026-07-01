@@ -4,7 +4,9 @@ import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { fmtRupiah } from '../utils'
+import Badge from '../components/ui/Badge'
+import CurrencyInput from '../components/ui/CurrencyInput'
+import { fmtRupiah, fmtShort } from '../utils'
 
 const BULAN_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const STATUS_OPTIONS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya', 'Rencana']
@@ -390,7 +392,7 @@ export default function RealizationPage({ tahun }) {
                 return (
                   <div key={b} style={{ border: '1px solid var(--clr-border)', padding: '10px', borderRadius: '4px' }}>
                     <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '13px', textAlign: 'center' }}>{bulan}</div>
-                    <input type="number" className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
+                    <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
                       value={form.items[b]?.real ?? ''} 
                       onChange={(e) => setBulan(b, 'real', e.target.value)} 
                       placeholder="Rp 0" />
