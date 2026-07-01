@@ -31,17 +31,17 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'right' }}>
         <thead>
           <tr style={{ backgroundColor: '#0f172a', color: 'white' }}>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'left', border: '1px solid #334155' }}>URAIAN</th>
-            <th rowSpan={2} style={{ padding: '12px', border: '1px solid #334155' }}>Budget RKAP {tahun}</th>
-            <th rowSpan={2} style={{ padding: '12px', border: '1px solid #334155' }}>RKAP sd {bulanName} {tahun}</th>
-            <th colSpan={2} style={{ padding: '12px', border: '1px solid #334155', textAlign: 'center' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
-            <th colSpan={2} style={{ padding: '12px', border: '1px solid #334155', textAlign: 'center' }}>% thd RKAP {bulanName} {tahun}</th>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'left', border: '1px solid #334155', verticalAlign: 'middle' }}>URAIAN</th>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>Budget RKAP {tahun}</th>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>RKAP sd {bulanName} {tahun}</th>
+            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
+            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
           </tr>
           <tr style={{ backgroundColor: '#1e293b', color: 'white' }}>
-            <th style={{ padding: '8px', border: '1px solid #334155' }}>By PO</th>
-            <th style={{ padding: '8px', border: '1px solid #334155' }}>By BAST</th>
-            <th style={{ padding: '8px', border: '1px solid #334155' }}>By PO</th>
-            <th style={{ padding: '8px', border: '1px solid #334155' }}>By BAST</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By PO</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By BAST</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By PO</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By BAST</th>
           </tr>
         </thead>
         <tbody>
