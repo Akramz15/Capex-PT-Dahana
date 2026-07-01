@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah, fmtShort } from '../utils'
 
 import { getRkapLockStatus, setRkapLockStatus } from '../api/settings'
+import { Lock, Unlock } from 'lucide-react'
 
 const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '' }
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -240,8 +241,9 @@ export default function RKAPMasterPage({ tahun }) {
         </div>
         {isAdmin && (
           <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
-            <button className={`btn ${isLocked ? 'btn-danger' : 'btn-success'}`} onClick={handleToggleLock}>
-              {isLocked ? '🔒 Buka Kunci RKAP' : '🔓 Kunci RKAP ' + tahun}
+            <button className={`btn ${isLocked ? 'btn-danger' : 'btn-success'}`} onClick={handleToggleLock} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {isLocked ? <Unlock size={18} /> : <Lock size={18} />}
+              {isLocked ? 'Buka Kunci RKAP' : 'Kunci RKAP ' + tahun}
             </button>
             <button className="btn btn-primary" id="btn-tambah-capex" onClick={openCreate}>
               Tambah Capex
