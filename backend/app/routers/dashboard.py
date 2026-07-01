@@ -5,6 +5,7 @@ from ..services.dashboard import (
     get_dashboard_summary,
     get_monthly_chart_data,
     get_capex_progress_table,
+    get_summary_table_ytd,
 )
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
@@ -32,3 +33,12 @@ async def progress_table(
     _user: dict = Depends(get_current_user),
 ):
     return get_capex_progress_table(tahun)
+
+
+@router.get("/summary-ytd")
+async def summary_table_ytd(
+    tahun: int = Query(2026, ge=2020, le=2099),
+    bulan: int = Query(12, ge=1, le=12),
+    _user: dict = Depends(get_current_user),
+):
+    return get_summary_table_ytd(tahun, bulan)

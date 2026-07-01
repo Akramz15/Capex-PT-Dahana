@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getDashboardSummary, getMonthlyChart, getProgressTable } from '../api/capex'
+import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd } from '../api/capex'
 import { exportCapex } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import BudgetVsRealizationChart from '../components/charts/BudgetVsRealizationChart'
 import StatusDistributionChart from '../components/charts/StatusDistributionChart'
+import SummaryYTDTable from '../components/ui/SummaryYTDTable'
 import DataTable from '../components/ui/DataTable'
 import Badge from '../components/ui/Badge'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
@@ -43,20 +44,24 @@ export default function DashboardPage({ tahun }) {
   const [summary,   setSummary]   = useState(null)
   const [monthly,   setMonthly]   = useState([])
   const [progress,  setProgress]  = useState([])
+  const [ytdData,   setYtdData]   = useState([])
+  const [ytdBulan,  setYtdBulan]  = useState(new Date().getMonth() + 1)
   const [loading,   setLoading]   = useState(true)
   const [exporting, setExporting] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [s, m, p] = await Promise.all([
+      const [s, m, p, y] = await Promise.all([
         getDashboardSummary(tahun),
         getMonthlyChart(tahun),
         getProgressTable(tahun),
+        getDashboardSummaryYtd(tahun, ytdBulan)
       ])
       setSummary(s.data)
       setMonthly(m.data)
       setProgress(p.data)
+      setYtdData(y.data)
     } catch (e) {
       console.error(e)
     } finally {
@@ -65,6 +70,20 @@ export default function DashboardPage({ tahun }) {
   }, [tahun])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const fetchYtdOnly = useCallback(async () => {
+    try {
+      const res = await getDashboardSummaryYtd(tahun, ytdBulan)
+      setYtdData(res.data)
+    } catch (e) {
+      console.error(e)
+    }
+  }, [tahun, ytdBulan])
+
+  useEffect(() => {
+    // Only fetch if not initially loading (to avoid double fetch)
+    if (!loading) fetchYtdOnly()
+  }, [ytdBulan]) // eslint-disable-line
 
   const handleExport = async () => {
     setExporting(true)
@@ -153,6 +172,41 @@ export default function DashboardPage({ tahun }) {
             />
           </div>
         </div>
+      </div>
+
+      <div className="section" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>Ringkasan Anggaran & Realisasi (YTD)</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>s.d. Bulan:</span>
+            <select
+              value={ytdBulan}
+              onChange={(e) => setYtdBulan(parseInt(e.target.value))}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                fontSize: '0.875rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value={1}>Januari</option>
+              <option value={2}>Februari</option>
+              <option value={3}>Maret</option>
+              <option value={4}>April</option>
+              <option value={5}>Mei</option>
+              <option value={6}>Juni</option>
+              <option value={7}>Juli</option>
+              <option value={8}>Agustus</option>
+              <option value={9}>September</option>
+              <option value={10}>Oktober</option>
+              <option value={11}>November</option>
+              <option value={12}>Desember</option>
+            </select>
+          </div>
+        </div>
+        <SummaryYTDTable data={ytdData} tahun={tahun} bulan={ytdBulan} />
       </div>
 
       <div className="section">

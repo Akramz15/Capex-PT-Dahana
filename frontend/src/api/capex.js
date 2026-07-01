@@ -3,6 +3,7 @@ import client from './client'
 export const getDashboardSummary  = (tahun) => client.get('/dashboard/summary',       { params: { tahun } })
 export const getMonthlyChart      = (tahun) => client.get('/dashboard/monthly-chart',  { params: { tahun } })
 export const getProgressTable     = (tahun) => client.get('/dashboard/progress-table', { params: { tahun } })
+export const getDashboardSummaryYtd = (tahun, bulan) => client.get('/dashboard/summary-ytd', { params: { tahun, bulan } })
 
 export const listCapex    = (params = {}) => client.get('/capex',       { params })
 export const getCapex     = (id)          => client.get(`/capex/${id}`)

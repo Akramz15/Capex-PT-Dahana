@@ -84,3 +84,87 @@ def get_capex_progress_table(tahun: int) -> list[dict]:
         })
 
     return rows
+
+def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
+    client = get_supabase_admin()
+    
+    # 1. Ambil data master
+    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap").eq("tahun", tahun).execute()
+    
+    # 2. Ambil data realisasi HANYA untuk bulan <= bulan yang dipilih
+    real = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
+    
+    # Agregasi data YTD per capex_id
+    ytd_data = {}
+    for r in real.data:
+        cid = r["capex_id"]
+        if cid not in ytd_data:
+            ytd_data[cid] = {
+                "rkap_ytd": 0,
+                "realisasi_po": 0,
+                "realisasi_bast": 0
+            }
+        
+        ytd_data[cid]["rkap_ytd"] += r.get("nilai_rkap") or 0
+        
+        val = r.get("nilai_realisasi") or 0
+        st = r.get("status")
+        
+        if st == "PO":
+            ytd_data[cid]["realisasi_po"] += val
+        elif st == "BAADK":
+            ytd_data[cid]["realisasi_bast"] += val
+            
+    # Susun per Kategori
+    kategori_map = {}
+    for m in master.data:
+        kat = m.get("kategori") or "Lainnya"
+        cid = str(m["id"])
+        
+        if kat not in kategori_map:
+            kategori_map[kat] = {
+                "kategori": kat,
+                "items": [],
+                "subtotal_budget": 0,
+                "subtotal_rkap_ytd": 0,
+                "subtotal_real_po": 0,
+                "subtotal_real_bast": 0,
+            }
+            
+        budget = m.get("anggaran_rkap") or 0
+        ytd = ytd_data.get(cid, {})
+        rkap_ytd = ytd.get("rkap_ytd", 0)
+        real_po = ytd.get("realisasi_po", 0)
+        real_bast = ytd.get("realisasi_bast", 0)
+        
+        pct_po = round((real_po / rkap_ytd * 100), 2) if rkap_ytd > 0 else 0
+        pct_bast = round((real_bast / rkap_ytd * 100), 2) if rkap_ytd > 0 else 0
+        
+        item_data = {
+            "id": cid,
+            "uraian": m.get("daftar_capex") or "-",
+            "budget": budget,
+            "rkap_ytd": rkap_ytd,
+            "real_po": real_po,
+            "real_bast": real_bast,
+            "pct_po": pct_po,
+            "pct_bast": pct_bast
+        }
+        
+        kategori_map[kat]["items"].append(item_data)
+        kategori_map[kat]["subtotal_budget"] += budget
+        kategori_map[kat]["subtotal_rkap_ytd"] += rkap_ytd
+        kategori_map[kat]["subtotal_real_po"] += real_po
+        kategori_map[kat]["subtotal_real_bast"] += real_bast
+        
+    # Hitung persentase subtotal
+    result = []
+    for kat, data in kategori_map.items():
+        rytd = data["subtotal_rkap_ytd"]
+        data["subtotal_pct_po"] = round((data["subtotal_real_po"] / rytd * 100), 2) if rytd > 0 else 0
+        data["subtotal_pct_bast"] = round((data["subtotal_real_bast"] / rytd * 100), 2) if rytd > 0 else 0
+        result.append(data)
+        
+    # Urutkan secara alfabetis atau sesuai urutan tertentu (biasanya Investasi Rutin di atas)
+    result.sort(key=lambda x: x["kategori"])
+    return result
