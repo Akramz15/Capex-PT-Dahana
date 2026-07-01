@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from app.core.database import get_supabase
+from app.core.database import get_supabase, get_supabase_admin
 from app.core.security import require_admin
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
@@ -28,7 +28,7 @@ async def set_rkap_lock(
     _admin=Depends(require_admin)
 ):
     """Mengubah status penguncian RKAP (Hanya Admin)."""
-    sb = get_supabase()
+    sb = get_supabase_admin()
 
     
     # Cek apakah sudah ada
