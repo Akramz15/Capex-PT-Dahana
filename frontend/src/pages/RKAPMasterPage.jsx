@@ -242,7 +242,7 @@ export default function RKAPMasterPage({ tahun }) {
         {isAdmin && (
           <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
             <button className={`btn ${isLocked ? 'btn-danger' : 'btn-success'}`} onClick={handleToggleLock} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {isLocked ? <Unlock size={18} /> : <Lock size={18} />}
+              {isLocked ? <Lock size={18} /> : <Unlock size={18} />}
               {isLocked ? 'Buka Kunci RKAP' : 'Kunci RKAP ' + tahun}
             </button>
             <button className="btn btn-primary" id="btn-tambah-capex" onClick={openCreate}>
