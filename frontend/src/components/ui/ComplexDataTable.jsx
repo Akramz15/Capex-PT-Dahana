@@ -172,7 +172,7 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
           )}
         </div>
       )}
-      <div className="table-container" style={{ overflowX: 'auto', position: 'relative' }}>
+      <div className="table-container" style={{ overflowX: 'auto', position: 'relative', backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
         <table className="data-table" style={{ minWidth: 'max-content' }}>
         <thead>
           {headerRows.map((row, rowIndex) => (

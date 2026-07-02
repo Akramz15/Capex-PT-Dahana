@@ -144,7 +144,7 @@ export default function StatusPage({ tahun }) {
         </div>
       </div>
 
-      <div className="section">
+      <div>
         {loading ? <LoadingSpinner /> : (
           <ComplexDataTable
             columns={columns}

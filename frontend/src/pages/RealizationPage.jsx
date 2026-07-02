@@ -324,7 +324,7 @@ export default function RealizationPage({ tahun }) {
         </div>
       </div>
 
-      <div className="section">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {loading ? <LoadingSpinner /> : (
           <>
             <ComplexDataTable 
