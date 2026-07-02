@@ -18,17 +18,19 @@ export default function Header({ currentPath, tahun, onTahunChange }) {
       </div>
 
       <div className="header-right">
-        <select
-          className="header-year-select"
-          value={tahun}
-          onChange={(e) => onTahunChange(Number(e.target.value))}
-          aria-label="Pilih Tahun"
-          id="year-selector"
-        >
-          {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+        {currentPath !== '/aset' && (
+          <select
+            className="header-year-select"
+            value={tahun}
+            onChange={(e) => onTahunChange(Number(e.target.value))}
+            aria-label="Pilih Tahun"
+            id="year-selector"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        )}
       </div>
     </header>
   )
