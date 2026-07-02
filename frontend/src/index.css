@@ -578,6 +578,7 @@ img, svg { display: block; }
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 8px 18px;
   border-radius: var(--radius-sm);
