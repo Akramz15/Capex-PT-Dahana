@@ -7,7 +7,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(payload: LoginRequest) -> LoginResponse:
+def login(payload: LoginRequest) -> LoginResponse:
     client = get_supabase()
     try:
         response = client.auth.sign_in_with_password(
@@ -45,6 +45,6 @@ async def login(payload: LoginRequest) -> LoginResponse:
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout() -> None:
+def logout() -> None:
     client = get_supabase()
     client.auth.sign_out()

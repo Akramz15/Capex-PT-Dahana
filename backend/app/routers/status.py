@@ -13,7 +13,7 @@ StatusTypeFilter = Literal["PO", "Tender", "Kajian", "BAADK", "Lainnya"]
 
 
 @router.get("", response_model=list[StatusLogResponse])
-async def list_status_log(
+def list_status_log(
     tahun: Optional[int] = Query(None),
     status_type: Optional[StatusTypeFilter] = Query(None),
     capex_id: Optional[UUID] = Query(None),
@@ -38,7 +38,7 @@ async def list_status_log(
 
 
 @router.get("/{log_id}", response_model=StatusLogResponse)
-async def get_status_log(
+def get_status_log(
     log_id: UUID,
     _user: dict = Depends(get_current_user),
 ):
@@ -50,7 +50,7 @@ async def get_status_log(
 
 
 @router.post("", response_model=StatusLogResponse, status_code=status.HTTP_201_CREATED)
-async def create_status_log(
+def create_status_log(
     payload: StatusLogCreate,
     _admin: dict = Depends(require_admin),
 ):
@@ -62,7 +62,7 @@ async def create_status_log(
 
 
 @router.put("/{log_id}", response_model=StatusLogResponse)
-async def update_status_log(
+def update_status_log(
     log_id: UUID,
     payload: StatusLogUpdate,
     _admin: dict = Depends(require_admin),
@@ -79,7 +79,7 @@ async def update_status_log(
 
 
 @router.delete("/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_status_log(
+def delete_status_log(
     log_id: UUID,
     _admin: dict = Depends(require_admin),
 ):

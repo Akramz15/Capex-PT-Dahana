@@ -9,7 +9,7 @@ router = APIRouter(prefix="/export-capex", tags=["Export"])
 
 
 @router.post("")
-async def export_capex_excel(
+def export_capex_excel(
     tahun: int = Query(..., ge=2020, le=2099, description="Tahun anggaran yang akan diekspor"),
     _admin: dict = Depends(require_admin),
 ):

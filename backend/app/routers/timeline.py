@@ -12,7 +12,7 @@ _TABLE = "capex_timeline"
 
 
 @router.get("", response_model=list[TimelineResponse])
-async def list_timeline(
+def list_timeline(
     tahun: Optional[int] = Query(None),
     capex_id: Optional[UUID] = Query(None),
     _user: dict = Depends(get_current_user),
@@ -35,7 +35,7 @@ async def list_timeline(
 
 
 @router.post("", response_model=TimelineResponse, status_code=status.HTTP_201_CREATED)
-async def create_timeline(
+def create_timeline(
     payload: TimelineCreate,
     _admin: dict = Depends(require_admin),
 ):
@@ -48,7 +48,7 @@ async def create_timeline(
 from ..models.timeline_bulk import TimelineBulkRequest
 
 @router.post("/bulk", status_code=status.HTTP_200_OK)
-async def upsert_timeline_bulk(
+def upsert_timeline_bulk(
     payload: TimelineBulkRequest,
     _admin: dict = Depends(require_admin),
 ):
@@ -70,7 +70,7 @@ async def upsert_timeline_bulk(
 
 
 @router.put("/{timeline_id}", response_model=TimelineResponse)
-async def update_timeline(
+def update_timeline(
     timeline_id: UUID,
     payload: TimelineUpdate,
     _admin: dict = Depends(require_admin),
@@ -87,7 +87,7 @@ async def update_timeline(
 
 
 @router.delete("/{timeline_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_timeline(
+def delete_timeline(
     timeline_id: UUID,
     _admin: dict = Depends(require_admin),
 ):

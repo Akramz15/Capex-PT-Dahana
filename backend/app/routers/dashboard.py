@@ -12,7 +12,7 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
 @router.get("/summary")
-async def dashboard_summary(
+def dashboard_summary(
     tahun: int = Query(2026, ge=2020, le=2099),
     _user: dict = Depends(get_current_user),
 ):
@@ -20,7 +20,7 @@ async def dashboard_summary(
 
 
 @router.get("/monthly-chart")
-async def monthly_chart(
+def monthly_chart(
     tahun: int = Query(2026, ge=2020, le=2099),
     _user: dict = Depends(get_current_user),
 ):
@@ -28,7 +28,7 @@ async def monthly_chart(
 
 
 @router.get("/progress-table")
-async def progress_table(
+def progress_table(
     tahun: int = Query(2026, ge=2020, le=2099),
     _user: dict = Depends(get_current_user),
 ):
@@ -36,7 +36,7 @@ async def progress_table(
 
 
 @router.get("/summary-ytd")
-async def summary_table_ytd(
+def summary_table_ytd(
     tahun: int = Query(2026, ge=2020, le=2099),
     bulan: int = Query(12, ge=1, le=12),
     _user: dict = Depends(get_current_user),
@@ -45,7 +45,7 @@ async def summary_table_ytd(
 
 
 @router.get("/export-summary-ytd")
-async def export_summary_table_ytd(
+def export_summary_table_ytd(
     tahun: int = Query(2026, ge=2020, le=2099),
     bulan: int = Query(12, ge=1, le=12),
     _user: dict = Depends(get_current_user),

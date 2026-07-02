@@ -12,7 +12,7 @@ _TABLE = "capex_master"
 
 
 @router.get("", response_model=list[CapexMasterResponse])
-async def list_capex(
+def list_capex(
     tahun: Optional[int] = Query(None, description="Filter berdasarkan tahun"),
     kategori: Optional[str] = Query(None, description="Filter berdasarkan kategori"),
     _user: dict = Depends(get_current_user),
@@ -30,7 +30,7 @@ async def list_capex(
 
 
 @router.get("/{capex_id}", response_model=CapexMasterResponse)
-async def get_capex(
+def get_capex(
     capex_id: UUID,
     _user: dict = Depends(get_current_user),
 ):
@@ -43,7 +43,7 @@ async def get_capex(
 
 
 @router.post("", response_model=CapexMasterResponse, status_code=status.HTTP_201_CREATED)
-async def create_capex(
+def create_capex(
     payload: CapexMasterCreate,
     _admin: dict = Depends(require_admin),
 ):
@@ -90,7 +90,7 @@ async def create_capex(
         return result.data[0]
 
 @router.put("/{capex_id}", response_model=CapexMasterResponse)
-async def update_capex(
+def update_capex(
     capex_id: UUID,
     payload: CapexMasterUpdate,
     _admin: dict = Depends(require_admin),
@@ -121,7 +121,7 @@ async def update_capex(
 
 
 @router.delete("/{capex_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_capex(
+def delete_capex(
     capex_id: UUID,
     _admin: dict = Depends(require_admin),
 ):

@@ -11,7 +11,7 @@ class LockStatus(BaseModel):
 
 
 @router.get("/rkap-lock/{tahun}")
-async def get_rkap_lock(tahun: int):
+def get_rkap_lock(tahun: int):
     """Mendapatkan status penguncian RKAP untuk tahun tertentu."""
     sb = get_supabase_admin()
     res = sb.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
@@ -22,7 +22,7 @@ async def get_rkap_lock(tahun: int):
 
 
 @router.post("/rkap-lock/{tahun}")
-async def set_rkap_lock(
+def set_rkap_lock(
     tahun: int, 
     lock_data: LockStatus, 
     _admin=Depends(require_admin)

@@ -12,7 +12,7 @@ _TABLE = "capex_lku"
 
 
 @router.get("", response_model=list[LKUResponse])
-async def list_lku(
+def list_lku(
     tahun: Optional[int] = Query(None),
     departemen: Optional[str] = Query(None),
     _user: dict = Depends(get_current_user),
@@ -30,7 +30,7 @@ async def list_lku(
 
 
 @router.post("", response_model=LKUResponse, status_code=status.HTTP_201_CREATED)
-async def create_lku(
+def create_lku(
     payload: LKUCreate,
     _admin: dict = Depends(require_admin),
 ):
@@ -43,7 +43,7 @@ async def create_lku(
 
 
 @router.put("/{lku_id}", response_model=LKUResponse)
-async def update_lku(
+def update_lku(
     lku_id: UUID,
     payload: LKUUpdate,
     _admin: dict = Depends(require_admin),
@@ -60,7 +60,7 @@ async def update_lku(
 
 
 @router.delete("/{lku_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_lku(
+def delete_lku(
     lku_id: UUID,
     _admin: dict = Depends(require_admin),
 ):

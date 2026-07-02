@@ -12,7 +12,7 @@ _TABLE = "capex_assets"
 
 
 @router.get("", response_model=list[AssetResponse])
-async def list_assets(
+def list_assets(
     category: Optional[str] = Query(None, description="Filter kategori aset"),
     lokasi: Optional[str] = Query(None, description="Filter lokasi aset"),
     search: Optional[str] = Query(None, description="Cari berdasarkan deskripsi aset"),
@@ -33,7 +33,7 @@ async def list_assets(
 
 
 @router.get("/{asset_id}", response_model=AssetResponse)
-async def get_asset(
+def get_asset(
     asset_id: UUID,
     _user: dict = Depends(get_current_user),
 ):
@@ -45,7 +45,7 @@ async def get_asset(
 
 
 @router.post("", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
-async def create_asset(
+def create_asset(
     payload: AssetCreate,
     _admin: dict = Depends(require_admin),
 ):
@@ -59,7 +59,7 @@ async def create_asset(
 
 
 @router.put("/{asset_id}", response_model=AssetResponse)
-async def update_asset(
+def update_asset(
     asset_id: UUID,
     payload: AssetUpdate,
     _admin: dict = Depends(require_admin),
@@ -80,7 +80,7 @@ async def update_asset(
 
 
 @router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_asset(
+def delete_asset(
     asset_id: UUID,
     _admin: dict = Depends(require_admin),
 ):

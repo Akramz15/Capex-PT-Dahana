@@ -6,7 +6,7 @@ from .database import get_supabase, get_supabase_admin
 
 _bearer = HTTPBearer()
 
-async def get_current_user(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
 ) -> dict:
     token = credentials.credentials
@@ -34,7 +34,7 @@ async def get_current_user(
     return result.data
 
 
-async def require_admin(user: dict = Depends(get_current_user)) -> dict:
+def require_admin(user: dict = Depends(get_current_user)) -> dict:
     if user.get("role") != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

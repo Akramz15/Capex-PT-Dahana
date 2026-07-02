@@ -14,7 +14,7 @@ _TABLE = "capex_realization"
 
 
 @router.get("", response_model=list[RealizationResponse])
-async def list_realization(
+def list_realization(
     capex_id: Optional[UUID] = Query(None),
     tahun: Optional[int] = Query(None),
     bulan: Optional[int] = Query(None, ge=1, le=12),
@@ -39,7 +39,7 @@ async def list_realization(
 
 
 @router.get("/{realization_id}", response_model=RealizationResponse)
-async def get_realization(
+def get_realization(
     realization_id: UUID,
     _user: dict = Depends(get_current_user),
 ):
@@ -51,7 +51,7 @@ async def get_realization(
 
 
 @router.post("", response_model=RealizationResponse, status_code=status.HTTP_201_CREATED)
-async def create_realization(
+def create_realization(
     payload: RealizationCreate,
     _admin: dict = Depends(require_admin),
 ):
@@ -65,7 +65,7 @@ async def create_realization(
 from ..models.realization_bulk import RealizationBulkRequest
 
 @router.post("/bulk", status_code=status.HTTP_200_OK)
-async def upsert_realization_bulk(
+def upsert_realization_bulk(
     payload: RealizationBulkRequest,
     _admin: dict = Depends(require_admin),
 ):
@@ -93,7 +93,7 @@ async def upsert_realization_bulk(
 
 
 @router.put("/{realization_id}", response_model=RealizationResponse)
-async def update_realization(
+def update_realization(
     realization_id: UUID,
     payload: RealizationUpdate,
     _admin: dict = Depends(require_admin),
@@ -110,7 +110,7 @@ async def update_realization(
 
 
 @router.delete("/{realization_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_realization(
+def delete_realization(
     realization_id: UUID,
     _admin: dict = Depends(require_admin),
 ):
