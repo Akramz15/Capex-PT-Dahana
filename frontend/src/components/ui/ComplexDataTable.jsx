@@ -195,7 +195,11 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                     maxWidth: col.width || 'none'
                   }}
                 >
-                  {col.header}
+                  {col.width ? (
+                    <div style={{ width: `calc(${col.width} - 32px)`, minWidth: `calc(${col.width} - 32px)`, maxWidth: `calc(${col.width} - 32px)`, margin: '0 auto', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {col.header}
+                    </div>
+                  ) : col.header}
                 </th>
               ))}
               {/* Action column header only on the first row */}
@@ -236,7 +240,11 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                       maxWidth: col.width || 'none'
                     }}
                   >
-                    {col.render ? col.render(row, rowIndex) : row[col.accessor]}
+                    {col.width ? (
+                      <div style={{ width: `calc(${col.width} - 32px)`, minWidth: `calc(${col.width} - 32px)`, maxWidth: `calc(${col.width} - 32px)`, margin: '0 auto', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                        {col.render ? col.render(row, rowIndex) : row[col.accessor]}
+                      </div>
+                    ) : (col.render ? col.render(row, rowIndex) : row[col.accessor])}
                   </td>
                 ))}
                 {(onEdit || onDelete || onCustomAction) && (

@@ -16,8 +16,8 @@ const EMPTY_FORM = {
 }
 
 const COLUMNS = [
-  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '50px' },
-  { header: 'Asset description', accessor: 'asset_description', sticky: true, stickyLeft: '50px', width: '250px' },
+  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '60px' },
+  { header: 'Asset description', accessor: 'asset_description', sticky: true, stickyLeft: '59px', width: '250px' },
   { 
     header: 'Kajian Investasi', 
     children: [
