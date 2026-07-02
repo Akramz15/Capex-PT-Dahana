@@ -14,6 +14,7 @@ const STATUS_OPTIONS = [
   { value: 'S', label: 'SPMK (S)' },
   { value: 'P', label: 'Pekerjaan (P)' },
   { value: 'B', label: 'BAST (B)' },
+  { value: 'SE', label: 'Settlement (SE)' },
   { value: 'C', label: 'Cancel (C)' }
 ]
 
@@ -24,6 +25,7 @@ const getStatusColor = (code) => {
     case 'S': return '#FFCCFF' // Pink
     case 'P': return '#CCFFFF' // Light Blue
     case 'B': return '#993399' // Purple
+    case 'SE': return '#0ea5e9' // Ocean Blue
     case 'W': return '#FFFF00' // Yellow (if used)
     case 'C': return '#FF0000' // Red
     default: return 'transparent'

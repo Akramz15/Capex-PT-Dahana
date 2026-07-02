@@ -98,7 +98,7 @@ export default function RKAPMasterPage({ tahun }) {
           return
         }
         const res = await createCapex(form)
-        capexId = res.id
+        capexId = res.data.id
       } else {
         await updateCapex(form.id, form)
       }
@@ -125,7 +125,14 @@ export default function RKAPMasterPage({ tahun }) {
       await fetchData()
       closeModal()
     } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menyimpan data.')
+      let msg = 'Gagal menyimpan data.'
+      const detail = e.response?.data?.detail
+      if (Array.isArray(detail)) {
+        msg = detail[0].msg
+      } else if (typeof detail === 'string') {
+        msg = detail
+      }
+      alert(msg)
     } finally {
       setSaving(false)
     }

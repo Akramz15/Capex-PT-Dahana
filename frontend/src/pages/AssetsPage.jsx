@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { listAssets, createAsset, updateAsset, deleteAsset, uploadAssetsExcel } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah, fmtShort } from '../utils'
-import { Pencil, Trash2, Plus, Upload } from 'lucide-react'
+import { Pencil, Trash2, Plus, Upload, Filter } from 'lucide-react'
 
 const EMPTY_FORM = {
   kajian_no: '', kajian_tanggal: '', kajian_perihal: '',
@@ -58,12 +58,19 @@ export default function AssetsPage() {
   const [saving,  setSaving]  = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
+  
+  const [startYear, setStartYear] = useState('')
+  const [endYear, setEndYear] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const res = await listAssets()
-      setData(res.data)
+      const mappedData = res.data.map(d => ({
+        ...d,
+        kajian_tahun: d.kajian_tanggal ? d.kajian_tanggal.substring(0, 4) : ''
+      }))
+      setData(mappedData)
     } finally {
       setLoading(false)
     }
@@ -183,14 +190,39 @@ export default function AssetsPage() {
         {loading ? <LoadingSpinner /> : (
           <ComplexDataTable
             columns={COLUMNS}
-            data={data}
+            data={tableData}
             onEdit={isAdmin ? openEdit : undefined}
             onDelete={isAdmin ? handleDelete : undefined}
             searchKeys={['no_po', 'asset_description', 'category', 'lokasi']}
             filterOptions={[
               { key: 'category', label: 'Kategori Aset' },
+              { key: 'kajian_tahun', label: 'Tahun Kajian' },
               { key: 'lokasi', label: 'Lokasi' }
             ]}
+            customToolbarContent={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--clr-text-muted)', fontWeight: 500, fontSize: '13.5px', whiteSpace: 'nowrap' }}>
+                  <Filter size={16} /> Lintas Tahun:
+                </div>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  style={{ width: '100px', padding: '6px 12px' }}
+                  placeholder="Mulai" 
+                  value={startYear} 
+                  onChange={(e) => setStartYear(e.target.value)}
+                />
+                <span style={{ color: 'var(--clr-text-muted)' }}>-</span>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  style={{ width: '100px', padding: '6px 12px' }}
+                  placeholder="Akhir" 
+                  value={endYear} 
+                  onChange={(e) => setEndYear(e.target.value)}
+                />
+              </div>
+            }
             renderFooter={renderFooter}
           />
         )}

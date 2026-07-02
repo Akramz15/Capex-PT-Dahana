@@ -13,6 +13,7 @@ export const exportDashboardSummaryYtd = (tahun, bulan) =>
 
 export const listCapex    = (params = {}) => client.get('/capex',       { params })
 export const getCapex     = (id)          => client.get(`/capex/${id}`)
+export const exportCapex  = (tahun)       => client.get('/export-capex', { params: { tahun }, responseType: 'blob' })
 export const createCapex  = (data)        => client.post('/capex',      data)
 export const updateCapex  = (id, data)    => client.put(`/capex/${id}`, data)
 export const deleteCapex  = (id)          => client.delete(`/capex/${id}`)

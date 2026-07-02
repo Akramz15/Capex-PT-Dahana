@@ -5,12 +5,13 @@ import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import BudgetVsRealizationChart from '../components/charts/BudgetVsRealizationChart'
+import CumulativeTrendChart from '../components/charts/CumulativeTrendChart'
 import StatusDistributionChart from '../components/charts/StatusDistributionChart'
 import SummaryYTDTable from '../components/ui/SummaryYTDTable'
 import DataTable from '../components/ui/DataTable'
 import Badge from '../components/ui/Badge'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
-import { BarChart2 } from 'lucide-react'
+import { BarChart2, TrendingUp } from 'lucide-react'
 import { Hourglass, Download, PieChart } from 'lucide-react'
 
 const COLUMNS = [
@@ -23,66 +24,63 @@ const COLUMNS = [
     render: (v) => <span className="rupiah">{fmtRupiah(v)}</span> },
   { key: 'persen_realisasi',  label: '% Realisasi', sortable: true,
     render: (v, row) => (
-      <div style={{ minWidth: 100 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
-          <span>{v}%</span>
-        </div>
-        <div className="progress-bar-wrap">
-          <div className="progress-bar-fill" style={{ width: `${Math.min(v, 100)}%` }} />
-        </div>
-      </div>
-    ) },
-  { key: 'statuses', label: 'Status', sortable: false,
-    render: (v) => v?.length ? v.map((s, i) => <Badge key={i} status={s} />) : <Badge status="Rencana" /> },
-  { key: 'pic',               label: 'PIC',         sortable: true },
+      <Badge color={v >= 100 ? 'success' : v >= 50 ? 'warning' : 'danger'}>
+        {v.toFixed(1)}%
+      </Badge>
+    ) 
+  }
 ]
 
 export default function DashboardPage({ tahun }) {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
 
-  const [summary,   setSummary]   = useState(null)
-  const [monthly,   setMonthly]   = useState([])
-  const [progress,  setProgress]  = useState([])
-  const [ytdData,   setYtdData]   = useState([])
-  const [ytdBulan,  setYtdBulan]  = useState(new Date().getMonth() + 1)
-  const [loading,   setLoading]   = useState(true)
+  const [summary, setSummary] = useState(null)
+  const [monthly, setMonthly] = useState([])
+  const [progress, setProgress] = useState([])
+  const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [exportingYtd, setExportingYtd] = useState(false)
 
-  const fetchData = useCallback(async () => {
+  // Chart configuration state
+  const [chartMode, setChartMode] = useState('bar')
+  const [chartRange, setChartRange] = useState(1) // 1=Bulanan, 3=Triwulan, 6=Semester, 12=Tahunan
+
+  const [ytdBulan, setYtdBulan] = useState(new Date().getMonth() + 1)
+  const [ytdData, setYtdData] = useState([])
+
+  const fetchDashboard = useCallback(async () => {
     setLoading(true)
     try {
-      const [s, m, p, y] = await Promise.all([
+      const [sumRes, monRes, progRes, ytdRes] = await Promise.all([
         getDashboardSummary(tahun),
         getMonthlyChart(tahun),
         getProgressTable(tahun),
         getDashboardSummaryYtd(tahun, ytdBulan)
       ])
-      setSummary(s.data)
-      setMonthly(m.data)
-      setProgress(p.data)
-      setYtdData(y.data)
+      setSummary(sumRes.data)
+      setMonthly(monRes.data)
+      setProgress(progRes.data)
+      setYtdData(ytdRes.data)
     } catch (e) {
       console.error(e)
     } finally {
       setLoading(false)
     }
-  }, [tahun])
-
-  useEffect(() => { fetchData() }, [fetchData])
+  }, [tahun, ytdBulan])
 
   const fetchYtdOnly = useCallback(async () => {
     try {
-      const res = await getDashboardSummaryYtd(tahun, ytdBulan)
-      setYtdData(res.data)
+      const ytdRes = await getDashboardSummaryYtd(tahun, ytdBulan)
+      setYtdData(ytdRes.data)
     } catch (e) {
       console.error(e)
     }
   }, [tahun, ytdBulan])
 
+  useEffect(() => { fetchDashboard() }, [fetchDashboard])
+
   useEffect(() => {
-    // Only fetch if not initially loading (to avoid double fetch)
     if (!loading) fetchYtdOnly()
   }, [ytdBulan]) // eslint-disable-line
 
@@ -164,11 +162,55 @@ export default function DashboardPage({ tahun }) {
 
       <div className="charts-grid">
         <div className="section" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="section-header">
-            <span className="section-title"><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Anggaran vs Realisasi per Bulan</span>
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="section-title">
+              {chartMode === 'bar' ? (
+                <><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Anggaran vs Realisasi</>
+              ) : (
+                <><TrendingUp size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Tren Kumulatif</>
+              )}
+            </span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {chartMode === 'line' && (
+                <select 
+                  className="form-select" 
+                  style={{ padding: '4px 8px', fontSize: '13px', minWidth: '110px' }}
+                  value={chartRange}
+                  onChange={(e) => setChartRange(Number(e.target.value))}
+                >
+                  <option value={1}>Per Bulan</option>
+                  <option value={3}>Triwulan (3 Bulan)</option>
+                  <option value={6}>Semester (6 Bulan)</option>
+                </select>
+              )}
+              <div style={{ display: 'flex', backgroundColor: 'var(--clr-background)', padding: '2px', borderRadius: '6px', border: '1px solid var(--clr-border)' }}>
+                <button 
+                  onClick={() => setChartMode('bar')}
+                  style={{ 
+                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer',
+                    backgroundColor: chartMode === 'bar' ? '#fff' : 'transparent',
+                    color: chartMode === 'bar' ? 'var(--clr-primary)' : 'var(--clr-text-secondary)',
+                    boxShadow: chartMode === 'bar' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                >Bar</button>
+                <button 
+                  onClick={() => setChartMode('line')}
+                  style={{ 
+                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer',
+                    backgroundColor: chartMode === 'line' ? '#fff' : 'transparent',
+                    color: chartMode === 'line' ? 'var(--clr-primary)' : 'var(--clr-text-secondary)',
+                    boxShadow: chartMode === 'line' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                >Tren (Line)</button>
+              </div>
+            </div>
           </div>
           <div className="section-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-            <BudgetVsRealizationChart data={monthly} />
+            {chartMode === 'bar' ? (
+              <BudgetVsRealizationChart data={monthly} />
+            ) : (
+              <CumulativeTrendChart data={monthly} range={chartRange} />
+            )}
           </div>
         </div>
 
