@@ -268,6 +268,16 @@ export default function AssetsPage() {
               <input id="f-tgl-po" type="date" className="form-input" value={form.tanggal_po} onChange={set('tanggal_po')} />
             </div>
           </div>
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-no-asset">No Asset</label>
+              <input id="f-no-asset" type="text" className="form-input" value={form.no_asset} onChange={set('no_asset')} />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-sub-number">Sub Number</label>
+              <input id="f-sub-number" type="text" className="form-input" value={form.sub_number} onChange={set('sub_number')} />
+            </div>
+          </div>
           <div className="form-group">
             <label className="form-label" htmlFor="f-desc">Deskripsi Aset <span className="required">*</span></label>
             <input id="f-desc" type="text" className="form-input" value={form.asset_description} onChange={set('asset_description')} />
@@ -287,7 +297,11 @@ export default function AssetsPage() {
               <input id="f-cap-on" type="date" className="form-input" value={form.capitalized_on} onChange={set('capitalized_on')} />
             </div>
           </div>
-          <div className="form-grid-2">
+          <div className="form-grid-3">
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-currency">Mata Uang</label>
+              <input id="f-currency" type="text" className="form-input" value={form.currency} onChange={set('currency')} />
+            </div>
             <div className="form-group">
               <label className="form-label" htmlFor="f-acquis">Nilai Perolehan (Rp)</label>
               <CurrencyInput id="f-acquis" className="form-input" value={form.acquis_val} onChange={set('acquis_val')} />
@@ -297,7 +311,11 @@ export default function AssetsPage() {
               <CurrencyInput id="f-dep" className="form-input" value={form.accum_dep} onChange={set('accum_dep')} />
             </div>
           </div>
-          <div className="form-grid-2">
+          <div className="form-grid-3">
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-loc-code">Kode Lokasi</label>
+              <input id="f-loc-code" type="text" className="form-input" value={form.location_code} onChange={set('location_code')} />
+            </div>
             <div className="form-group">
               <label className="form-label" htmlFor="f-lokasi">Lokasi</label>
               <input list="lok-options" id="f-lokasi" type="text" className="form-input" value={form.lokasi} onChange={set('lokasi')} placeholder="Pilih atau ketik Lokasi" />
