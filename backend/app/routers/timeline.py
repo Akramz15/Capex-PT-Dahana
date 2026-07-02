@@ -13,8 +13,8 @@ _TABLE = "capex_timeline"
 
 @router.get("", response_model=list[TimelineResponse])
 def list_timeline(
-    tahun: Optional[int] = Query(None),
-    capex_id: Optional[UUID] = Query(None),
+    tahun: Optional[int] = None,
+    capex_id: Optional[UUID] = None,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
@@ -25,9 +25,9 @@ def list_timeline(
         .order("bulan")
         .order("minggu")
     )
-    if tahun:
+    if tahun is not None and isinstance(tahun, int):
         query = query.eq("tahun", tahun)
-    if capex_id:
+    if capex_id is not None and isinstance(capex_id, (str, UUID)):
         query = query.eq("capex_id", str(capex_id))
 
     result = query.execute()

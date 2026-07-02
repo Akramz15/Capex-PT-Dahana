@@ -15,9 +15,9 @@ _TABLE = "capex_realization"
 
 @router.get("", response_model=list[RealizationResponse])
 def list_realization(
-    capex_id: Optional[UUID] = Query(None),
-    tahun: Optional[int] = Query(None),
-    bulan: Optional[int] = Query(None, ge=1, le=12),
+    capex_id: Optional[UUID] = None,
+    tahun: Optional[int] = None,
+    bulan: Optional[int] = None,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
@@ -27,11 +27,11 @@ def list_realization(
         .order("tahun")
         .order("bulan")
     )
-    if capex_id:
+    if capex_id is not None and isinstance(capex_id, (str, UUID)):
         query = query.eq("capex_id", str(capex_id))
-    if tahun:
+    if tahun is not None and isinstance(tahun, int):
         query = query.eq("tahun", tahun)
-    if bulan:
+    if bulan is not None and isinstance(bulan, int):
         query = query.eq("bulan", bulan)
 
     result = query.execute()

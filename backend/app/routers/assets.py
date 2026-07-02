@@ -15,19 +15,19 @@ _TABLE = "capex_assets"
 
 @router.get("", response_model=list[AssetResponse])
 def list_assets(
-    category: Optional[str] = Query(None, description="Filter kategori aset"),
-    lokasi: Optional[str] = Query(None, description="Filter lokasi aset"),
-    search: Optional[str] = Query(None, description="Cari berdasarkan deskripsi aset"),
+    category: Optional[str] = None,
+    lokasi: Optional[str] = None,
+    search: Optional[str] = None,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
     query = client.table(_TABLE).select("*").order("tanggal_po", desc=True)
 
-    if category:
+    if category is not None and isinstance(category, str):
         query = query.eq("category", category)
-    if lokasi:
+    if lokasi is not None and isinstance(lokasi, str):
         query = query.ilike("lokasi", f"%{lokasi}%")
-    if search:
+    if search is not None and isinstance(search, str):
         query = query.ilike("asset_description", f"%{search}%")
 
     result = query.execute()

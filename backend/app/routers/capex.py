@@ -13,16 +13,16 @@ _TABLE = "capex_master"
 
 @router.get("", response_model=list[CapexMasterResponse])
 def list_capex(
-    tahun: Optional[int] = Query(None, description="Filter berdasarkan tahun"),
-    kategori: Optional[str] = Query(None, description="Filter berdasarkan kategori"),
+    tahun: Optional[int] = None,
+    kategori: Optional[str] = None,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
     query = client.table(_TABLE).select("*").order("tahun").order("kode")
 
-    if tahun:
+    if tahun is not None and isinstance(tahun, int):
         query = query.eq("tahun", tahun)
-    if kategori:
+    if kategori is not None and isinstance(kategori, str):
         query = query.eq("kategori", kategori)
 
     result = query.execute()

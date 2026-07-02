@@ -13,16 +13,16 @@ _TABLE = "capex_lku"
 
 @router.get("", response_model=list[LKUResponse])
 def list_lku(
-    tahun: Optional[int] = Query(None),
-    departemen: Optional[str] = Query(None),
+    tahun: Optional[int] = None,
+    departemen: Optional[str] = None,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
     query = client.table(_TABLE).select("*").order("tahun").order("departemen")
 
-    if tahun:
+    if tahun is not None and isinstance(tahun, int):
         query = query.eq("tahun", tahun)
-    if departemen:
+    if departemen is not None and isinstance(departemen, str):
         query = query.ilike("departemen", f"%{departemen}%")
 
     result = query.execute()
