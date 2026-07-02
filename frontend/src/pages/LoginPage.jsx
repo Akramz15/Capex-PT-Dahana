@@ -23,7 +23,12 @@ export default function LoginPage() {
       setAuth(res.data.user, res.data.access_token)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.detail ?? 'Terjadi kesalahan. Coba lagi.')
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setError(detail[0].msg)
+      } else {
+        setError(detail ?? 'Email atau password salah. Coba lagi.')
+      }
     } finally {
       setLoading(false)
     }
