@@ -97,9 +97,8 @@ def update_capex(
 ):
     client = get_supabase_admin()
 
-    # 1. Cek apakah ada perubahan pada anggaran_rkap
+    # 1. Cek apakah ada perubahan pada anggaran_rkap saat RKAP dikunci
     if payload.anggaran_rkap is not None:
-        # Cek tahun capex ini
         existing = client.table(_TABLE).select("tahun").eq("id", str(capex_id)).single().execute()
         if existing.data:
             tahun = existing.data["tahun"]
@@ -109,6 +108,25 @@ def update_capex(
                     status_code=400, 
                     detail="Tahun RKAP ini sudah dikunci! Anda tidak bisa mengubah Anggaran RKAP awal. Silakan Buka Kunci (Unlock) terlebih dahulu jika memang ada salah ketik."
                 )
+
+    # 2. Penyesuaian anggaran sumber jika anggaran_perubahan diubah pada item pergeseran
+    if payload.anggaran_perubahan is not None:
+        existing_full = client.table(_TABLE).select("source_capex_id, anggaran_perubahan").eq("id", str(capex_id)).execute()
+        if existing_full.data:
+            item_data = existing_full.data[0]
+            source_id = item_data.get("source_capex_id")
+            old_amount = item_data.get("anggaran_perubahan") or 0
+            new_amount = payload.anggaran_perubahan
+            delta = new_amount - old_amount
+            
+            if source_id and delta != 0:
+                source_res = client.table(_TABLE).select("anggaran_perubahan").eq("id", str(source_id)).execute()
+                if source_res.data:
+                    current_source = source_res.data[0].get("anggaran_perubahan") or 0
+                    if delta > 0 and current_source < delta:
+                        raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi untuk penambahan pergeseran ini.")
+                    
+                    client.table(_TABLE).update({"anggaran_perubahan": current_source - delta}).eq("id", str(source_id)).execute()
 
     update_data = payload.model_dump(exclude_none=True)
     if not update_data:
@@ -126,6 +144,23 @@ def delete_capex(
     _admin: dict = Depends(require_admin),
 ):
     client = get_supabase_admin()
-    result = client.table(_TABLE).delete().eq("id", str(capex_id)).execute()
-    if not result.data:
+    
+    # 1. Ambil data item yang akan dihapus
+    existing = client.table(_TABLE).select("source_capex_id, anggaran_perubahan").eq("id", str(capex_id)).execute()
+    if not existing.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data Capex tidak ditemukan.")
+    
+    item = existing.data[0]
+    source_id = item.get("source_capex_id")
+    refund_amount = item.get("anggaran_perubahan") or 0
+    
+    # 2. Jika item berasal dari pergeseran dana, kembalikan saldonya ke sumber
+    if source_id and refund_amount > 0:
+        source_res = client.table(_TABLE).select("anggaran_perubahan").eq("id", str(source_id)).execute()
+        if source_res.data:
+            current_source_budget = source_res.data[0].get("anggaran_perubahan") or 0
+            new_source_budget = current_source_budget + refund_amount
+            client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", str(source_id)).execute()
+            
+    # 3. Hapus data capex
+    client.table(_TABLE).delete().eq("id", str(capex_id)).execute()
