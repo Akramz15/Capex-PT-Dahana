@@ -246,15 +246,15 @@ export default function AssetsPage() {
         >
           <div className="form-grid-3">
             <div className="form-group">
-              <label className="form-label" htmlFor="f-kajian-no">Kajian No</label>
+              <label className="form-label" htmlFor="f-kajian-no">Kajian Investasi No</label>
               <input id="f-kajian-no" type="text" className="form-input" value={form.kajian_no} onChange={set('kajian_no')} />
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-kajian-tgl">Kajian Tanggal</label>
+              <label className="form-label" htmlFor="f-kajian-tgl">Kajian Investasi Tanggal</label>
               <input id="f-kajian-tgl" type="date" className="form-input" value={form.kajian_tanggal} onChange={set('kajian_tanggal')} />
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-kajian-per">Kajian Perihal</label>
+              <label className="form-label" htmlFor="f-kajian-per">Kajian Investasi Perihal</label>
               <input id="f-kajian-per" type="text" className="form-input" value={form.kajian_perihal} onChange={set('kajian_perihal')} />
             </div>
           </div>
@@ -278,13 +278,9 @@ export default function AssetsPage() {
               <input id="f-sub-number" type="text" className="form-input" value={form.sub_number} onChange={set('sub_number')} />
             </div>
           </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="f-desc">Deskripsi Aset <span className="required">*</span></label>
-            <input id="f-desc" type="text" className="form-input" value={form.asset_description} onChange={set('asset_description')} />
-          </div>
           <div className="form-grid-2">
             <div className="form-group">
-              <label className="form-label" htmlFor="f-cat">Kategori</label>
+              <label className="form-label" htmlFor="f-cat">Category</label>
               <input list="cat-options" id="f-cat" type="text" className="form-input" value={form.category} onChange={set('category')} placeholder="Pilih atau ketik Kategori" />
               <datalist id="cat-options">
                 {Array.from(new Set(data.map(d => d.category).filter(Boolean))).sort().map(c => (
@@ -293,31 +289,35 @@ export default function AssetsPage() {
               </datalist>
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-cap-on">Kapitalisasi</label>
+              <label className="form-label" htmlFor="f-cap-on">Capitalized on</label>
               <input id="f-cap-on" type="date" className="form-input" value={form.capitalized_on} onChange={set('capitalized_on')} />
             </div>
           </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="f-desc">Asset description <span className="required">*</span></label>
+            <input id="f-desc" type="text" className="form-input" value={form.asset_description} onChange={set('asset_description')} />
+          </div>
           <div className="form-grid-3">
             <div className="form-group">
-              <label className="form-label" htmlFor="f-currency">Mata Uang</label>
+              <label className="form-label" htmlFor="f-currency">Currency</label>
               <input id="f-currency" type="text" className="form-input" value={form.currency} onChange={set('currency')} />
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-acquis">Nilai Perolehan (Rp)</label>
+              <label className="form-label" htmlFor="f-acquis">Acquis.val.</label>
               <CurrencyInput id="f-acquis" className="form-input" value={form.acquis_val} onChange={set('acquis_val')} />
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-dep">Akumulasi Depresiasi (Rp)</label>
+              <label className="form-label" htmlFor="f-dep">Accum.dep.</label>
               <CurrencyInput id="f-dep" className="form-input" value={form.accum_dep} onChange={set('accum_dep')} />
             </div>
           </div>
           <div className="form-grid-3">
             <div className="form-group">
-              <label className="form-label" htmlFor="f-loc-code">Kode Lokasi</label>
+              <label className="form-label" htmlFor="f-loc-code">Location Code</label>
               <input id="f-loc-code" type="text" className="form-input" value={form.location_code} onChange={set('location_code')} />
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-lokasi">Lokasi</label>
+              <label className="form-label" htmlFor="f-lokasi">Location Name</label>
               <input list="lok-options" id="f-lokasi" type="text" className="form-input" value={form.lokasi} onChange={set('lokasi')} placeholder="Pilih atau ketik Lokasi" />
               <datalist id="lok-options">
                 {Array.from(new Set(data.map(d => d.lokasi).filter(Boolean))).sort().map(l => (
@@ -326,7 +326,7 @@ export default function AssetsPage() {
               </datalist>
             </div>
             <div className="form-group">
-              <label className="form-label" htmlFor="f-room">Ruangan</label>
+              <label className="form-label" htmlFor="f-room">Room</label>
               <input id="f-room" type="text" className="form-input" value={form.room} onChange={set('room')} />
             </div>
           </div>
