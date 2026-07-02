@@ -172,9 +172,10 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
           )}
         </div>
       )}
-      <div className="table-container" style={{ overflowX: 'auto', position: 'relative', backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
-        <table className="data-table" style={{ minWidth: 'max-content' }}>
-        <thead>
+      <div className="table-card" style={{ backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
+        <div className="table-scroll" style={{ overflowX: 'auto', position: 'relative' }}>
+          <table className="data-table" style={{ minWidth: 'max-content', width: '100%' }}>
+          <thead>
           {headerRows.map((row, rowIndex) => (
             <tr key={`header-row-${rowIndex}`}>
               {row.map((col, colIndex) => (
@@ -190,7 +191,8 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                     zIndex: col.sticky ? 10 : 'auto',
                     backgroundColor: col.sticky ? 'var(--clr-surface)' : 'inherit',
                     width: col.width || 'auto',
-                    minWidth: col.width || 'auto'
+                    minWidth: col.width || 'auto',
+                    maxWidth: col.width || 'none'
                   }}
                 >
                   {col.header}
@@ -228,7 +230,10 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                       position: col.sticky ? 'sticky' : 'static',
                       left: col.stickyLeft || 'auto',
                       zIndex: col.sticky ? 5 : 'auto',
-                      backgroundColor: col.sticky ? 'var(--clr-surface)' : 'inherit'
+                      backgroundColor: col.sticky ? 'var(--clr-surface)' : 'inherit',
+                      width: col.width || 'auto',
+                      minWidth: col.width || 'auto',
+                      maxWidth: col.width || 'none'
                     }}
                   >
                     {col.render ? col.render(row, rowIndex) : row[col.accessor]}
@@ -283,6 +288,7 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
         </tbody>
         {renderFooter && <tfoot>{renderFooter(filteredData)}</tfoot>}
         </table>
+        </div>
       </div>
     </div>
   );
