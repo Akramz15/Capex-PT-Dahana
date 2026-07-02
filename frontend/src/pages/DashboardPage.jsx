@@ -4,6 +4,7 @@ import { exportCapex } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { useDialog } from '../contexts/DialogContext'
 import BudgetVsRealizationChart from '../components/charts/BudgetVsRealizationChart'
 import CumulativeTrendChart from '../components/charts/CumulativeTrendChart'
 import StatusDistributionChart from '../components/charts/StatusDistributionChart'
@@ -32,6 +33,7 @@ const COLUMNS = [
 ]
 
 export default function DashboardPage({ tahun }) {
+  const dialog = useDialog()
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
 
@@ -90,7 +92,7 @@ export default function DashboardPage({ tahun }) {
       const res = await exportCapex(tahun)
       downloadBlob(res.data, `Monitoring_Capex_PT_Dahana_${tahun}.xlsx`)
     } catch {
-      alert('Gagal mengekspor laporan. Coba lagi.')
+      dialog.alert({ title: 'Error', message: 'Gagal mengekspor laporan. Coba lagi.', variant: 'danger' })
     } finally {
       setExporting(false)
     }
@@ -102,7 +104,7 @@ export default function DashboardPage({ tahun }) {
       const res = await exportDashboardSummaryYtd(tahun, ytdBulan)
       downloadBlob(res.data, `Ringkasan_YTD_${tahun}_${ytdBulan}.xlsx`)
     } catch {
-      alert('Gagal mengekspor Ringkasan YTD. Coba lagi.')
+      dialog.alert({ title: 'Error', message: 'Gagal mengekspor Ringkasan YTD. Coba lagi.', variant: 'danger' })
     } finally {
       setExportingYtd(false)
     }

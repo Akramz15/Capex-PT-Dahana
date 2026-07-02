@@ -6,6 +6,7 @@ import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import { useDialog } from '../contexts/DialogContext'
 import { fmtRupiah, fmtShort } from '../utils'
 
 import { getRkapLockStatus, setRkapLockStatus } from '../api/settings'
@@ -16,6 +17,7 @@ const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', '
 
 export default function RKAPMasterPage({ tahun }) {
   const user    = useAuthStore((s) => s.user)
+  const dialog  = useDialog()
   const isAdmin = user?.role === 'admin'
 
   const [data,    setData]    = useState([])
@@ -74,17 +76,24 @@ export default function RKAPMasterPage({ tahun }) {
   }
   const closeModal = () => { setModal(null); setForm(EMPTY_FORM) }
 
-  const handleToggleLock = async () => {
-    if (!window.confirm(`Anda yakin ingin ${isLocked ? 'MEMBUKA KUNCI' : 'MENGUNCI'} RKAP tahun ${tahun}?`)) return
-    try {
-      setLoading(true)
-      await setRkapLockStatus(tahun, !isLocked)
-      await fetchData()
-    } catch (e) {
-      alert('Gagal mengubah status kunci RKAP.')
-    } finally {
-      setLoading(false)
-    }
+  const handleToggleLock = () => {
+    dialog.confirm({
+      title: 'Konfirmasi',
+      message: `Anda yakin ingin ${isLocked ? 'MEMBUKA KUNCI' : 'MENGUNCI'} RKAP tahun ${tahun}?`,
+      confirmText: isLocked ? 'Buka Kunci' : 'Kunci',
+      variant: isLocked ? 'primary' : 'warning',
+      onConfirm: async () => {
+        try {
+          setLoading(true)
+          await setRkapLockStatus(tahun, !isLocked)
+          await fetchData()
+        } catch (e) {
+          dialog.alert({ title: 'Error', message: 'Gagal mengubah status kunci RKAP.', variant: 'danger' })
+        } finally {
+          setLoading(false)
+        }
+      }
+    })
   }
 
   const handleSave = async () => {
@@ -93,7 +102,7 @@ export default function RKAPMasterPage({ tahun }) {
       let capexId = form.id
       if (modal === 'create') {
         if (isLocked && !form.source_capex_id) {
-          alert('Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana (Capex Lama) untuk pergeseran anggaran.')
+          dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana (Capex Lama) untuk pergeseran anggaran.', variant: 'warning' })
           setSaving(false)
           return
         }
@@ -132,20 +141,27 @@ export default function RKAPMasterPage({ tahun }) {
       } else if (typeof detail === 'string') {
         msg = detail
       }
-      alert(msg)
+      dialog.alert({ title: 'Error', message: msg, variant: 'danger' })
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDelete = async (row) => {
-    if (!window.confirm(`Hapus "${row.daftar_capex}"?`)) return
-    try {
-      await deleteCapex(row.id)
-      await fetchData()
-    } catch {
-      alert('Gagal menghapus data.')
-    }
+  const handleDelete = (row) => {
+    dialog.confirm({
+      title: 'Konfirmasi Hapus',
+      message: `Hapus "${row.daftar_capex}"?`,
+      confirmText: 'Hapus',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteCapex(row.id)
+          await fetchData()
+        } catch {
+          dialog.alert({ title: 'Error', message: 'Gagal menghapus data.', variant: 'danger' })
+        }
+      }
+    })
   }
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))

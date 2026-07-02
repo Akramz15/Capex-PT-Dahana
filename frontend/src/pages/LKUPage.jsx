@@ -3,6 +3,7 @@ import { listLKU, listCapex, createLKU, updateLKU, deleteLKU } from '../api/cape
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
+import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah } from '../utils'
@@ -17,6 +18,7 @@ const EMPTY_FORM = {
 
 export default function LKUPage({ tahun }) {
   const user = useAuthStore((s) => s.user)
+  const dialog = useDialog()
   const isAdmin = user?.role === 'admin'
 
   const [data, setData] = useState([])
@@ -59,18 +61,27 @@ export default function LKUPage({ tahun }) {
       await fetchData()
       closeModal()
     } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menyimpan data.')
+      dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDelete = async (row) => {
-    if (!window.confirm('Hapus data LKU ini?')) return
-    try {
-      await deleteLKU(row.id)
-      setData((p) => p.filter((r) => r.id !== row.id))
-    } catch { alert('Gagal menghapus.') }
+  const handleDelete = (row) => {
+    dialog.confirm({
+      title: 'Konfirmasi Hapus',
+      message: 'Hapus data LKU ini?',
+      confirmText: 'Hapus',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteLKU(row.id)
+          setData((p) => p.filter((r) => r.id !== row.id))
+        } catch { 
+          dialog.alert({ title: 'Error', message: 'Gagal menghapus.', variant: 'danger' })
+        }
+      }
+    })
   }
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))

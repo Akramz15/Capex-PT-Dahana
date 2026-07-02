@@ -1,3 +1,5 @@
+import { DialogProvider } from "./contexts/DialogContext"
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/layout/Layout'
@@ -45,10 +47,13 @@ function AppRoutes() {
   )
 }
 
+
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <DialogProvider>
+        <AppRoutes />
+      </DialogProvider>
     </BrowserRouter>
   )
 }

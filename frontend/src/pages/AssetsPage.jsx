@@ -3,6 +3,7 @@ import { listAssets, createAsset, updateAsset, deleteAsset, uploadAssetsExcel } 
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
+import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah, fmtShort } from '../utils'
@@ -49,6 +50,7 @@ const COLUMNS = [
 
 export default function AssetsPage() {
   const user    = useAuthStore((s) => s.user)
+  const dialog = useDialog()
   const isAdmin = user?.role === 'admin'
 
   const [data,    setData]    = useState([])
@@ -98,18 +100,27 @@ export default function AssetsPage() {
       await fetchData()
       closeModal()
     } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menyimpan.')
+      dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan.', variant: 'danger' })
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDelete = async (row) => {
-    if (!window.confirm(`Hapus aset "${row.asset_description}"?`)) return
-    try {
-      await deleteAsset(row.id)
-      setData((p) => p.filter((r) => r.id !== row.id))
-    } catch { alert('Gagal menghapus.') }
+  const handleDelete = (row) => {
+    dialog.confirm({
+      title: 'Konfirmasi Hapus',
+      message: `Hapus aset "${row.asset_description}"?`,
+      confirmText: 'Hapus',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteAsset(row.id)
+          setData((p) => p.filter((r) => r.id !== row.id))
+        } catch { 
+          dialog.alert({ title: 'Error', message: 'Gagal menghapus.', variant: 'danger' })
+        }
+      }
+    })
   }
 
   const handleUploadClick = () => {
@@ -120,24 +131,30 @@ export default function AssetsPage() {
     const file = e.target.files?.[0]
     if (!file) return
     
-    if (!window.confirm(`PERINGATAN: Mengunggah Excel akan MENGHAPUS SEMUA DATA ASET LAMA dan menggantinya dengan data dari file "${file.name}". Lanjutkan?`)) {
-      e.target.value = ''
-      return
-    }
-
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await uploadAssetsExcel(formData)
-      alert(res.data.message)
-      await fetchData()
-    } catch (err) {
-      alert(err.response?.data?.detail ?? 'Gagal mengunggah file excel.')
-    } finally {
-      setUploading(false)
-      e.target.value = ''
-    }
+    dialog.confirm({
+      title: 'Peringatan Unggah',
+      message: `Mengunggah Excel akan MENGHAPUS SEMUA DATA ASET LAMA dan menggantinya dengan data dari file "${file.name}". Lanjutkan?`,
+      confirmText: 'Unggah',
+      variant: 'danger',
+      onConfirm: async () => {
+        setUploading(true)
+        try {
+          const formData = new FormData()
+          formData.append('file', file)
+          const res = await uploadAssetsExcel(formData)
+          dialog.alert({ title: 'Sukses', message: res.data.message, variant: 'success' })
+          await fetchData()
+        } catch (err) {
+          dialog.alert({ title: 'Error', message: err.response?.data?.detail ?? 'Gagal mengunggah file excel.', variant: 'danger' })
+        } finally {
+          setUploading(false)
+          e.target.value = ''
+        }
+      },
+      onCancel: () => {
+        e.target.value = ''
+      }
+    })
   }
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))

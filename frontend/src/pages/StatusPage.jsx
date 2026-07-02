@@ -3,6 +3,7 @@ import { listStatus, listCapex, createStatus, updateStatus, deleteStatus } from 
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
+import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah } from '../utils'
@@ -12,6 +13,7 @@ const EMPTY_FORM = { capex_id: '', tahun: 2026, status_type: 'PO', anggaran_rkap
 
 export default function StatusPage({ tahun }) {
   const user = useAuthStore((s) => s.user)
+  const dialog = useDialog()
   const isAdmin = user?.role === 'admin'
 
   const [activeTab, setActiveTab] = useState('PO')
@@ -73,18 +75,27 @@ export default function StatusPage({ tahun }) {
       await fetchData()
       closeModal()
     } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menyimpan data.')
+      dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDelete = async (row) => {
-    if (!window.confirm('Hapus data status ini?')) return
-    try {
-      await deleteStatus(row.id)
-      setData((p) => p.filter((r) => r.id !== row.id))
-    } catch { alert('Gagal menghapus.') }
+  const handleDelete = (row) => {
+    dialog.confirm({
+      title: 'Konfirmasi Hapus',
+      message: 'Hapus data status ini?',
+      confirmText: 'Hapus',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteStatus(row.id)
+          setData((p) => p.filter((r) => r.id !== row.id))
+        } catch { 
+          dialog.alert({ title: 'Error', message: 'Gagal menghapus.', variant: 'danger' })
+        }
+      }
+    })
   }
 
   const setF = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))

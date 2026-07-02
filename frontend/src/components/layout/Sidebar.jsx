@@ -1,8 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { logout as apiLogout } from '../../api/auth'
-import { LayoutDashboard, ClipboardList, TrendingUp, FolderGit2, Activity, CalendarClock, Box } from 'lucide-react'
-import { Calendar, Factory, Briefcase, Key, Eye } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Key, Eye } from 'lucide-react'
+import { useDialog } from '../../contexts/DialogContext'
 
 import logoUrl from '../../assets/MONITORING CAPEX.png'
 
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+  const dialog = useDialog()
 
   const handleLogout = async () => {
     try { await apiLogout() } catch { /* ignore */ }
@@ -60,9 +61,13 @@ export default function Sidebar() {
           <button
             className="sidebar-logout"
             onClick={() => {
-              if (window.confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
-                handleLogout()
-              }
+              dialog.confirm({
+                title: 'Konfirmasi Logout',
+                message: 'Apakah Anda yakin ingin keluar dari sistem?',
+                confirmText: 'Keluar',
+                variant: 'danger',
+                onConfirm: handleLogout
+              });
             }}
             title="Keluar"
             aria-label="Logout"

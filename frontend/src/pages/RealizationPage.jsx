@@ -3,6 +3,7 @@ import { listRealization, listCapex, createRealizationBulk, deleteRealization } 
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
+import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
@@ -23,6 +24,7 @@ const EMPTY_FORM = {
 export default function RealizationPage({ tahun }) {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+  const dialog = useDialog()
 
   const [data, setData] = useState([])
   const [capexList, setCapexList] = useState([])
@@ -102,20 +104,27 @@ export default function RealizationPage({ tahun }) {
     setModal(true)
   }
 
-  const handleDelete = async (row) => {
-    if (!confirm(`Hapus semua data realisasi bulan 1-12 untuk "${row.daftar_capex}"?`)) return
-    try {
-      setLoading(true)
-      for (const item of row.items_raw) {
-        if (item.id) {
-          await deleteRealization(item.id)
+  const handleDelete = (row) => {
+    dialog.confirm({
+      title: 'Konfirmasi Hapus',
+      message: `Hapus semua data realisasi bulan 1-12 untuk "${row.daftar_capex}"?`,
+      confirmText: 'Hapus',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setLoading(true)
+          for (const item of row.items_raw) {
+            if (item.id) {
+              await deleteRealization(item.id)
+            }
+          }
+          await fetchData()
+        } catch (e) {
+          dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menghapus data realisasi.', variant: 'danger' })
+          setLoading(false)
         }
       }
-      await fetchData()
-    } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menghapus data realisasi.')
-      setLoading(false)
-    }
+    })
   }
   
   const closeModal = () => { setModal(false); setForm(EMPTY_FORM) }
@@ -147,7 +156,7 @@ export default function RealizationPage({ tahun }) {
       await fetchData()
       closeModal()
     } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menyimpan data.')
+      dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {
       setSaving(false)
     }

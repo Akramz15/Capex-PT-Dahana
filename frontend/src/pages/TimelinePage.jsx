@@ -3,6 +3,7 @@ import { listTimeline, listCapex, createTimelineBulk } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
+import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah } from '../utils'
 
@@ -36,6 +37,7 @@ const EMPTY_FORM = { capex_id: '', bulan_awal: 1, minggu_awal: 1, bulan_akhir: 1
 
 export default function TimelinePage({ tahun }) {
   const user = useAuthStore((s) => s.user)
+  const dialog = useDialog()
   const isAdmin = user?.role === 'admin'
 
   const [data, setData] = useState([])
@@ -102,7 +104,8 @@ export default function TimelinePage({ tahun }) {
       const m_end = Number(minggu_akhir)
       
       if (b_start > b_end || (b_start === b_end && m_start > m_end)) {
-        alert("Bulan/Minggu awal tidak boleh lebih besar dari akhir.")
+        dialog.alert({ title: 'Peringatan', message: 'Bulan/Minggu awal tidak boleh lebih besar dari akhir.', variant: 'warning' })
+        setSaving(false)
         return
       }
 
@@ -131,7 +134,7 @@ export default function TimelinePage({ tahun }) {
       await fetchData()
       closeModal()
     } catch (e) {
-      alert(e.response?.data?.detail ?? 'Gagal menyimpan data.')
+      dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {
       setSaving(false)
     }

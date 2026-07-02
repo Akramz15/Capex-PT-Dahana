@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
+import { useDialog } from '../../contexts/DialogContext'
 
 export default function Modal({ title, onClose, onSubmit, submitLabel = 'Simpan', submitLoading = false, width, children }) {
+  const dialog = useDialog()
+
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
@@ -19,9 +22,13 @@ export default function Modal({ title, onClose, onSubmit, submitLabel = 'Simpan'
           <div className="modal-footer">
             <button className="btn btn-outline" onClick={onClose} disabled={submitLoading}>Batal</button>
             <button className="btn btn-primary" onClick={() => {
-              if (window.confirm('Apakah Anda yakin ingin menyimpan data ini?')) {
-                onSubmit()
-              }
+              dialog.confirm({
+                title: 'Konfirmasi Simpan',
+                message: 'Apakah Anda yakin ingin menyimpan data ini?',
+                confirmText: 'Simpan',
+                variant: 'primary',
+                onConfirm: onSubmit
+              });
             }} disabled={submitLoading} id="modal-submit-btn">
               {submitLoading ? 'Menyimpan...' : submitLabel}
             </button>
