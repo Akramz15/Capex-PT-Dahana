@@ -184,7 +184,7 @@ export default function AssetsPage() {
               ref={fileInputRef} 
               onChange={handleFileChange} 
             />
-            <button className="btn btn-secondary" onClick={handleUploadClick} disabled={uploading}>
+            <button className="btn btn-success" onClick={handleUploadClick} disabled={uploading}>
               <Upload size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
               {uploading ? 'Mengunggah...' : 'Upload Excel'}
             </button>
