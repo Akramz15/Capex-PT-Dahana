@@ -8,7 +8,7 @@ from ..services.export_engine import generate_export
 router = APIRouter(prefix="/export-capex", tags=["Export"])
 
 
-@router.post("")
+@router.get("")
 def export_capex_excel(
     tahun: int = Query(..., ge=2020, le=2099, description="Tahun anggaran yang akan diekspor"),
     _admin: dict = Depends(require_admin),

@@ -48,7 +48,7 @@ export const updateLKU = (id, data)    => client.put(`/lku/${id}`, data)
 export const deleteLKU = (id)          => client.delete(`/lku/${id}`)
 
 export const exportCapex = (tahun) =>
-  client.post('/export-capex', null, {
+  client.get('/export-capex', {
     params: { tahun },
     responseType: 'blob',
   })

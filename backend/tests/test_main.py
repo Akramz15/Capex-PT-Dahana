@@ -39,5 +39,6 @@ def test_export_requires_admin(mock_settings):
     with patch("app.core.database.get_supabase"), patch("app.core.database.get_supabase_admin"):
         from main import app
         client = TestClient(app)
-        response = client.post("/api/export-capex?tahun=2026")
+        # Admin export capex
+        response = client.get("/api/export-capex?tahun=2026")
         assert response.status_code == 403
