@@ -115,41 +115,48 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
   return (
     <div>
       {(searchKeys.length > 0 || filterOptions.length > 0 || customToolbarContent) && (
-        <div className="table-toolbar" style={{ marginBottom: '16px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
-          {/* Left side: Smart Filters or Custom */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', flex: '1 1 auto', alignItems: 'center' }}>
-            {customToolbarContent}
-            {filterOptions.length > 0 && (
+        <div className="table-toolbar" style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
+          
+          {/* Row 1: Custom Content (Legend, etc) */}
+          {customToolbarContent && (
+            <div style={{ width: '100%' }}>
+              {customToolbarContent}
+            </div>
+          )}
+
+          {/* Row 2: Built-in Filters */}
+          {filterOptions.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--clr-text-muted)', fontWeight: 500, fontSize: '13.5px', whiteSpace: 'nowrap' }}>
                 <Filter size={16} /> Filter:
               </div>
-            )}
-            {filterOptions.map(fo => (
-              <select
-                key={`filter-${fo.key}`}
-                className="form-select"
-                style={{ 
-                  flex: '1 1 180px', 
-                  maxWidth: '260px', 
-                  padding: '8px 32px 8px 12px', 
-                  borderRadius: '6px', 
-                  backgroundColor: '#fff',
-                  textOverflow: 'ellipsis' 
-                }}
-                value={activeFilters[fo.key] || ''}
-                onChange={(e) => setActiveFilters(prev => ({ ...prev, [fo.key]: e.target.value }))}
-              >
-                <option value="">Semua {fo.label}</option>
-                {derivedFilterOptions[fo.key]?.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            ))}
-          </div>
+              {filterOptions.map(fo => (
+                <select
+                  key={`filter-${fo.key}`}
+                  className="form-select"
+                  style={{ 
+                    flex: '1 1 180px', 
+                    maxWidth: '260px', 
+                    padding: '8px 32px 8px 12px', 
+                    borderRadius: '6px', 
+                    backgroundColor: '#fff',
+                    textOverflow: 'ellipsis' 
+                  }}
+                  value={activeFilters[fo.key] || ''}
+                  onChange={(e) => setActiveFilters(prev => ({ ...prev, [fo.key]: e.target.value }))}
+                >
+                  <option value="">Semua {fo.label}</option>
+                  {derivedFilterOptions[fo.key]?.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ))}
+            </div>
+          )}
 
-          {/* Right side: Search */}
+          {/* Row 3: Search */}
           {searchKeys.length > 0 && (
-            <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: '320px' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '100%' }}>
               <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--clr-text-muted)' }}>
                 <Search size={16} />
               </div>
