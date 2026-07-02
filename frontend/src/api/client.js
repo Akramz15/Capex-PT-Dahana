@@ -15,7 +15,8 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only auto-logout on 401 for non-blob requests (not during file downloads)
+    if (error.response?.status === 401 && error.config?.responseType !== 'blob') {
       useAuthStore.getState().logout()
     }
     return Promise.reject(error)

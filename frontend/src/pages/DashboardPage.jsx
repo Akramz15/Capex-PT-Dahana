@@ -92,17 +92,26 @@ export default function DashboardPage({ tahun }) {
       const res = await exportCapex(tahun)
       downloadBlob(res.data, `Monitoring_Capex_PT_Dahana_${tahun}.xlsx`)
     } catch (e) {
-      let msg = e.message || 'Error unknown'
-      if (e.response?.data instanceof Blob) {
+      let msg = 'Terjadi kesalahan yang tidak diketahui.'
+
+      if (!e.response) {
+        // Network error — backend tidak bisa dihubungi
+        msg = 'Server backend tidak dapat dihubungi. Pastikan backend sudah berjalan di port 8000.'
+      } else if (e.response.status === 401) {
+        msg = 'Sesi login telah berakhir. Silakan login ulang.'
+      } else if (e.response.status === 403) {
+        msg = 'Akses ditolak. Hanya Admin yang dapat mengunduh laporan.'
+      } else if (e.response?.data instanceof Blob) {
         try {
           const text = await e.response.data.text()
           const json = JSON.parse(text)
           msg = json.detail || msg
-        } catch {}
-      } else if (e.response?.data?.detail) {
-        msg = e.response.data.detail
+        } catch { msg = `Server error (${e.response.status})` }
+      } else {
+        msg = e.response?.data?.detail || e.message || msg
       }
-      dialog.alert({ title: 'Error', message: `Gagal mengekspor laporan: ${msg}`, variant: 'danger' })
+
+      dialog.alert({ title: 'Gagal Mengunduh Laporan', message: msg, variant: 'danger' })
     } finally {
       setExporting(false)
     }

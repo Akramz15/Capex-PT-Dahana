@@ -51,4 +51,5 @@ export const exportCapex = (tahun) =>
   client.get('/export-capex', {
     params: { tahun },
     responseType: 'blob',
+    timeout: 60000, // 60 detik untuk operasi berat
   })
