@@ -18,7 +18,7 @@ export default function Header({ currentPath, tahun, onTahunChange }) {
       </div>
 
       <div className="header-right">
-        {currentPath !== '/aset' && (
+        {!currentPath.startsWith('/aset') && (
           <select
             className="header-year-select"
             value={tahun}
