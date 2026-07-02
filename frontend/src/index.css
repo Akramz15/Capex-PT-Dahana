@@ -737,7 +737,17 @@ img, svg { display: block; }
 }
 
 .form-textarea { resize: vertical; min-height: 88px; }
-.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
 
 .form-error {
   font-size: 12px;

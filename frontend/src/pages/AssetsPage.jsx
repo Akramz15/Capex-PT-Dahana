@@ -1,14 +1,15 @@
-import { useEffect, useState, useCallback } from 'react'
-import { listAssets, createAsset, updateAsset, deleteAsset } from '../api/capex'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { listAssets, createAsset, updateAsset, deleteAsset, uploadAssetsExcel } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah, fmtShort } from '../utils'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, Upload } from 'lucide-react'
 
 const EMPTY_FORM = {
+  kajian_no: '', kajian_tanggal: '', kajian_perihal: '',
   no_po: '', tanggal_po: '', no_asset: '', sub_number: '', category: '',
   capitalized_on: '', asset_description: '', acquis_val: 0, accum_dep: 0,
   book_val: 0, currency: 'IDR', location_code: '', lokasi: '', room: '', keterangan: '',
@@ -16,6 +17,14 @@ const EMPTY_FORM = {
 
 const COLUMNS = [
   { header: 'No', render: (_, i) => i + 1 },
+  { 
+    header: 'Kajian Investasi', 
+    children: [
+      { header: 'No', accessor: 'kajian_no' },
+      { header: 'Tanggal', accessor: 'kajian_tanggal' },
+      { header: 'Perihal', accessor: 'kajian_perihal' }
+    ]
+  },
   { header: 'No PO',             accessor: 'no_po' },
   { header: 'Tanggal PO',        accessor: 'tanggal_po' },
   { header: 'No Asset',          accessor: 'no_asset' },
@@ -27,8 +36,13 @@ const COLUMNS = [
   { header: 'Accum.dep.',        render: (r) => <span className="rupiah">{fmtRupiah(r.accum_dep)}</span> },
   { header: 'Book val.',         render: (r) => <span className="rupiah">{fmtRupiah(r.book_val)}</span> },
   { header: 'Currency',          accessor: 'currency' },
-  { header: 'Location',          accessor: 'location_code' },
-  { header: 'Lokasi',            accessor: 'lokasi' },
+  {
+    header: 'Location',
+    children: [
+       { header: 'Code', accessor: 'location_code' },
+       { header: 'Name', accessor: 'lokasi' }
+    ]
+  },
   { header: 'Room',              accessor: 'room' },
   { header: 'Keterangan',        accessor: 'keterangan' }
 ]
@@ -42,6 +56,8 @@ export default function AssetsPage() {
   const [modal,   setModal]   = useState(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [saving,  setSaving]  = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -89,6 +105,34 @@ export default function AssetsPage() {
     } catch { alert('Gagal menghapus.') }
   }
 
+  const handleUploadClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click()
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    if (!window.confirm(`PERINGATAN: Mengunggah Excel akan MENGHAPUS SEMUA DATA ASET LAMA dan menggantinya dengan data dari file "${file.name}". Lanjutkan?`)) {
+      e.target.value = ''
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await uploadAssetsExcel(formData)
+      alert(res.data.message)
+      await fetchData()
+    } catch (err) {
+      alert(err.response?.data?.detail ?? 'Gagal mengunggah file excel.')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const renderFooter = (filteredData) => {
@@ -98,7 +142,7 @@ export default function AssetsPage() {
     
     return (
       <tr style={{ fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
-        <td colSpan={8} style={{ textAlign: 'right', border: '1px solid var(--clr-border)', padding: '12px 16px' }}>Total</td>
+        <td colSpan={11} style={{ textAlign: 'right', border: '1px solid var(--clr-border)', padding: '12px 16px' }}>Total</td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}><span className="rupiah">{fmtRupiah(sumAcquis)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}><span className="rupiah">{fmtRupiah(sumAccum)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}><span className="rupiah">{fmtRupiah(sumBook)}</span></td>
@@ -116,9 +160,22 @@ export default function AssetsPage() {
           <p className="page-desc">Laporan Aktiva Tetap PT Dahana dari hasil kapitalisasi investasi.</p>
         </div>
         {isAdmin && (
-          <button className="btn btn-primary" id="btn-tambah-aset" onClick={openCreate}>
-            <Plus size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> Tambah Aset
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="file" 
+              accept=".xlsx,.xls" 
+              style={{ display: 'none' }} 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+            />
+            <button className="btn btn-secondary" onClick={handleUploadClick} disabled={uploading}>
+              <Upload size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
+              {uploading ? 'Mengunggah...' : 'Upload Excel'}
+            </button>
+            <button className="btn btn-primary" id="btn-tambah-aset" onClick={openCreate}>
+              <Plus size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> Tambah Aset
+            </button>
+          </div>
         )}
       </div>
 
@@ -146,6 +203,20 @@ export default function AssetsPage() {
           onSubmit={handleSave}
           submitLoading={saving}
         >
+          <div className="form-grid-3">
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-kajian-no">Kajian No</label>
+              <input id="f-kajian-no" type="text" className="form-input" value={form.kajian_no} onChange={set('kajian_no')} />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-kajian-tgl">Kajian Tanggal</label>
+              <input id="f-kajian-tgl" type="date" className="form-input" value={form.kajian_tanggal} onChange={set('kajian_tanggal')} />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="f-kajian-per">Kajian Perihal</label>
+              <input id="f-kajian-per" type="text" className="form-input" value={form.kajian_perihal} onChange={set('kajian_perihal')} />
+            </div>
+          </div>
           <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" htmlFor="f-no-po">No PO</label>

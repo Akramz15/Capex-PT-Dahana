@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
+import openpyxl
+from io import BytesIO
 from typing import Optional
 from uuid import UUID
 
@@ -51,7 +53,7 @@ def create_asset(
 ):
     client = get_supabase_admin()
     data = payload.model_dump()
-    for date_field in ("tanggal_po", "capitalized_on"):
+    for date_field in ("tanggal_po", "capitalized_on", "kajian_tanggal"):
         if data.get(date_field):
             data[date_field] = str(data[date_field])
     result = client.table(_TABLE).insert(data).execute()
@@ -69,7 +71,7 @@ def update_asset(
     if not update_data:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Tidak ada field yang diupdate.")
 
-    for date_field in ("tanggal_po", "capitalized_on"):
+    for date_field in ("tanggal_po", "capitalized_on", "kajian_tanggal"):
         if date_field in update_data:
             update_data[date_field] = str(update_data[date_field])
 
@@ -88,3 +90,76 @@ def delete_asset(
     result = client.table(_TABLE).delete().eq("id", str(asset_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data aset tidak ditemukan.")
+
+@router.post("/upload", status_code=status.HTTP_200_OK)
+def upload_assets(
+    file: UploadFile = File(...),
+    _admin: dict = Depends(require_admin),
+):
+    if not file.filename.endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Harus berupa file Excel (.xlsx / .xls)")
+    
+    try:
+        content = file.file.read()
+        wb = openpyxl.load_workbook(BytesIO(content), data_only=True)
+        sheet = wb.active
+        
+        insert_data = []
+        for row in sheet.iter_rows(min_row=6, values_only=True):
+            if not row[10]: # Asset description is empty, probably end of table
+                continue
+            
+            def get_val(val, default=None):
+                return val if val is not None and str(val).strip() != "" else default
+                
+            def get_date(val):
+                if not val: return None
+                if hasattr(val, "date"): return str(val.date())
+                return str(val).split()[0]
+                
+            def get_int(val):
+                if not val: return 0
+                try:
+                    return int(float(val))
+                except:
+                    return 0
+
+            item = {
+                "kajian_no": str(get_val(row[1])) if get_val(row[1]) else None,
+                "kajian_tanggal": get_date(row[2]),
+                "kajian_perihal": str(get_val(row[3])) if get_val(row[3]) else None,
+                "no_po": str(get_val(row[4])) if get_val(row[4]) else None,
+                "tanggal_po": get_date(row[5]),
+                "no_asset": str(get_val(row[6])) if get_val(row[6]) else None,
+                "sub_number": str(get_val(row[7])) if get_val(row[7]) else None,
+                "category": str(get_val(row[8])) if get_val(row[8]) else None,
+                "capitalized_on": get_date(row[9]),
+                "asset_description": str(get_val(row[10])),
+                "acquis_val": get_int(row[11]),
+                "accum_dep": get_int(row[12]),
+                "book_val": get_int(row[13]),
+                "currency": str(get_val(row[14], "IDR"))[:3],
+                "location_code": str(get_val(row[15])) if get_val(row[15]) else None,
+                "lokasi": str(get_val(row[16])) if get_val(row[16]) else None,
+                "room": str(get_val(row[17])) if get_val(row[17]) else None,
+                "keterangan": str(get_val(row[18])) if get_val(row[18]) else None,
+            }
+            insert_data.append(item)
+            
+        if not insert_data:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tidak ada data yang valid ditemukan di baris 6 ke bawah.")
+
+        client = get_supabase_admin()
+        # Truncate existing data (Atomic delete)
+        client.table(_TABLE).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+        
+        # Bulk insert new data
+        chunk_size = 100
+        for i in range(0, len(insert_data), chunk_size):
+            chunk = insert_data[i:i + chunk_size]
+            client.table(_TABLE).insert(chunk).execute()
+            
+        return {"message": f"Berhasil mengupload {len(insert_data)} data aset.", "count": len(insert_data)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Gagal memproses file: {str(e)}")

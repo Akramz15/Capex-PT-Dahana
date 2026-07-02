@@ -5,6 +5,9 @@ from datetime import date, datetime
 
 
 class AssetBase(BaseModel):
+    kajian_no: Optional[str] = Field(None, max_length=100)
+    kajian_tanggal: Optional[date] = None
+    kajian_perihal: Optional[str] = None
     no_po: Optional[str] = Field(None, max_length=50)
     tanggal_po: Optional[date] = None
     no_asset: Optional[str] = Field(None, max_length=50)
@@ -27,6 +30,9 @@ class AssetCreate(AssetBase):
 
 
 class AssetUpdate(BaseModel):
+    kajian_no: Optional[str] = Field(None, max_length=100)
+    kajian_tanggal: Optional[date] = None
+    kajian_perihal: Optional[str] = None
     no_po: Optional[str] = Field(None, max_length=50)
     tanggal_po: Optional[date] = None
     no_asset: Optional[str] = Field(None, max_length=50)
