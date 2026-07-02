@@ -9,6 +9,11 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "🚀 Memulai Aplikasi Monitoring Capex PT Dahana..."
 echo ""
 
+# Bersihkan port 8000 dan 5173 jika masih terpakai proses lama
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+sleep 1
+
 # Jalankan Backend
 echo "▶️  Menjalankan Backend (FastAPI) di port 8000..."
 cd "$ROOT_DIR/backend"
