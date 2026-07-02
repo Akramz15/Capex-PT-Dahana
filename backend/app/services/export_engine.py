@@ -217,12 +217,24 @@ def _inject_aset_sheet(ws: Worksheet, col_map: dict[str, int], start_row: int) -
 
 def generate_export(tahun: int) -> BytesIO:
     settings = get_settings()
-    template_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", settings.excel_template_path)
-    )
+    
+    base_dir = os.path.dirname(__file__)
+    possible_paths = [
+        os.path.abspath(os.path.join(base_dir, "..", "..", "templates", "Template Monitoring Capex-R2.xlsx")),
+        os.path.abspath(os.path.join(base_dir, "..", "..", settings.excel_template_path)),
+        os.path.abspath(os.path.join(base_dir, "..", "..", "..", "docs", "Template Monitoring Capex-R2.xlsx")),
+        os.path.abspath(os.path.join(os.getcwd(), "templates", "Template Monitoring Capex-R2.xlsx")),
+        os.path.abspath(os.path.join(os.getcwd(), "docs", "Template Monitoring Capex-R2.xlsx")),
+    ]
 
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"Template Excel tidak ditemukan: {template_path}")
+    template_path = None
+    for p in possible_paths:
+        if os.path.exists(p):
+            template_path = p
+            break
+
+    if not template_path:
+        raise FileNotFoundError(f"Template Excel tidak ditemukan di lokasi mana pun: {possible_paths}")
 
     wb = load_workbook(template_path)
 
