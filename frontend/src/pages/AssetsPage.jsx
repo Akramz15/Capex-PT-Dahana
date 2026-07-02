@@ -62,7 +62,14 @@ export default function AssetsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const payload = { ...form, acquis_val: Number(form.acquis_val), accum_dep: Number(form.accum_dep), book_val: Number(form.book_val) }
+      const acq = Number(form.acquis_val) || 0
+      const acc = Number(form.accum_dep) || 0
+      const payload = { 
+        ...form, 
+        acquis_val: acq, 
+        accum_dep: acc, 
+        book_val: acq - acc 
+      }
       if (modal === 'create') await createAsset(payload)
       else await updateAsset(form.id, payload)
       await fetchData()
