@@ -122,8 +122,22 @@ export default function DashboardPage({ tahun }) {
     try {
       const res = await exportDashboardSummaryYtd(tahun, ytdBulan)
       downloadBlob(res.data, `Ringkasan_YTD_${tahun}_${ytdBulan}.xlsx`)
-    } catch {
-      dialog.alert({ title: 'Error', message: 'Gagal mengekspor Ringkasan YTD. Coba lagi.', variant: 'danger' })
+    } catch (e) {
+      let msg = 'Terjadi kesalahan yang tidak diketahui.'
+      if (!e.response) {
+        msg = 'Server backend tidak dapat dihubungi. Pastikan backend sudah berjalan di port 8000.'
+      } else if (e.response.status === 401) {
+        msg = 'Sesi login telah berakhir. Silakan login ulang.'
+      } else if (e.response?.data instanceof Blob) {
+        try {
+          const text = await e.response.data.text()
+          const json = JSON.parse(text)
+          msg = json.detail || msg
+        } catch { msg = `Server error (${e.response.status})` }
+      } else {
+        msg = e.response?.data?.detail || e.message || msg
+      }
+      dialog.alert({ title: 'Gagal Mengunduh Ringkasan YTD', message: msg, variant: 'danger' })
     } finally {
       setExportingYtd(false)
     }
