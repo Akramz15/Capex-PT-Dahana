@@ -16,7 +16,8 @@ const EMPTY_FORM = {
 }
 
 const COLUMNS = [
-  { header: 'No', render: (_, i) => i + 1 },
+  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '50px' },
+  { header: 'Asset description', accessor: 'asset_description', sticky: true, stickyLeft: '50px', width: '250px' },
   { 
     header: 'Kajian Investasi', 
     children: [
@@ -31,7 +32,6 @@ const COLUMNS = [
   { header: 'Sub number',        accessor: 'sub_number' },
   { header: 'Category',          accessor: 'category' },
   { header: 'Capitalized on',    accessor: 'capitalized_on' },
-  { header: 'Asset description', accessor: 'asset_description' },
   { header: 'Acquis.val.',       render: (r) => <span className="rupiah">{fmtRupiah(r.acquis_val)}</span> },
   { header: 'Accum.dep.',        render: (r) => <span className="rupiah">{fmtRupiah(r.accum_dep)}</span> },
   { header: 'Book val.',         render: (r) => <span className="rupiah">{fmtRupiah(r.book_val)}</span> },

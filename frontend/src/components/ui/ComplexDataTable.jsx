@@ -184,7 +184,13 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                   rowSpan={col.rowSpan}
                   style={{
                     textAlign: 'center',
-                    border: '1px solid var(--clr-border)'
+                    border: '1px solid var(--clr-border)',
+                    position: col.sticky ? 'sticky' : 'static',
+                    left: col.stickyLeft || 'auto',
+                    zIndex: col.sticky ? 10 : 'auto',
+                    backgroundColor: col.sticky ? 'var(--clr-surface)' : 'inherit',
+                    width: col.width || 'auto',
+                    minWidth: col.width || 'auto'
                   }}
                 >
                   {col.header}
@@ -217,7 +223,13 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                 {leafColumns.map((col, colIndex) => (
                   <td 
                     key={`cell-${row.id || rowIndex}-${colIndex}`}
-                    style={{ border: '1px solid var(--clr-border)' }}
+                    style={{ 
+                      border: '1px solid var(--clr-border)',
+                      position: col.sticky ? 'sticky' : 'static',
+                      left: col.stickyLeft || 'auto',
+                      zIndex: col.sticky ? 5 : 'auto',
+                      backgroundColor: col.sticky ? 'var(--clr-surface)' : 'inherit'
+                    }}
                   >
                     {col.render ? col.render(row, rowIndex) : row[col.accessor]}
                   </td>
