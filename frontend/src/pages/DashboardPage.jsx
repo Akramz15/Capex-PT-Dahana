@@ -218,11 +218,11 @@ export default function DashboardPage({ tahun }) {
                   <option value={6}>Semester (6 Bulan)</option>
                 </select>
               )}
-              <div style={{ display: 'flex', backgroundColor: 'var(--clr-background)', padding: '2px', borderRadius: '6px', border: '1px solid var(--clr-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--clr-background)', padding: '2px', borderRadius: '6px', border: '1px solid var(--clr-border)' }}>
                 <button 
                   onClick={() => setChartMode('bar')}
                   style={{ 
-                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer',
+                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
                     backgroundColor: chartMode === 'bar' ? '#fff' : 'transparent',
                     color: chartMode === 'bar' ? 'var(--clr-primary)' : 'var(--clr-text-secondary)',
                     boxShadow: chartMode === 'bar' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
@@ -231,7 +231,7 @@ export default function DashboardPage({ tahun }) {
                 <button 
                   onClick={() => setChartMode('line')}
                   style={{ 
-                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer',
+                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
                     backgroundColor: chartMode === 'line' ? '#fff' : 'transparent',
                     color: chartMode === 'line' ? 'var(--clr-primary)' : 'var(--clr-text-secondary)',
                     boxShadow: chartMode === 'line' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
