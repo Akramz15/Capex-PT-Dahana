@@ -142,6 +142,15 @@ export default function AssetsPage() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  const tableData = useMemo(() => {
+    return data.filter(d => {
+      let valid = true
+      if (startYear && d.kajian_tahun && d.kajian_tahun < startYear) valid = false
+      if (endYear && d.kajian_tahun && d.kajian_tahun > endYear) valid = false
+      return valid
+    })
+  }, [data, startYear, endYear])
+
   const renderFooter = (filteredData) => {
     const sumAcquis = filteredData.reduce((acc, r) => acc + (Number(r.acquis_val) || 0), 0)
     const sumAccum = filteredData.reduce((acc, r) => acc + (Number(r.accum_dep) || 0), 0)
