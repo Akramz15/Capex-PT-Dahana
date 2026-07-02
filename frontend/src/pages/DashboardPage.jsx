@@ -91,8 +91,18 @@ export default function DashboardPage({ tahun }) {
     try {
       const res = await exportCapex(tahun)
       downloadBlob(res.data, `Monitoring_Capex_PT_Dahana_${tahun}.xlsx`)
-    } catch {
-      dialog.alert({ title: 'Error', message: 'Gagal mengekspor laporan. Coba lagi.', variant: 'danger' })
+    } catch (e) {
+      let msg = e.message || 'Error unknown'
+      if (e.response?.data instanceof Blob) {
+        try {
+          const text = await e.response.data.text()
+          const json = JSON.parse(text)
+          msg = json.detail || msg
+        } catch {}
+      } else if (e.response?.data?.detail) {
+        msg = e.response.data.detail
+      }
+      dialog.alert({ title: 'Error', message: `Gagal mengekspor laporan: ${msg}`, variant: 'danger' })
     } finally {
       setExporting(false)
     }
