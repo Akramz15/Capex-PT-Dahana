@@ -8,8 +8,6 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah, fmtShort } from '../utils'
-import { exportRealizationToExcel } from '../utils/excelExport'
-import { Download } from 'lucide-react'
 
 const BULAN_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const STATUS_OPTIONS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya', 'Rencana']
@@ -34,7 +32,6 @@ export default function RealizationPage({ tahun }) {
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
-  const [exporting, setExporting] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -126,14 +123,7 @@ export default function RealizationPage({ tahun }) {
     })
   }
 
-  const handleExport = () => {
-    try {
-      exportRealizationToExcel(data, tahun)
-    } catch (e) {
-      dialog.alert({ title: 'Error', message: 'Gagal mengekspor data ke Excel.', variant: 'danger' })
-    }
-  }
-  
+
   const closeModal = () => { setModal(false); setForm(EMPTY_FORM) }
 
   const handleSave = async () => {
@@ -337,12 +327,6 @@ export default function RealizationPage({ tahun }) {
         <div className="page-header-text">
           <h2 className="page-title">Realisasi {tahun}</h2>
           <p className="page-desc">Log realisasi investasi bulanan setiap item Capex.</p>
-        </div>
-        <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn btn-outline" onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Download size={18} />
-            Download Excel
-          </button>
         </div>
       </div>
 

@@ -8,10 +8,9 @@ import CurrencyInput from '../components/ui/CurrencyInput'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useDialog } from '../contexts/DialogContext'
 import { fmtRupiah, fmtShort } from '../utils'
-import { exportRkapToExcel } from '../utils/excelExport'
 
 import { getRkapLockStatus, setRkapLockStatus } from '../api/settings'
-import { Lock, Unlock, History, UploadCloud, Download } from 'lucide-react'
+import { Lock, Unlock, History, UploadCloud } from 'lucide-react'
 import { getAuditLogs, uploadCapexExcel } from '../api/capex'
 
 const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '' }
@@ -30,7 +29,6 @@ export default function RKAPMasterPage({ tahun }) {
   const [isLocked, setIsLocked] = useState(false)
   const [auditLogs, setAuditLogs] = useState([])
   const [uploading, setUploading] = useState(false)
-  const [exporting, setExporting] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -112,13 +110,7 @@ export default function RKAPMasterPage({ tahun }) {
     }
   }
 
-  const handleExport = () => {
-    try {
-      exportRkapToExcel(data, tahun)
-    } catch (e) {
-      dialog.alert({ title: 'Error', message: 'Gagal mengekspor data ke Excel.', variant: 'danger' })
-    }
-  }
+
 
 
   const closeModal = () => { setModal(null); setForm(EMPTY_FORM); setAuditLogs([]) }
@@ -330,11 +322,7 @@ export default function RKAPMasterPage({ tahun }) {
               {isLocked ? 'Buka Kunci RKAP' : 'Kunci RKAP ' + tahun}
             </button>
             
-            <button className="btn btn-outline" onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Download size={18} />
-              Download Excel
-            </button>
-            
+
             {!isLocked && (
               <>
                 <input 
