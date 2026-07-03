@@ -138,7 +138,8 @@ def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
 
         if "Total" in col_map:
             _set_value_safely(ws, row, col_map["Total"], _format_rupiah(m.get("anggaran_rkap")))
-            _set_value_safely(ws, row, col_map["Total"] + 1, _format_rupiah(total_realisasi))
+            _set_value_safely(ws, row, col_map["Total"] + 1, _format_rupiah(m.get("anggaran_perubahan")))
+            _set_value_safely(ws, row, col_map["Total"] + 2, _format_rupiah(total_realisasi))
             
         row += 1
 
