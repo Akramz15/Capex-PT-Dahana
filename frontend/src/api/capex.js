@@ -16,6 +16,15 @@ export const getCapex     = (id)          => client.get(`/capex/${id}`)
 export const createCapex  = (data)        => client.post('/capex',      data)
 export const updateCapex  = (id, data)    => client.put(`/capex/${id}`, data)
 export const deleteCapex  = (id)          => client.delete(`/capex/${id}`)
+export const getAuditLogs = (tahun)       => client.get('/capex/audit-logs/all', { params: { tahun } })
+export const uploadCapexExcel = (tahun, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return client.post('/capex/upload', formData, {
+    params: { tahun },
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
 
 export const listRealization   = (params = {}) => client.get('/realization',       { params })
 export const createRealization = (data)        => client.post('/realization',      data)

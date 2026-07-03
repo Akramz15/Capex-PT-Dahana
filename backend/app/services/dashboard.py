@@ -11,9 +11,12 @@ def get_dashboard_summary(tahun: int) -> dict:
     total_perubahan = sum(r["anggaran_perubahan"] for r in master_result.data)
     total_capex_items = len(master_result.data)
 
+    # 1. Update total_realisasi to come from capex_realization instead of capex_status_log
+    realisasi_result = client.table("capex_realization").select("nilai_realisasi").eq("tahun", tahun).execute()
+    total_realisasi = sum(r.get("nilai_realisasi") or 0 for r in realisasi_result.data)
+
     status_result = client.table("capex_status_log").select("status_type, rekap_nilai").eq("tahun", tahun).execute()
     
-    total_realisasi = 0
     status_amounts: dict[str, int] = {}
     
     for r in status_result.data:
@@ -23,9 +26,10 @@ def get_dashboard_summary(tahun: int) -> dict:
             
         val = r.get("rekap_nilai") or 0
         status_amounts[st] = status_amounts.get(st, 0) + val
-        total_realisasi += val
 
-    persen_realisasi = round((total_realisasi / total_rkap * 100), 2) if total_rkap > 0 else 0
+    # Use total_perubahan as the active budget to be super realtime with reallocations
+    active_budget = total_perubahan if total_perubahan > 0 else total_rkap
+    persen_realisasi = round((total_realisasi / active_budget * 100), 2) if active_budget > 0 else 0
 
     return {
         "total_capex_items": total_capex_items,
@@ -33,7 +37,7 @@ def get_dashboard_summary(tahun: int) -> dict:
         "total_anggaran_perubahan": total_perubahan,
         "total_realisasi": total_realisasi,
         "persen_realisasi": persen_realisasi,
-        "sisa_anggaran": total_rkap - total_realisasi,
+        "sisa_anggaran": active_budget - total_realisasi,
         "status_distribution": status_amounts,
     }
 
@@ -57,7 +61,7 @@ def get_monthly_chart_data(tahun: int) -> list[dict]:
 def get_capex_progress_table(tahun: int) -> list[dict]:
     client = get_supabase_admin()
 
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, pic").eq("tahun", tahun).execute()
+    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic").eq("tahun", tahun).execute()
     real = client.table("capex_realization").select("capex_id, nilai_realisasi, status").eq("tahun", tahun).execute()
 
     real_by_capex: dict[str, dict] = {}
@@ -74,7 +78,7 @@ def get_capex_progress_table(tahun: int) -> list[dict]:
         cid = str(m["id"])
         realisasi = real_by_capex.get(cid, {}).get("total_realisasi", 0)
         statuses = list(real_by_capex.get(cid, {}).get("statuses", set()))
-        anggaran = m["anggaran_rkap"]
+        anggaran = m.get("anggaran_perubahan") or m.get("anggaran_rkap") or 0
         persen = round(realisasi / anggaran * 100, 2) if anggaran > 0 else 0
         rows.append({
             **m,
@@ -89,7 +93,7 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
     client = get_supabase_admin()
     
     # 1. Ambil data master
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap").eq("tahun", tahun).execute()
+    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).execute()
     
     # 2. Ambil data realisasi HANYA untuk bulan <= bulan yang dipilih
     real = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
@@ -133,7 +137,8 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
                 "subtotal_real_bast": 0,
             }
             
-        budget = m.get("anggaran_rkap") or 0
+        # Use anggaran_perubahan as primary active budget
+        budget = m.get("anggaran_perubahan") or m.get("anggaran_rkap") or 0
         ytd = ytd_data.get(cid, {})
         rkap_ytd = ytd.get("rkap_ytd", 0)
         total_real = ytd.get("total_realisasi", 0)

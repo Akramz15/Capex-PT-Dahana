@@ -10,7 +10,8 @@ import { useDialog } from '../contexts/DialogContext'
 import { fmtRupiah, fmtShort } from '../utils'
 
 import { getRkapLockStatus, setRkapLockStatus } from '../api/settings'
-import { Lock, Unlock } from 'lucide-react'
+import { Lock, Unlock, History, UploadCloud } from 'lucide-react'
+import { getAuditLogs, uploadCapexExcel } from '../api/capex'
 
 const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '' }
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -26,6 +27,8 @@ export default function RKAPMasterPage({ tahun }) {
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [saving,  setSaving]  = useState(false)
   const [isLocked, setIsLocked] = useState(false)
+  const [auditLogs, setAuditLogs] = useState([])
+  const [uploading, setUploading] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -51,9 +54,9 @@ export default function RKAPMasterPage({ tahun }) {
         })
         
         row.total_rkap = capex.anggaran_rkap || 0
+        row.anggaran_perubahan = capex.anggaran_perubahan || 0
         
-        // Sum the rekap_nilai from status logs for this capex to match the dashboard's official totals
-        row.total_real = statuses.reduce((acc, s) => acc + (s.rekap_nilai || 0), 0)
+        row.total_real = reals.reduce((acc, r) => acc + (r.nilai_realisasi || 0), 0)
         
         return row
       })
@@ -74,7 +77,38 @@ export default function RKAPMasterPage({ tahun }) {
     setForm({ ...row, items })
     setModal('edit')
   }
-  const closeModal = () => { setModal(null); setForm(EMPTY_FORM) }
+  
+  const openAuditLogs = async () => {
+    try {
+      setLoading(true)
+      const res = await getAuditLogs(tahun)
+      setAuditLogs(res.data)
+      setModal('audit')
+    } catch (e) {
+      dialog.alert({ title: 'Error', message: 'Gagal mengambil riwayat pengalihan.', variant: 'danger' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUploadExcel = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    try {
+      setUploading(true)
+      await uploadCapexExcel(tahun, file)
+      dialog.alert({ title: 'Sukses', message: 'Data RKAP berhasil diunggah.', variant: 'success' })
+      await fetchData()
+    } catch (err) {
+      dialog.alert({ title: 'Gagal Upload', message: err.response?.data?.detail || 'Terjadi kesalahan.', variant: 'danger' })
+    } finally {
+      setUploading(false)
+      e.target.value = '' // reset input
+    }
+  }
+
+  const closeModal = () => { setModal(null); setForm(EMPTY_FORM); setAuditLogs([]) }
 
   const handleToggleLock = () => {
     dialog.confirm({
@@ -181,16 +215,19 @@ export default function RKAPMasterPage({ tahun }) {
       ]
     })),
     { header: 'Total', children: [
-      { header: 'RKAP', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_rkap)}</span> },
+      { header: 'RKAP Awal', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_rkap)}</span> },
+      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_perubahan)}</span> },
       { header: 'Realisasi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> }
     ]}
   ]
 
   const renderGroupHeader = (groupName, groupData) => {
     let totalRkapSum = 0;
+    let totalPerubahanSum = 0;
     let totalRealSum = 0;
     groupData.forEach(r => {
-      totalRkapSum += r.total_rkap || 0;
+      totalRkapSum += r.anggaran_rkap || 0;
+      totalPerubahanSum += r.anggaran_perubahan || 0;
       totalRealSum += r.total_real || 0;
     });
 
@@ -218,6 +255,9 @@ export default function RKAPMasterPage({ tahun }) {
           {totalRkapSum > 0 ? <span className="rupiah">{fmtRupiah(totalRkapSum)}</span> : '-'}
         </td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
+          {totalPerubahanSum > 0 ? <span className="rupiah">{fmtRupiah(totalPerubahanSum)}</span> : '-'}
+        </td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
           {totalRealSum > 0 ? <span className="rupiah">{fmtRupiah(totalRealSum)}</span> : '-'}
         </td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)' }}></td>}
@@ -226,7 +266,8 @@ export default function RKAPMasterPage({ tahun }) {
   }
 
   const renderFooter = (filteredData) => {
-    const sumTotalRKAP = filteredData.reduce((acc, r) => acc + (r.total_rkap || 0), 0)
+    const sumTotalRKAP = filteredData.reduce((acc, r) => acc + (r.anggaran_rkap || 0), 0)
+    const sumTotalPerubahan = filteredData.reduce((acc, r) => acc + (r.anggaran_perubahan || 0), 0)
     const sumTotalReal = filteredData.reduce((acc, r) => acc + (r.total_real || 0), 0)
     
     return (
@@ -248,6 +289,9 @@ export default function RKAPMasterPage({ tahun }) {
           {sumTotalRKAP > 0 ? <span className="rupiah">{fmtRupiah(sumTotalRKAP)}</span> : '-'}
         </td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>
+          {sumTotalPerubahan > 0 ? <span className="rupiah">{fmtRupiah(sumTotalPerubahan)}</span> : '-'}
+        </td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>
           {sumTotalReal > 0 ? <span className="rupiah">{fmtRupiah(sumTotalReal)}</span> : '-'}
         </td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)' }}></td>}
@@ -264,10 +308,36 @@ export default function RKAPMasterPage({ tahun }) {
         </div>
         {isAdmin && (
           <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-secondary" onClick={openAuditLogs} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <History size={18} />
+              Riwayat Pengalihan
+            </button>
             <button className={`btn ${isLocked ? 'btn-danger' : 'btn-success'}`} onClick={handleToggleLock} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {isLocked ? <Lock size={18} /> : <Unlock size={18} />}
               {isLocked ? 'Buka Kunci RKAP' : 'Kunci RKAP ' + tahun}
             </button>
+            
+            {!isLocked && (
+              <>
+                <input 
+                  type="file" 
+                  accept=".xlsx, .xls" 
+                  id="upload-excel" 
+                  style={{ display: 'none' }} 
+                  onChange={handleUploadExcel} 
+                />
+                <button 
+                  className="btn btn-outline" 
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => document.getElementById('upload-excel').click()}
+                  disabled={uploading}
+                >
+                  <UploadCloud size={18} />
+                  {uploading ? 'Mengunggah...' : 'Upload Excel'}
+                </button>
+              </>
+            )}
+
             <button className="btn btn-primary" id="btn-tambah-capex" onClick={openCreate}>
               Tambah Capex
             </button>
@@ -394,6 +464,44 @@ export default function RKAPMasterPage({ tahun }) {
                 )
               })}
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'audit' && (
+        <Modal
+          title={`Riwayat Pengalihan Anggaran (${tahun})`}
+          onClose={closeModal}
+          width="900px"
+          hideSubmit
+        >
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            {auditLogs.length === 0 ? (
+              <p style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>Belum ada riwayat pengalihan anggaran di tahun {tahun}.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px', textAlign: 'left' }}>Waktu</th>
+                    <th style={{ padding: '12px', textAlign: 'left' }}>Oleh</th>
+                    <th style={{ padding: '12px', textAlign: 'left' }}>Keterangan</th>
+                    <th style={{ padding: '12px', textAlign: 'right' }}>Anggaran Digeser</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map(log => (
+                    <tr key={log.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '12px' }}>{new Date(log.created_at).toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '12px', fontWeight: '500' }}>{log.user_name}</td>
+                      <td style={{ padding: '12px' }}>{log.keterangan}</td>
+                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: '500', color: '#0369a1' }}>
+                        {fmtRupiah(log.anggaran)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </Modal>
       )}

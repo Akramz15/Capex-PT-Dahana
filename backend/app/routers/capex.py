@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
 from typing import Optional
 from uuid import UUID
+import openpyxl
 
 from ..core.database import get_supabase_admin
 from ..core.security import get_current_user, require_admin
@@ -73,7 +74,8 @@ def create_capex(
                     "p_kategori": payload.kategori,
                     "p_anggaran_perubahan": payload.anggaran_perubahan,
                     "p_pic": payload.pic,
-                    "p_source_capex_id": str(payload.source_capex_id)
+                    "p_source_capex_id": str(payload.source_capex_id),
+                    "p_user_id": _admin["id"]
                 }
             ).execute()
             new_id = rpc_res.data
@@ -164,3 +166,102 @@ def delete_capex(
             
     # 3. Hapus data capex
     client.table(_TABLE).delete().eq("id", str(capex_id)).execute()
+
+
+@router.get("/audit-logs/all")
+def get_audit_logs(
+    tahun: int = Query(..., description="Tahun anggaran"),
+    _user: dict = Depends(get_current_user),
+):
+    client = get_supabase_admin()
+    # Join capex_audit_logs with capex_master and profiles
+    query = (
+        client.table("capex_audit_logs")
+        .select("*, capex_master!capex_audit_logs_capex_id_fkey(kode, daftar_capex), profiles(full_name)")
+        .eq("tahun", tahun)
+        .order("created_at", desc=True)
+    )
+    result = query.execute()
+    
+    logs = []
+    for r in result.data:
+        capex_info = r.get("capex_master") or {}
+        prof_info = r.get("profiles") or {}
+        logs.append({
+            "id": r["id"],
+            "tahun": r["tahun"],
+            "action_type": r["action_type"],
+            "capex_id": r["capex_id"],
+            "source_capex_id": r["source_capex_id"],
+            "anggaran": r["anggaran"],
+            "keterangan": r["keterangan"],
+            "created_at": r["created_at"],
+            "user_name": prof_info.get("full_name") or "System",
+            "capex_nama": capex_info.get("daftar_capex") or "-",
+            "capex_kode": capex_info.get("kode") or "-"
+        })
+    return logs
+
+
+@router.post("/upload")
+def upload_capex_excel(
+    tahun: int = Query(...),
+    file: UploadFile = File(...),
+    _admin: dict = Depends(require_admin),
+):
+    client = get_supabase_admin()
+    
+    # Cek apakah RKAP tahun tersebut dikunci
+    lock_res = client.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
+    if lock_res.data and lock_res.data[0]["is_locked"]:
+        raise HTTPException(status_code=400, detail="Gagal Upload: RKAP tahun ini sudah dikunci.")
+
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Format file tidak didukung. Harap upload file Excel (.xlsx)")
+
+    try:
+        wb = openpyxl.load_workbook(file.file, data_only=True)
+        sheet = wb.active
+        
+        inserted = 0
+        data_to_insert = []
+        
+        # Asumsi baris 1 adalah header: Kode | Daftar Capex | Kategori | Anggaran RKAP | PIC
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if not row or not row[1]: # Jika daftar capex kosong, skip
+                continue
+                
+            kode = str(row[0]) if row[0] else ""
+            daftar_capex = str(row[1])
+            kategori = str(row[2]) if row[2] else ""
+            
+            # Parsing anggaran (bisa int, float, atau string berformat)
+            try:
+                anggaran_str = str(row[3]).replace(',', '').replace('.', '') if row[3] else "0"
+                # If there are trailing zeros from float conversion, handle it
+                if '.' in anggaran_str:
+                    anggaran_str = anggaran_str.split('.')[0]
+                anggaran = int(anggaran_str)
+            except ValueError:
+                anggaran = 0
+                
+            pic = str(row[4]) if len(row) > 4 and row[4] else ""
+            
+            data_to_insert.append({
+                "tahun": tahun,
+                "kode": kode,
+                "daftar_capex": daftar_capex,
+                "kategori": kategori,
+                "anggaran_rkap": anggaran,
+                "anggaran_perubahan": anggaran, # Set default anggaran_perubahan sama dengan RKAP
+                "pic": pic
+            })
+            
+        if data_to_insert:
+            client.table(_TABLE).insert(data_to_insert).execute()
+            inserted = len(data_to_insert)
+            
+        return {"message": f"Berhasil upload {inserted} data capex untuk tahun {tahun}."}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Terjadi kesalahan saat memproses file Excel: {str(e)}")
