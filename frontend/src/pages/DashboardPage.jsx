@@ -294,15 +294,17 @@ export default function DashboardPage({ tahun }) {
               <option value={11}>November</option>
               <option value={12}>Desember</option>
             </select>
-            <button 
-              className="btn btn-success" 
-              onClick={handleExportYtd} 
-              disabled={exportingYtd}
-              style={{ padding: '6px 12px', fontSize: '0.875rem' }}
-            >
-              <Download size={14} style={{ marginRight: 6 }} />
-              {exportingYtd ? 'Mengekspor...' : 'Unduh Excel'}
-            </button>
+            {isAdmin && (
+              <button 
+                className="btn btn-success" 
+                onClick={handleExportYtd} 
+                disabled={exportingYtd}
+                style={{ padding: '6px 12px', fontSize: '0.875rem' }}
+              >
+                <Download size={14} style={{ marginRight: 6 }} />
+                {exportingYtd ? 'Mengekspor...' : 'Unduh Excel'}
+              </button>
+            )}
           </div>
         </div>
         <SummaryYTDTable data={ytdData} tahun={tahun} bulan={ytdBulan} />

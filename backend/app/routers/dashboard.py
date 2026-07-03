@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 
-from ..core.security import get_current_user
+from ..core.security import get_current_user, require_admin
 from ..services.dashboard import (
     get_dashboard_summary,
     get_monthly_chart_data,
@@ -48,7 +48,7 @@ def summary_table_ytd(
 def export_summary_table_ytd(
     tahun: int = Query(2026, ge=2020, le=2099),
     bulan: int = Query(12, ge=1, le=12),
-    _user: dict = Depends(get_current_user),
+    _admin: dict = Depends(require_admin),
 ):
     from fastapi.responses import StreamingResponse
     from ..services.export_engine import export_ytd_summary_excel
