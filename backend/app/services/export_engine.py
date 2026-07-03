@@ -67,22 +67,41 @@ def _inject_real_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
     
     for m in masters:
         cid = str(m["id"])
+        if "Kode" in col_map: _set_value_safely(ws, row, col_map["Kode"], m.get("kode"))
+        if "Kategori" in col_map: _set_value_safely(ws, row, col_map["Kategori"], m.get("kategori"))
         if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
         if "Anggaran" in col_map:
             _set_value_safely(ws, row, col_map["Anggaran"], _format_rupiah(m.get("anggaran_rkap")))
             _set_value_safely(ws, row, col_map["Anggaran"] + 1, _format_rupiah(m.get("anggaran_perubahan")))
         if "PIC" in col_map: _set_value_safely(ws, row, col_map["PIC"], m.get("pic"))
 
+        total_realisasi = 0
+        total_rkap_monthly = 0
         for b in range(1, 13):
             b_name = BULAN_COLS[b - 1]
             entry = real_map.get((cid, b), {})
+            rkap_m = entry.get("nilai_rkap", 0)
+            real_m = entry.get("nilai_realisasi", 0)
+            total_rkap_monthly += rkap_m
+            total_realisasi += real_m
+            
             if b_name in col_map:
-                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(entry.get("nilai_rkap", 0)))
-                _set_value_safely(ws, row, col_map[b_name] + 1, _format_rupiah(entry.get("nilai_realisasi", 0)))
+                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(rkap_m))
+                _set_value_safely(ws, row, col_map[b_name] + 1, _format_rupiah(real_m))
 
         status_entry = next((r for r in reals if r["capex_id"] == cid and r.get("status")), {})
         if "Status" in col_map: _set_value_safely(ws, row, col_map["Status"], status_entry.get("status"))
         if "Keterangan" in col_map: _set_value_safely(ws, row, col_map["Keterangan"], status_entry.get("keterangan"))
+        
+        if "Total" in col_map:
+            # We match the web logic: Total RKAP is the capex budget, Total Realisasi is sum of months
+            # If the excel expects sum of monthly RKAP, we can use total_rkap_monthly, 
+            # but web uses anggaran_rkap. Let's use m.get("anggaran_rkap") for the first Total column,
+            # or if it's "Anggaran Aktif" it would be anggaran_perubahan.
+            # In the image, Total is RKAP | Realisasi. We will use anggaran_rkap.
+            _set_value_safely(ws, row, col_map["Total"], _format_rupiah(m.get("anggaran_rkap")))
+            _set_value_safely(ws, row, col_map["Total"] + 1, _format_rupiah(total_realisasi))
+            
         row += 1
 
 def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start_row: int) -> None:
@@ -95,14 +114,32 @@ def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
     
     for m in masters:
         cid = str(m["id"])
+        if "Kode" in col_map: _set_value_safely(ws, row, col_map["Kode"], m.get("kode"))
+        if "Kategori" in col_map: _set_value_safely(ws, row, col_map["Kategori"], m.get("kategori"))
+        if "PIC" in col_map: _set_value_safely(ws, row, col_map["PIC"], m.get("pic"))
         if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
+        
+        status_entry = next((r for r in reals if r["capex_id"] == cid and r.get("status")), {})
+        if "Status" in col_map: _set_value_safely(ws, row, col_map["Status"], status_entry.get("status"))
 
+        total_realisasi = 0
+        total_rkap_monthly = 0
         for b in range(1, 13):
             b_name = BULAN_COLS[b - 1]
             entry = real_map.get((cid, b), {})
+            rkap_m = entry.get("nilai_rkap", 0)
+            real_m = entry.get("nilai_realisasi", 0)
+            total_rkap_monthly += rkap_m
+            total_realisasi += real_m
+            
             if b_name in col_map:
-                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(entry.get("nilai_rkap", 0)))
-                _set_value_safely(ws, row, col_map[b_name] + 1, _format_rupiah(entry.get("nilai_realisasi", 0)))
+                _set_value_safely(ws, row, col_map[b_name], _format_rupiah(rkap_m))
+                _set_value_safely(ws, row, col_map[b_name] + 1, _format_rupiah(real_m))
+
+        if "Total" in col_map:
+            _set_value_safely(ws, row, col_map["Total"], _format_rupiah(m.get("anggaran_rkap")))
+            _set_value_safely(ws, row, col_map["Total"] + 1, _format_rupiah(total_realisasi))
+            
         row += 1
 
 def _inject_status_sheet(ws: Worksheet, tahun: int, status_type: str, col_map: dict[str, int], start_row: int) -> None:
