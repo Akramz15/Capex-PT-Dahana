@@ -19,8 +19,8 @@ BULAN_COLS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
               "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
 SHEET_CONFIG = {
-    "RKAP": { "header_row": 4, "data_start_row": 6 },
-    "Real": { "header_row": 4, "data_start_row": 6 },
+    "RKAP": { "header_row": 1, "data_start_row": 3 },
+    "Real": { "header_row": 1, "data_start_row": 3 },
     "PO": { "header_row": 4, "data_start_row": 5 },
     "Tender": { "header_row": 4, "data_start_row": 5 },
     "Kajian": { "header_row": 4, "data_start_row": 5 },
@@ -64,9 +64,12 @@ def _inject_real_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
     
     real_map = {(r["capex_id"], r["bulan"]): r for r in reals}
     row = start_row
+    idx = 1
     
     for m in masters:
         cid = str(m["id"])
+        if "No" in col_map: _set_value_safely(ws, row, col_map["No"], idx)
+        if "Tahun" in col_map: _set_value_safely(ws, row, col_map["Tahun"], m.get("tahun"))
         if "Kode" in col_map: _set_value_safely(ws, row, col_map["Kode"], m.get("kode"))
         if "Kategori" in col_map: _set_value_safely(ws, row, col_map["Kategori"], m.get("kategori"))
         if "Daftar Capex" in col_map: _set_value_safely(ws, row, col_map["Daftar Capex"], m.get("daftar_capex"))
@@ -103,6 +106,7 @@ def _inject_real_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
             _set_value_safely(ws, row, col_map["Total"] + 1, _format_rupiah(total_realisasi))
             
         row += 1
+        idx += 1
 
 def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start_row: int) -> None:
     client = get_supabase_admin()
@@ -111,9 +115,12 @@ def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
     
     real_map = {(r["capex_id"], r["bulan"]): r for r in reals}
     row = start_row
+    idx = 1
     
     for m in masters:
         cid = str(m["id"])
+        if "No" in col_map: _set_value_safely(ws, row, col_map["No"], idx)
+        if "Tahun" in col_map: _set_value_safely(ws, row, col_map["Tahun"], m.get("tahun"))
         if "Kode" in col_map: _set_value_safely(ws, row, col_map["Kode"], m.get("kode"))
         if "Kategori" in col_map: _set_value_safely(ws, row, col_map["Kategori"], m.get("kategori"))
         if "PIC" in col_map: _set_value_safely(ws, row, col_map["PIC"], m.get("pic"))
@@ -142,6 +149,7 @@ def _inject_rkap_sheet(ws: Worksheet, tahun: int, col_map: dict[str, int], start
             _set_value_safely(ws, row, col_map["Total"] + 2, _format_rupiah(total_realisasi))
             
         row += 1
+        idx += 1
 
 def _inject_status_sheet(ws: Worksheet, tahun: int, status_type: str, col_map: dict[str, int], start_row: int) -> None:
     client = get_supabase_admin()
