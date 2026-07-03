@@ -174,19 +174,31 @@ def get_audit_logs(
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
-    # Join capex_audit_logs with capex_master and profiles
+    # Fetch audit logs with capex_master join
     query = (
         client.table("capex_audit_logs")
-        .select("*, capex_master!capex_audit_logs_capex_id_fkey(kode, daftar_capex), profiles(full_name)")
+        .select("*, capex_master!capex_audit_logs_capex_id_fkey(kode, daftar_capex)")
         .eq("tahun", tahun)
         .order("created_at", desc=True)
     )
     result = query.execute()
     
+    # Collect unique user_ids
+    user_ids = list(set([r["user_id"] for r in result.data if r.get("user_id")]))
+    
+    # Fetch profile names manually
+    prof_map = {}
+    if user_ids:
+        prof_res = client.table("profiles").select("id, full_name").in_("id", user_ids).execute()
+        for p in prof_res.data:
+            prof_map[p["id"]] = p.get("full_name") or "User"
+            
     logs = []
     for r in result.data:
         capex_info = r.get("capex_master") or {}
-        prof_info = r.get("profiles") or {}
+        user_id = r.get("user_id")
+        user_name = prof_map.get(user_id) if user_id else "System"
+        
         logs.append({
             "id": r["id"],
             "tahun": r["tahun"],
@@ -196,10 +208,11 @@ def get_audit_logs(
             "anggaran": r["anggaran"],
             "keterangan": r["keterangan"],
             "created_at": r["created_at"],
-            "user_name": prof_info.get("full_name") or "System",
+            "user_name": user_name,
             "capex_nama": capex_info.get("daftar_capex") or "-",
             "capex_kode": capex_info.get("kode") or "-"
         })
+        
     return logs
 
 
