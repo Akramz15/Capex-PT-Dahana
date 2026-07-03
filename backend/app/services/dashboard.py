@@ -6,18 +6,15 @@ BULAN_NAMES = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "O
 def get_dashboard_summary(tahun: int) -> dict:
     client = get_supabase_admin()
 
-    master_result = client.table("capex_master").select("id, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).execute()
+    master_result = client.table("capex_master").select("id, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).execute()
     total_rkap = sum(r["anggaran_rkap"] for r in master_result.data)
     total_perubahan = sum(r["anggaran_perubahan"] for r in master_result.data)
     total_capex_items = len(master_result.data)
 
-    # 1. Update total_realisasi to come from capex_realization instead of capex_status_log
-    realisasi_result = client.table("capex_realization").select("nilai_realisasi").eq("tahun", tahun).execute()
-    total_realisasi = sum(r.get("nilai_realisasi") or 0 for r in realisasi_result.data)
-
     status_result = client.table("capex_status_log").select("status_type, rekap_nilai").eq("tahun", tahun).execute()
     
     status_amounts: dict[str, int] = {}
+    total_realisasi = 0
     
     for r in status_result.data:
         st = r["status_type"]
@@ -26,6 +23,20 @@ def get_dashboard_summary(tahun: int) -> dict:
             
         val = r.get("rekap_nilai") or 0
         status_amounts[st] = status_amounts.get(st, 0) + val
+        total_realisasi += val
+
+    # Category Distribution & Top 5 Capex
+    category_amounts = {}
+    top_capex_list = []
+    
+    for r in master_result.data:
+        kat = r.get("kategori") or "Lainnya"
+        budget = r.get("anggaran_perubahan") if r.get("anggaran_perubahan") else r.get("anggaran_rkap")
+        budget = budget or 0
+        category_amounts[kat] = category_amounts.get(kat, 0) + budget
+        top_capex_list.append({"nama": r.get("daftar_capex") or "Unknown", "anggaran": budget})
+        
+    top5_capex = sorted(top_capex_list, key=lambda x: x["anggaran"], reverse=True)[:5]
 
     # Use total_perubahan as the active budget to be super realtime with reallocations
     active_budget = total_perubahan if total_perubahan > 0 else total_rkap
@@ -39,6 +50,8 @@ def get_dashboard_summary(tahun: int) -> dict:
         "persen_realisasi": persen_realisasi,
         "sisa_anggaran": active_budget - total_realisasi,
         "status_distribution": status_amounts,
+        "kategori_distribution": category_amounts,
+        "top5_capex": top5_capex,
     }
 
 

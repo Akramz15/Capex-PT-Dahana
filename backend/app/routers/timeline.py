@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
+import openpyxl
+from io import BytesIO
 from typing import Optional
 from uuid import UUID
 
@@ -95,3 +97,65 @@ def delete_timeline(
     result = client.table(_TABLE).delete().eq("id", str(timeline_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data timeline tidak ditemukan.")
+
+@router.post("/upload")
+def upload_timeline_excel(
+    tahun: int = Query(...),
+    file: UploadFile = File(...),
+    _admin: dict = Depends(require_admin),
+):
+    try:
+        contents = file.file.read()
+        wb = openpyxl.load_workbook(BytesIO(contents), data_only=True)
+        ws = wb.active
+        
+        client = get_supabase_admin()
+        
+        # Get mapping of Kode to Capex ID for this year
+        capex_res = client.table("capex_master").select("id, kode").eq("tahun", tahun).execute()
+        capex_map = {}
+        for c in capex_res.data:
+            if c.get("kode"):
+                capex_map[str(c["kode"]).strip().upper()] = c["id"]
+        
+        insert_data = []
+        for row in ws.iter_rows(min_row=5, values_only=True):
+            if not row[0] or not row[2]:
+                continue
+            
+            kode = str(row[2]).strip().upper()
+            capex_id = capex_map.get(kode)
+            if not capex_id:
+                continue
+                
+            c_idx = 5 # 0-indexed, col F is index 5
+            for month_idx in range(1, 13):
+                for week_idx in range(1, 6):
+                    try:
+                        status_val = row[c_idx]
+                        if status_val and str(status_val).strip() in ['A', 'B', 'C', 'D']:
+                            insert_data.append({
+                                "capex_id": str(capex_id),
+                                "tahun": tahun,
+                                "bulan": month_idx,
+                                "minggu": week_idx,
+                                "kode_status": str(status_val).strip().upper()
+                            })
+                    except Exception:
+                        pass
+                    c_idx += 1
+                    
+        if not insert_data:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tidak ada data timeline valid ditemukan.")
+            
+        chunk_size = 100
+        total = 0
+        for i in range(0, len(insert_data), chunk_size):
+            chunk = insert_data[i:i+chunk_size]
+            res = client.table(_TABLE).upsert(chunk, on_conflict="capex_id,tahun,bulan,minggu").execute()
+            if getattr(res, 'data', None):
+                total += len(res.data)
+            
+        return {"message": f"Berhasil mengupload jadwal timeline untuk {total} record."}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Gagal memproses file: {str(e)}")

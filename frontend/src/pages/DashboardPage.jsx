@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
 import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd, exportDashboardSummaryYtd } from '../api/capex'
-import { exportCapex } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
@@ -8,6 +7,8 @@ import { useDialog } from '../contexts/DialogContext'
 import BudgetVsRealizationChart from '../components/charts/BudgetVsRealizationChart'
 import CumulativeTrendChart from '../components/charts/CumulativeTrendChart'
 import StatusDistributionChart from '../components/charts/StatusDistributionChart'
+import CategoryDistributionChart from '../components/charts/CategoryDistributionChart'
+import Top5CapexChart from '../components/charts/Top5CapexChart'
 import SummaryYTDTable from '../components/ui/SummaryYTDTable'
 import DataTable from '../components/ui/DataTable'
 import Badge from '../components/ui/Badge'
@@ -24,11 +25,17 @@ const COLUMNS = [
   { key: 'total_realisasi',   label: 'Realisasi',   sortable: true,
     render: (v) => <span className="rupiah">{fmtRupiah(v)}</span> },
   { key: 'persen_realisasi',  label: '% Realisasi', sortable: true,
-    render: (v, row) => (
-      <Badge color={v >= 100 ? 'success' : v >= 50 ? 'warning' : 'danger'}>
-        {v.toFixed(1)}%
-      </Badge>
-    ) 
+    render: (v, row) => {
+      let bg = 'var(--clr-danger-light)';
+      let color = 'var(--clr-danger)';
+      if (v >= 100) { bg = 'var(--clr-success-light)'; color = 'var(--clr-success)'; }
+      else if (v >= 50) { bg = 'var(--clr-warning-light)'; color = 'var(--clr-warning)'; }
+      return (
+        <span className="badge" style={{ backgroundColor: bg, color: color, fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>
+          {v.toFixed(1)}%
+        </span>
+      )
+    }
   }
 ]
 
@@ -41,7 +48,6 @@ export default function DashboardPage({ tahun }) {
   const [monthly, setMonthly] = useState([])
   const [progress, setProgress] = useState([])
   const [loading, setLoading] = useState(true)
-  const [exporting, setExporting] = useState(false)
   const [exportingYtd, setExportingYtd] = useState(false)
 
   // Chart configuration state
@@ -86,37 +92,6 @@ export default function DashboardPage({ tahun }) {
     if (!loading) fetchYtdOnly()
   }, [ytdBulan]) // eslint-disable-line
 
-  const handleExport = async () => {
-    setExporting(true)
-    try {
-      const res = await exportCapex(tahun)
-      downloadBlob(res.data, `Monitoring_Capex_PT_Dahana_${tahun}.xlsx`)
-    } catch (e) {
-      let msg = 'Terjadi kesalahan yang tidak diketahui.'
-
-      if (!e.response) {
-        // Network error — backend tidak bisa dihubungi
-        msg = 'Server backend tidak dapat dihubungi. Pastikan backend sudah berjalan di port 8000.'
-      } else if (e.response.status === 401) {
-        msg = 'Sesi login telah berakhir. Silakan login ulang.'
-      } else if (e.response.status === 403) {
-        msg = 'Akses ditolak. Hanya Admin yang dapat mengunduh laporan.'
-      } else if (e.response?.data instanceof Blob) {
-        try {
-          const text = await e.response.data.text()
-          const json = JSON.parse(text)
-          msg = json.detail || msg
-        } catch { msg = `Server error (${e.response.status})` }
-      } else {
-        msg = e.response?.data?.detail || e.message || msg
-      }
-
-      dialog.alert({ title: 'Gagal Mengunduh Laporan', message: msg, variant: 'danger' })
-    } finally {
-      setExporting(false)
-    }
-  }
-
   const handleExportYtd = async () => {
     setExportingYtd(true)
     try {
@@ -152,18 +127,6 @@ export default function DashboardPage({ tahun }) {
           <h2 className="page-title">Dashboard Monitoring Capex {tahun}</h2>
           <p className="page-desc">Ringkasan anggaran, realisasi, dan progress investasi PT Dahana.</p>
         </div>
-        {isAdmin && (
-          <div className="page-header-actions">
-            <button
-              className="btn btn-success"
-              onClick={handleExport}
-              disabled={exporting}
-              id="btn-export-excel"
-            >
-              {exporting ? <><Hourglass size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Mengekspor...</> : <><Download size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Download Laporan Excel</>}
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="cards-grid">
@@ -195,71 +158,68 @@ export default function DashboardPage({ tahun }) {
         />
       </div>
 
-      <div className="charts-grid">
-        <div className="section" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="section-title">
-              {chartMode === 'bar' ? (
-                <><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Anggaran vs Realisasi</>
-              ) : (
-                <><TrendingUp size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Tren Kumulatif</>
-              )}
-            </span>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {chartMode === 'line' && (
-                <select 
-                  className="form-select" 
-                  style={{ padding: '4px 8px', fontSize: '13px', minWidth: '110px' }}
-                  value={chartRange}
-                  onChange={(e) => setChartRange(Number(e.target.value))}
-                >
-                  <option value={1}>Per Bulan</option>
-                  <option value={3}>Triwulan (3 Bulan)</option>
-                  <option value={6}>Semester (6 Bulan)</option>
-                </select>
-              )}
-              <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--clr-background)', padding: '2px', borderRadius: '6px', border: '1px solid var(--clr-border)' }}>
-                <button 
-                  onClick={() => setChartMode('bar')}
-                  style={{ 
-                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
-                    backgroundColor: chartMode === 'bar' ? '#fff' : 'transparent',
-                    color: chartMode === 'bar' ? 'var(--clr-primary)' : 'var(--clr-text-secondary)',
-                    boxShadow: chartMode === 'bar' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
-                  }}
-                >Bar</button>
-                <button 
-                  onClick={() => setChartMode('line')}
-                  style={{ 
-                    padding: '4px 12px', fontSize: '12px', fontWeight: 600, border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
-                    backgroundColor: chartMode === 'line' ? '#fff' : 'transparent',
-                    color: chartMode === 'line' ? 'var(--clr-primary)' : 'var(--clr-text-secondary)',
-                    boxShadow: chartMode === 'line' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
-                  }}
-                >Tren (Line)</button>
-              </div>
-            </div>
-          </div>
-          <div className="section-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-            {chartMode === 'bar' ? (
-              <BudgetVsRealizationChart data={monthly} />
-            ) : (
-              <CumulativeTrendChart data={monthly} range={chartRange} />
+      <div className="section" style={{ display: 'flex', flexDirection: 'column', marginTop: '24px' }}>
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="section-title">
+            {chartMode === 'bar' && <><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Anggaran vs Realisasi</>}
+            {chartMode === 'line' && <><TrendingUp size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Tren Kumulatif (S-Curve)</>}
+            {chartMode === 'status' && <><PieChart size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Distribusi Status</>}
+            {chartMode === 'kategori' && <><PieChart size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Distribusi Kategori</>}
+            {chartMode === 'top5' && <><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Top 5 Capex Terbesar</>}
+          </span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {chartMode === 'line' && (
+              <select 
+                className="form-select" 
+                style={{ padding: '4px 8px', fontSize: '13px', minWidth: '110px' }}
+                value={chartRange}
+                onChange={(e) => setChartRange(Number(e.target.value))}
+              >
+                <option value={1}>Per Bulan</option>
+                <option value={3}>Triwulan (3 Bulan)</option>
+                <option value={6}>Semester (6 Bulan)</option>
+              </select>
             )}
+            <select
+              className="form-select"
+              style={{ padding: '6px 12px', fontSize: '13px', minWidth: '220px', fontWeight: 600, border: '1px solid var(--clr-border)', borderRadius: '6px' }}
+              value={chartMode}
+              onChange={(e) => setChartMode(e.target.value)}
+            >
+              <option value="bar">Anggaran vs Realisasi (Bar)</option>
+              <option value="line">Tren Kumulatif / S-Curve (Line)</option>
+              <option value="status">Distribusi Status (Pie)</option>
+              <option value="kategori">Distribusi Kategori (Pie)</option>
+              <option value="top5">Top 5 Capex Terbesar (Bar)</option>
+            </select>
           </div>
         </div>
-
-        <div className="section">
-          <div className="section-header">
-            <span className="section-title"><PieChart size={18} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} /> Distribusi Status</span>
-          </div>
-          <div className="section-body">
+        <div className="section-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {chartMode === 'bar' && <BudgetVsRealizationChart data={monthly} />}
+          {chartMode === 'line' && <CumulativeTrendChart data={monthly} range={chartRange} />}
+          {chartMode === 'status' && (
             <StatusDistributionChart 
               data={summary?.status_distribution ?? {}} 
               totalRKAP={summary?.total_anggaran_rkap || 0}
               totalReal={summary?.total_realisasi || 0}
               sisa={summary?.sisa_anggaran || 0}
             />
+          )}
+          {chartMode === 'kategori' && (
+            <CategoryDistributionChart 
+              data={summary?.kategori_distribution ?? {}} 
+              totalBudget={summary?.total_anggaran_perubahan > 0 ? summary?.total_anggaran_perubahan : summary?.total_anggaran_rkap}
+            />
+          )}
+          {chartMode === 'top5' && <Top5CapexChart data={summary?.top5_capex ?? []} />}
+
+          <div style={{ marginTop: '24px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', borderLeft: '4px solid var(--clr-primary)', fontSize: '0.875rem', color: '#475569' }}>
+            <strong>Fungsi Grafik:</strong> 
+            {chartMode === 'bar' && ' Membandingkan total Anggaran dengan Realisasi secara per bulan.'}
+            {chartMode === 'line' && ' Kurva-S (S-Curve) untuk melihat kumulatif tren penyerapan anggaran dari waktu ke waktu.'}
+            {chartMode === 'status' && ' Menjabarkan porsi uang yang sedang berada di fase Kajian, Tender, PO, dan BA/ADK.'}
+            {chartMode === 'kategori' && ' Menampilkan porsi alokasi anggaran terbesar berdasarkan kategori atau departemen.'}
+            {chartMode === 'top5' && ' Menyoroti 5 proyek raksasa yang paling banyak memakan porsi anggaran perusahaan tahun ini.'}
           </div>
         </div>
       </div>
@@ -296,13 +256,13 @@ export default function DashboardPage({ tahun }) {
             </select>
             {isAdmin && (
               <button 
-                className="btn btn-success" 
+                className="btn btn-outline" 
                 onClick={handleExportYtd} 
                 disabled={exportingYtd}
                 style={{ padding: '6px 12px', fontSize: '0.875rem' }}
               >
                 <Download size={14} style={{ marginRight: 6 }} />
-                {exportingYtd ? 'Mengekspor...' : 'Unduh Excel'}
+                {exportingYtd ? 'Mengekspor...' : 'Download Excel'}
               </button>
             )}
           </div>

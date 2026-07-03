@@ -12,6 +12,7 @@ import AssetsPage      from './pages/AssetsPage'
 import StatusPage      from './pages/StatusPage'
 import LKUPage         from './pages/LKUPage'
 import UsersPage       from './pages/UsersPage'
+import RiwayatPengalihanPage from './pages/RiwayatPengalihanPage'
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -37,6 +38,7 @@ function AppRoutes() {
                 <Routes>
                   <Route path="/dashboard"  element={<DashboardPage   tahun={tahun} />} />
                   <Route path="/rkap"       element={<RKAPMasterPage  tahun={tahun} />} />
+                  <Route path="/rkap/riwayat" element={<RiwayatPengalihanPage tahun={tahun} />} />
                   <Route path="/realisasi"  element={<RealizationPage tahun={tahun} />} />
                   <Route path="/status"     element={<StatusPage      tahun={tahun} />} />
                   <Route path="/timeline"   element={<TimelinePage    tahun={tahun} />} />

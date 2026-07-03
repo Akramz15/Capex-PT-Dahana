@@ -1,14 +1,21 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { logout as apiLogout } from '../../api/auth'
-import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye, History } from 'lucide-react'
 import { useDialog } from '../../contexts/DialogContext'
 
 import logoUrl from '../../assets/MONITORING CAPEX.png'
 
 const NAV_ITEMS = [
   { to: '/dashboard',   icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-  { to: '/rkap',        icon: <ClipboardList size={18} />, label: 'RKAP Master' },
+  { 
+    to: '/rkap',        
+    icon: <ClipboardList size={18} />, 
+    label: 'RKAP Master',
+    subItems: [
+      { to: '/rkap/riwayat', label: 'Riwayat Pengalihan', icon: <History size={16} /> }
+    ]
+  },
   { to: '/realisasi',   icon: <TrendingUp size={18} />, label: 'Realisasi' },
   { to: '/timeline',    icon: <Calendar size={18} />, label: 'Timeline' },
   { to: '/aset',        icon: <Factory size={18} />, label: 'Data Aset' },
@@ -18,6 +25,7 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
   const dialog = useDialog()
 
   const handleLogout = async () => {
@@ -42,16 +50,37 @@ export default function Sidebar() {
 
       <nav className="sidebar-nav">
         <div className="sidebar-section-label">Menu Utama</div>
-        {filteredNavItems.map(({ to, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
-          >
-            <span className="sidebar-icon">{icon}</span>
-            {label}
-          </NavLink>
-        ))}
+        {filteredNavItems.map(({ to, icon, label, subItems }) => {
+          const isParentActive = location.pathname.startsWith(to)
+          return (
+            <div key={to} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2px' }}>
+              <NavLink
+                to={to}
+                end={to === '/rkap'}
+                className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
+              >
+                <span className="sidebar-icon">{icon}</span>
+                {label}
+              </NavLink>
+              
+              {subItems && isParentActive && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '26px', paddingLeft: '12px', borderLeft: '2px solid rgba(255,255,255,0.15)', marginTop: '2px' }}>
+                  {subItems.map(sub => (
+                    <NavLink
+                      key={sub.to}
+                      to={sub.to}
+                      className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
+                      style={{ padding: '8px 12px', fontSize: '13px', minHeight: '36px' }}
+                    >
+                      <span className="sidebar-icon" style={{ opacity: 0.7, transform: 'scale(0.9)' }}>{sub.icon}</span>
+                      {sub.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </nav>
 
       <div className="sidebar-footer">

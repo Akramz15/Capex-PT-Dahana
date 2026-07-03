@@ -31,6 +31,14 @@ export const createRealization = (data)        => client.post('/realization',   
 export const createRealizationBulk = (data)    => client.post('/realization/bulk', data)
 export const updateRealization = (id, data)    => client.put(`/realization/${id}`, data)
 export const deleteRealization = (id)          => client.delete(`/realization/${id}`)
+export const uploadRealizationExcel = (tahun, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return client.post('/realization/upload', formData, {
+    params: { tahun },
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
 
 export const listStatus   = (params = {}) => client.get('/status',       { params })
 export const createStatus = (data)        => client.post('/status',      data)
@@ -62,3 +70,42 @@ export const exportCapex = (tahun) =>
     responseType: 'blob',
     timeout: 60000, // 60 detik untuk operasi berat
   })
+
+export const exportAuditLogsExcel = (params = {}) =>
+  client.get('/export-capex/audit-logs', {
+    params,
+    responseType: 'blob'
+  })
+
+export const exportRKAPExcel = (params = {}) =>
+  client.get('/export-capex/rkap', {
+    params,
+    responseType: 'blob'
+  })
+
+export const exportRealizationExcel = (params = {}) =>
+  client.get('/export-capex/realisasi', {
+    params,
+    responseType: 'blob'
+  })
+
+export const exportAssetsExcel = (params = {}) =>
+  client.get('/export-capex/assets', {
+    params,
+    responseType: 'blob'
+  })
+
+export const exportTimelineExcel = (params = {}) =>
+  client.get('/export-capex/timeline', {
+    params,
+    responseType: 'blob'
+  })
+
+export const uploadTimelineExcel = (tahun, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return client.post('/timeline/upload', formData, {
+    params: { tahun },
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}

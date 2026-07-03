@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
+import openpyxl
+from io import BytesIO
 from typing import Optional
 from uuid import UUID
 
@@ -118,3 +120,83 @@ def delete_realization(
     result = client.table(_TABLE).delete().eq("id", str(realization_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data realisasi tidak ditemukan.")
+
+@router.post("/upload", status_code=status.HTTP_200_OK)
+def upload_realization(
+    tahun: int = Query(...),
+    file: UploadFile = File(...),
+    _admin: dict = Depends(require_admin),
+):
+    client = get_supabase_admin()
+    
+    # Cek kunci RKAP jika perlu (walaupun ini realisasi, biasanya ada lock realisasi juga. 
+    # Tapi untuk simpel, kita asumsikan jika RKAP dikunci, realisasi tetap bisa diisi kecuali ditentukan lain)
+    
+    if not file.filename.endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Format file tidak didukung. Harap upload .xlsx")
+        
+    try:
+        content_file = file.file.read()
+        wb = openpyxl.load_workbook(BytesIO(content_file), data_only=True)
+        ws = wb.active
+        
+        # Ambil semua capex master untuk mapping id berdasarkan daftar_capex
+        capex_res = client.table("capex_master").select("id, daftar_capex").eq("tahun", tahun).execute()
+        capex_map = {c["daftar_capex"].lower().strip(): c["id"] for c in capex_res.data if c.get("daftar_capex")}
+        
+        inserted = 0
+        data_to_upsert = []
+        
+        # Mulai dari baris 5 berdasarkan export_dynamic.py
+        for row in ws.iter_rows(min_row=5, values_only=True):
+            if not row or not row[1] or str(row[1]).lower().strip() == 'total':
+                continue
+                
+            daftar_capex = str(row[1]).lower().strip()
+            capex_id = capex_map.get(daftar_capex)
+            
+            if not capex_id:
+                continue
+                
+            status_val = str(row[4]) if row[4] else None
+            ket_val = str(row[5]) if row[5] else None
+            
+            col_idx = 6 # idx 6 is column 7 (JANUARI RKAP) -> Wait, 0-indexed: row[6] is column G.
+            
+            for bulan in range(1, 13):
+                rkap_val = row[col_idx]
+                real_val = row[col_idx+1]
+                
+                def parse_int(v):
+                    try:
+                        if not v: return 0
+                        return int(float(v))
+                    except:
+                        return 0
+                        
+                rkap_int = parse_int(rkap_val)
+                real_int = parse_int(real_val)
+                
+                # Kita upsert jika ada nilainya
+                # Supaya tidak menumpuk database dengan 0,0 jika tidak ada realisasi
+                # Tapi kalau dari upload, bisa jadi mengubah jadi 0. Jadi kita insert aja
+                data_to_upsert.append({
+                    "capex_id": capex_id,
+                    "tahun": tahun,
+                    "bulan": bulan,
+                    "nilai_rkap": rkap_int,
+                    "nilai_realisasi": real_int,
+                    "status": status_val,
+                    "keterangan": ket_val
+                })
+                col_idx += 2
+                inserted += 1
+                
+        if data_to_upsert:
+            # Upsert
+            client.table("capex_realization").upsert(data_to_upsert, on_conflict="capex_id,tahun,bulan").execute()
+            
+        return {"message": f"Berhasil memproses upload untuk {len(data_to_upsert)//12} item capex."}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

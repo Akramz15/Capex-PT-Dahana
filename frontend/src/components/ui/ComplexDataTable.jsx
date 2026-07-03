@@ -14,7 +14,7 @@ import { Pencil, Trash2, Inbox, Search, Filter } from 'lucide-react';
  *   children: [ ... nested columns ... ] (optional)
  * }
  */
-function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emptyMessage = "Data belum tersedia", searchKeys = [], filterOptions = [], renderFooter = null, groupBy = null, renderGroupHeader = null, customToolbarContent = null }) {
+function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emptyMessage = "Data belum tersedia", searchKeys = [], filterOptions = [], renderFooter = null, groupBy = null, renderGroupHeader = null, customToolbarContent = null, onFilterChange = null }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState({});
 
@@ -99,18 +99,22 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
     }
 
     let matchesFilters = true;
-    for (const filterKey in activeFilters) {
-      const selectedValue = activeFilters[filterKey];
-      if (selectedValue && selectedValue !== '') {
-        if (String(row[filterKey]) !== selectedValue) {
-          matchesFilters = false;
-          break;
-        }
+    Object.keys(activeFilters).forEach(key => {
+      const selectedVal = activeFilters[key];
+      if (selectedVal && selectedVal !== 'all' && String(row[key]) !== selectedVal) {
+        matchesFilters = false;
       }
-    }
+    });
 
     return matchesSearch && matchesFilters;
   });
+
+  // Call onFilterChange when filters change
+  React.useEffect(() => {
+    if (onFilterChange) {
+      onFilterChange({ search: searchTerm, ...activeFilters });
+    }
+  }, [searchTerm, activeFilters, onFilterChange]);
 
   return (
     <div>

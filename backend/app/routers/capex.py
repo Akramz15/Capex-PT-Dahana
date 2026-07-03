@@ -60,35 +60,88 @@ def create_capex(
         # Jika dikunci, pastikan RKAP 0 dan wajib ada sumber dana
         if payload.anggaran_rkap > 0:
             raise HTTPException(status_code=400, detail="RKAP sudah dikunci. Anggaran RKAP awal harus 0.")
-        if not payload.source_capex_id:
-            raise HTTPException(status_code=400, detail="RKAP sudah dikunci. Anda wajib memilih Sumber Dana (Capex Lama) untuk digeser anggarannya.")
+        if not payload.nd_persetujuan:
+            raise HTTPException(status_code=400, detail="RKAP sudah dikunci. ND Persetujuan wajib diisi sebagai bukti persetujuan.")
             
-        # Panggil RPC untuk memastikan transaksi aman (potong sumber, tambah baru)
         try:
-            rpc_res = client.rpc(
-                "rpc_create_capex_reallocation", 
-                {
-                    "p_tahun": payload.tahun,
-                    "p_kode": payload.kode,
-                    "p_daftar_capex": payload.daftar_capex,
-                    "p_kategori": payload.kategori,
-                    "p_anggaran_perubahan": payload.anggaran_perubahan,
-                    "p_pic": payload.pic,
-                    "p_source_capex_id": str(payload.source_capex_id),
-                    "p_user_id": _admin["id"]
-                }
-            ).execute()
-            new_id = rpc_res.data
+            # 1. Cek & ambil data sumber
+            source_res = client.table(_TABLE).select("*").eq("id", str(payload.source_capex_id)).execute()
+            if not source_res.data:
+                raise HTTPException(status_code=400, detail="Capex sumber tidak ditemukan.")
             
-            # Fetch data baru untuk response
-            new_capex = client.table(_TABLE).select("*").eq("id", new_id).single().execute()
-            return new_capex.data
+            source_capex = source_res.data[0]
+            source_anggaran_awal = source_capex.get("anggaran_perubahan", 0)
+            
+            if source_anggaran_awal < payload.anggaran_perubahan:
+                raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi.")
+            
+            source_anggaran_akhir = source_anggaran_awal - payload.anggaran_perubahan
+            
+            # 2. Kurangi anggaran sumber di capex_master
+            client.table(_TABLE).update({"anggaran_perubahan": source_anggaran_akhir}).eq("id", str(payload.source_capex_id)).execute()
+            
+            # 2b. Kurangi anggaran sumber di realisasi bulanan (dari bulan 12 mundur)
+            try:
+                real_res = client.table("capex_realization").select("*").eq("capex_id", str(payload.source_capex_id)).order("bulan", desc=True).execute()
+                amount_to_deduct = payload.anggaran_perubahan
+                original_reals = real_res.data
+                
+                for r in original_reals:
+                    if amount_to_deduct <= 0:
+                        break
+                    rkap_val = r.get("nilai_rkap") or 0
+                    if rkap_val > 0:
+                        deduction = min(rkap_val, amount_to_deduct)
+                        new_val = rkap_val - deduction
+                        client.table("capex_realization").update({"nilai_rkap": new_val}).eq("id", r["id"]).execute()
+                        amount_to_deduct -= deduction
+            except Exception as e:
+                # Gagal potong bulanan, biarkan lanjut tapi idealnya di-log
+                pass
+            
+            try:
+                # 3. Insert capex baru (tujuan)
+                new_data = payload.model_dump(mode='json', exclude_unset=True)
+                nd_val = new_data.pop("nd_persetujuan", None)
+                new_res = client.table(_TABLE).insert(new_data).execute()
+                new_capex = new_res.data[0]
+                
+                # 4. Insert Audit Log Lengkap
+                audit_data = {
+                    "capex_id": new_capex["id"],
+                    "tahun": payload.tahun,
+                    "action_type": "CREATE_REALLOCATION",
+                    "keterangan": f"Pengalihan dana dari {source_capex['daftar_capex']} ke {payload.daftar_capex}",
+                    "user_id": _admin["id"],
+                    "anggaran": payload.anggaran_perubahan,
+                    "nd_persetujuan": nd_val,
+                    "source_capex_name": source_capex["daftar_capex"],
+                    "source_nilai_awal": source_anggaran_awal,
+                    "source_nilai_akhir": source_anggaran_akhir,
+                    "target_capex_name": payload.daftar_capex,
+                    "target_nilai_awal": 0,
+                    "target_nilai_akhir": payload.anggaran_perubahan
+                }
+                client.table("capex_audit_logs").insert(audit_data).execute()
+                
+                return new_capex
+            except Exception as inner_e:
+                # Rollback anggaran sumber jika insert gagal
+                client.table(_TABLE).update({"anggaran_perubahan": source_anggaran_awal}).eq("id", str(payload.source_capex_id)).execute()
+                # Rollback realisasi bulanan
+                if 'original_reals' in locals():
+                    for r in original_reals:
+                        client.table("capex_realization").update({"nilai_rkap": r.get("nilai_rkap")}).eq("id", r["id"]).execute()
+                raise inner_e
+                
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Gagal melakukan pergeseran anggaran: {str(e)}")
             
     else:
         # Jika belum dikunci, insert normal
-        result = client.table(_TABLE).insert(payload.model_dump(exclude_unset=True)).execute()
+        new_data = payload.model_dump(mode='json', exclude_unset=True)
+        new_data.pop("nd_persetujuan", None) # Buang jika dikirim
+        result = client.table(_TABLE).insert(new_data).execute()
         return result.data[0]
 
 @router.put("/{capex_id}", response_model=CapexMasterResponse)
@@ -164,6 +217,17 @@ def delete_capex(
             new_source_budget = current_source_budget + refund_amount
             client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", str(source_id)).execute()
             
+            # Tambahkan juga ke realisasi bulanan agar sinkron (cari bulan dengan rkap terbesar, atau bulan 1)
+            try:
+                real_res = client.table("capex_realization").select("*").eq("capex_id", str(source_id)).execute()
+                if real_res.data:
+                    # Cari bulan dengan nilai_rkap terbesar
+                    target_month = max(real_res.data, key=lambda x: x.get("nilai_rkap") or 0)
+                    old_rkap = target_month.get("nilai_rkap") or 0
+                    client.table("capex_realization").update({"nilai_rkap": old_rkap + refund_amount}).eq("id", target_month["id"]).execute()
+            except Exception:
+                pass
+            
     # 3. Hapus data capex
     client.table(_TABLE).delete().eq("id", str(capex_id)).execute()
 
@@ -209,6 +273,13 @@ def get_audit_logs(
             "keterangan": r["keterangan"],
             "created_at": r["created_at"],
             "user_name": user_name,
+            "nd_persetujuan": r.get("nd_persetujuan") or "",
+            "source_capex_name": r.get("source_capex_name") or "-",
+            "source_nilai_awal": r.get("source_nilai_awal") or 0,
+            "source_nilai_akhir": r.get("source_nilai_akhir") or 0,
+            "target_capex_name": r.get("target_capex_name") or "-",
+            "target_nilai_awal": r.get("target_nilai_awal") or 0,
+            "target_nilai_akhir": r.get("target_nilai_akhir") or 0,
             "capex_nama": capex_info.get("daftar_capex") or "-",
             "capex_kode": capex_info.get("kode") or "-"
         })

@@ -7,7 +7,9 @@ import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
-import { fmtRupiah, fmtShort } from '../utils'
+import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
+import { UploadCloud, Download, Hourglass } from 'lucide-react'
+import { uploadRealizationExcel, exportRealizationExcel } from '../api/capex'
 
 const BULAN_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const STATUS_OPTIONS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya', 'Rencana']
@@ -32,6 +34,9 @@ export default function RealizationPage({ tahun }) {
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [currentFilters, setCurrentFilters] = useState({})
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -123,6 +128,36 @@ export default function RealizationPage({ tahun }) {
     })
   }
 
+  const handleUploadExcel = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    try {
+      setUploading(true)
+      await uploadRealizationExcel(tahun, file)
+      dialog.alert({ title: 'Sukses', message: 'Data Realisasi berhasil diunggah.', variant: 'success' })
+      await fetchData()
+    } catch (err) {
+      let msg = 'Gagal mengunggah file.'
+      if (err.response?.data?.detail) msg = err.response.data.detail
+      dialog.alert({ title: 'Error', message: msg, variant: 'danger' })
+    } finally {
+      setUploading(false)
+      e.target.value = null
+    }
+  }
+
+  const handleExportExcel = async () => {
+    setExporting(true)
+    try {
+      const res = await exportRealizationExcel({ tahun, ...currentFilters })
+      downloadBlob(res.data, `Realisasi_${tahun}.xlsx`)
+    } catch (e) {
+      dialog.alert({ title: 'Error', message: 'Gagal mengunduh laporan excel.', variant: 'danger' })
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const closeModal = () => { setModal(false); setForm(EMPTY_FORM) }
 
@@ -328,6 +363,30 @@ export default function RealizationPage({ tahun }) {
           <h2 className="page-title">Realisasi {tahun}</h2>
           <p className="page-desc">Log realisasi investasi bulanan setiap item Capex.</p>
         </div>
+        {isAdmin && (
+          <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-outline" onClick={handleExportExcel} disabled={exporting} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {exporting ? <><Hourglass size={18} /> Mengekspor...</> : <><Download size={18} /> Download Excel</>}
+            </button>
+
+            <input 
+              type="file" 
+              accept=".xlsx, .xls" 
+              id="upload-excel" 
+              style={{ display: 'none' }} 
+              onChange={handleUploadExcel} 
+            />
+            <button 
+              className="btn btn-outline" 
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => document.getElementById('upload-excel').click()}
+              disabled={uploading}
+            >
+              <UploadCloud size={18} />
+              {uploading ? 'Mengunggah...' : 'Upload Excel'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -347,6 +406,7 @@ export default function RealizationPage({ tahun }) {
               renderFooter={renderFooter}
               groupBy="kategori"
               renderGroupHeader={renderGroupHeader}
+              onFilterChange={setCurrentFilters}
             />
             {data.length > 0 && renderSummary()}
           </>

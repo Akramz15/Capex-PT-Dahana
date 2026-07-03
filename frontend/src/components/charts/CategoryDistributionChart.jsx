@@ -1,15 +1,17 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
-import { BarChart3 } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { FolderOpen } from 'lucide-react'
 import { fmtRupiah } from '../../utils'
 
-const COLORS = {
-  PO:      'hsl(214, 80%, 52%)',
-  Tender:  'hsl(38, 92%, 50%)',
-  Kajian:  'hsl(199, 89%, 48%)',
-  BAADK:   'hsl(145, 63%, 42%)',
-  Lainnya: 'hsl(270, 60%, 55%)',
-  Rencana: 'hsl(220, 10%, 70%)',
-}
+const COLORS = [
+  'hsl(214, 80%, 52%)',
+  'hsl(38, 92%, 50%)',
+  'hsl(199, 89%, 48%)',
+  'hsl(145, 63%, 42%)',
+  'hsl(270, 60%, 55%)',
+  'hsl(340, 70%, 60%)',
+  'hsl(20, 80%, 55%)',
+  'hsl(200, 15%, 70%)'
+]
 
 const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
   if (percent < 0.05) return null
@@ -24,22 +26,22 @@ const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) =>
   )
 }
 
-export default function StatusDistributionChart({ data = {}, totalRKAP = 0, totalReal = 0, sisa = 0 }) {
+export default function CategoryDistributionChart({ data = {}, totalBudget = 0 }) {
   const chartData = Object.entries(data)
     .map(([name, value]) => ({ name, value }))
-    .filter(item => item.value > 0 || ['PO', 'Kajian', 'Tender', 'BAADK', 'Lainnya'].includes(item.name))
+    .sort((a, b) => b.value - a.value) // Sort largest first
 
-  if (!chartData.length) return (
+  if (!chartData.length || totalBudget === 0) return (
     <div className="table-empty">
-      <div className="table-empty-icon"><BarChart3 size={40} /></div>
+      <div className="table-empty-icon"><FolderOpen size={40} /></div>
       Data belum tersedia
     </div>
   )
 
   const getPct = (val) => {
-    if (totalRKAP <= 0) return '0%'
-    const pct = (val / totalRKAP * 100)
-    if (pct > 0 && pct < 0.05) return '< 0,1%'
+    if (totalBudget <= 0) return '0%'
+    const pct = (val / totalBudget * 100)
+    if (pct > 0 && pct < 0.1) return '< 0,1%'
     return pct.toFixed(1).replace('.', ',') + '%'
   }
 
@@ -58,8 +60,8 @@ export default function StatusDistributionChart({ data = {}, totalRKAP = 0, tota
             labelLine={false}
             label={renderLabel}
           >
-            {chartData.map(({ name }) => (
-              <Cell key={name} fill={COLORS[name] ?? 'hsl(220 15% 70%)'} />
+            {chartData.map(({ name }, index) => (
+              <Cell key={name} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip formatter={(v, n) => [`Rp ${fmtRupiah(v)}`, n]} />
@@ -73,9 +75,9 @@ export default function StatusDistributionChart({ data = {}, totalRKAP = 0, tota
             {chartData.map((item, i) => (
               <tr key={item.name}>
                 <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{fmtRupiah(item.value)}</td>
-                <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{getPct(item.value)}</td>
-                <td style={{ padding: '8px 12px', borderLeft: `6px solid ${COLORS[item.name] || '#ccc'}`, backgroundColor: 'var(--clr-bg-alt, #f8f9fa)', fontWeight: 500 }}>
-                  {item.name === 'BAADK' ? 'BA/ADK' : item.name}
+                <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap', width: '50px' }}>{getPct(item.value)}</td>
+                <td style={{ padding: '8px 12px', borderLeft: `6px solid ${COLORS[i % COLORS.length]}`, backgroundColor: 'var(--clr-bg-alt, #f8f9fa)', fontWeight: 500 }}>
+                  {item.name}
                 </td>
               </tr>
             ))}
@@ -83,19 +85,9 @@ export default function StatusDistributionChart({ data = {}, totalRKAP = 0, tota
             <tr><td colSpan={3} style={{ borderBottom: '2px solid #000', padding: '4px' }}></td></tr>
             
             <tr>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(totalReal)}</td>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{getPct(totalReal)}</td>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Total Realisasi</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(sisa)}</td>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{getPct(sisa)}</td>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Sisa</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(totalRKAP)}</td>
+              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(totalBudget)}</td>
               <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>100%</td>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Total</td>
+              <td style={{ padding: '12px', fontWeight: 'bold' }}>Total Anggaran Aktif</td>
             </tr>
           </tbody>
         </table>

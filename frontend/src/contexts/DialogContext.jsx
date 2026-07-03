@@ -64,17 +64,19 @@ export function DialogProvider({ children }) {
   }, []);
 
   const handleConfirm = () => {
-    if (dialogState.onConfirm) {
-      dialogState.onConfirm();
-    }
+    const fn = dialogState.onConfirm;
     closeDialog();
+    if (fn) {
+      fn();
+    }
   };
 
   const handleCancel = () => {
-    if (dialogState.onCancel) {
-      dialogState.onCancel();
-    }
+    const fn = dialogState.onCancel;
     closeDialog();
+    if (fn) {
+      fn();
+    }
   };
 
   const getIcon = () => {

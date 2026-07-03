@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from 'react'
-import { listTimeline, listCapex, createTimelineBulk } from '../api/capex'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { listTimeline, listCapex, createTimelineBulk, uploadTimelineExcel, exportTimelineExcel } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { fmtRupiah } from '../utils'
+import { fmtRupiah, downloadBlob } from '../utils'
+import { Upload, Download } from 'lucide-react'
 
 const BULAN_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const MINGGU_ARRAY = [1, 2, 3, 4]
@@ -46,6 +47,10 @@ export default function TimelinePage({ tahun }) {
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  
+  const [uploading, setUploading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const fileInputRef = useRef(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -133,11 +138,53 @@ export default function TimelinePage({ tahun }) {
       
       await fetchData()
       closeModal()
-    } catch (e) {
-      dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
+    } catch (err) {
+      dialog.alert({ title: 'Error', message: err.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleDownloadExcel = async () => {
+    setDownloading(true)
+    try {
+      const res = await exportTimelineExcel({ tahun })
+      downloadBlob(res.data, `Timeline_${tahun}.xlsx`)
+    } catch (err) {
+      dialog.alert({ title: 'Error', message: 'Gagal mengunduh laporan excel.', variant: 'danger' })
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    dialog.confirm({
+      title: 'Konfirmasi Upload',
+      message: `Anda yakin ingin mengupload data timeline untuk tahun ${tahun}? Data jadwal yang bertabrakan akan diperbarui.`,
+      onConfirm: async () => {
+        setUploading(true)
+        try {
+          const res = await uploadTimelineExcel(tahun, file)
+          dialog.alert({ title: 'Sukses', message: res.data.message, variant: 'success' })
+          await fetchData()
+        } catch (err) {
+          dialog.alert({ title: 'Error', message: err.response?.data?.detail ?? 'Gagal mengunggah file excel.', variant: 'danger' })
+        } finally {
+          setUploading(false)
+          e.target.value = ''
+        }
+      },
+      onCancel: () => {
+        e.target.value = ''
+      }
+    })
   }
 
   const setF = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -209,6 +256,33 @@ export default function TimelinePage({ tahun }) {
           <h2 className="page-title">Timeline (Gantt Chart) {tahun}</h2>
           <p className="page-desc">Jadwal pelaksanaan proyek investasi dari Kajian hingga BAST.</p>
         </div>
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="file" 
+              accept=".xlsx,.xls" 
+              style={{ display: 'none' }} 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+            />
+            <button className="btn btn-outline" onClick={handleUploadClick} disabled={uploading}>
+              <Upload size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
+              {uploading ? 'Mengunggah...' : 'Upload Excel'}
+            </button>
+            <button className="btn btn-outline" onClick={handleDownloadExcel} disabled={downloading}>
+              <Download size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
+              {downloading ? 'Unduh...' : 'Download Excel'}
+            </button>
+          </div>
+        )}
+        {!isAdmin && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-outline" onClick={handleDownloadExcel} disabled={downloading}>
+              <Download size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
+              {downloading ? 'Unduh...' : 'Download Excel'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

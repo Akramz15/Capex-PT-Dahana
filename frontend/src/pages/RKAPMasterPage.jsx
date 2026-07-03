@@ -10,11 +10,12 @@ import { useDialog } from '../contexts/DialogContext'
 import { fmtRupiah, fmtShort } from '../utils'
 
 import { getRkapLockStatus, setRkapLockStatus } from '../api/settings'
-import { Lock, Unlock, History, UploadCloud } from 'lucide-react'
-import { getAuditLogs, uploadCapexExcel } from '../api/capex'
+import { Lock, Unlock, UploadCloud, Download, Hourglass } from 'lucide-react'
+import { uploadCapexExcel, exportRKAPExcel } from '../api/capex'
+import { downloadBlob } from '../utils'
 
-const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '' }
-const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '', nd_persetujuan: '' }
+const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
 export default function RKAPMasterPage({ tahun }) {
   const user    = useAuthStore((s) => s.user)
@@ -27,8 +28,9 @@ export default function RKAPMasterPage({ tahun }) {
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [saving,  setSaving]  = useState(false)
   const [isLocked, setIsLocked] = useState(false)
-  const [auditLogs, setAuditLogs] = useState([])
   const [uploading, setUploading] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [currentFilters, setCurrentFilters] = useState({})
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -78,19 +80,6 @@ export default function RKAPMasterPage({ tahun }) {
     setModal('edit')
   }
   
-  const openAuditLogs = async () => {
-    try {
-      setLoading(true)
-      const res = await getAuditLogs(tahun)
-      setAuditLogs(res.data)
-      setModal('audit')
-    } catch (e) {
-      dialog.alert({ title: 'Error', message: 'Gagal mengambil riwayat pengalihan.', variant: 'danger' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleUploadExcel = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -110,10 +99,19 @@ export default function RKAPMasterPage({ tahun }) {
     }
   }
 
+  const handleExportExcel = async () => {
+    setExporting(true)
+    try {
+      const res = await exportRKAPExcel({ tahun, ...currentFilters })
+      downloadBlob(res.data, `RKAP_Master_${tahun}.xlsx`)
+    } catch (e) {
+      dialog.alert({ title: 'Error', message: 'Gagal mengunduh laporan excel.', variant: 'danger' })
+    } finally {
+      setExporting(false)
+    }
+  }
 
-
-
-  const closeModal = () => { setModal(null); setForm(EMPTY_FORM); setAuditLogs([]) }
+  const closeModal = () => { setModal(null); setForm(EMPTY_FORM) }
 
   const handleToggleLock = () => {
     dialog.confirm({
@@ -137,6 +135,24 @@ export default function RKAPMasterPage({ tahun }) {
 
   const handleSave = async () => {
     setSaving(true)
+    
+    // Validasi Total RKAP Bulanan vs Anggaran
+    let sumBulanan = 0
+    for (let i = 1; i <= 12; i++) {
+      sumBulanan += Number(form.items?.[i]?.rkap || 0)
+    }
+    const targetAnggaran = isLocked ? Number(form.anggaran_perubahan || 0) : Number(form.anggaran_rkap || 0)
+    
+    if (sumBulanan !== targetAnggaran) {
+      dialog.alert({ 
+        title: 'Validasi Gagal', 
+        message: `Total RKAP Bulanan (${fmtRupiah(sumBulanan)}) tidak sama dengan Anggaran (${fmtRupiah(targetAnggaran)}). Silakan sesuaikan rincian bulanan.`, 
+        variant: 'warning' 
+      })
+      setSaving(false)
+      return
+    }
+
     try {
       let capexId = form.id
       if (modal === 'create') {
@@ -313,15 +329,14 @@ export default function RKAPMasterPage({ tahun }) {
         </div>
         {isAdmin && (
           <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn btn-secondary" onClick={openAuditLogs} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <History size={18} />
-              Riwayat Pengalihan
-            </button>
             <button className={`btn ${isLocked ? 'btn-danger' : 'btn-success'}`} onClick={handleToggleLock} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {isLocked ? <Lock size={18} /> : <Unlock size={18} />}
               {isLocked ? 'Buka Kunci RKAP' : 'Kunci RKAP ' + tahun}
             </button>
             
+            <button className="btn btn-outline" onClick={handleExportExcel} disabled={exporting} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {exporting ? <><Hourglass size={18} /> Mengekspor...</> : <><Download size={18} /> Download Excel</>}
+            </button>
 
             {!isLocked && (
               <>
@@ -367,6 +382,7 @@ export default function RKAPMasterPage({ tahun }) {
             groupBy="kategori"
             renderGroupHeader={renderGroupHeader}
             renderFooter={renderFooter}
+            onFilterChange={setCurrentFilters}
           />
         )}
       </div>
@@ -431,6 +447,10 @@ export default function RKAPMasterPage({ tahun }) {
                     ))}
                   </select>
                   <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Wajib dipilih karena RKAP tahun ini sudah dikunci.</div>
+
+                  <label className="form-label" htmlFor="f-nd" style={{ color: '#0284c7', marginTop: '12px' }}>ND Persetujuan <span className="required">*</span></label>
+                  <input id="f-nd" type="text" className="form-input" value={form.nd_persetujuan || ''} onChange={set('nd_persetujuan')} placeholder="Contoh: ND-123/2026" style={{ borderColor: '#0ea5e9' }} />
+                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Kode/Nomor dokumen persetujuan wajib diisi.</div>
                 </>
               ) : null}
             </div>
@@ -470,44 +490,6 @@ export default function RKAPMasterPage({ tahun }) {
                 )
               })}
             </div>
-          </div>
-        </Modal>
-      )}
-
-      {modal === 'audit' && (
-        <Modal
-          title={`Riwayat Pengalihan Anggaran (${tahun})`}
-          onClose={closeModal}
-          width="900px"
-          hideSubmit
-        >
-          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-            {auditLogs.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>Belum ada riwayat pengalihan anggaran di tahun {tahun}.</p>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                    <th style={{ padding: '12px', textAlign: 'left' }}>Waktu</th>
-                    <th style={{ padding: '12px', textAlign: 'left' }}>Oleh</th>
-                    <th style={{ padding: '12px', textAlign: 'left' }}>Keterangan</th>
-                    <th style={{ padding: '12px', textAlign: 'right' }}>Anggaran Digeser</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditLogs.map(log => (
-                    <tr key={log.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ padding: '12px' }}>{new Date(log.created_at).toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '12px', fontWeight: '500' }}>{log.user_name}</td>
-                      <td style={{ padding: '12px' }}>{log.keterangan}</td>
-                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: '500', color: '#0369a1' }}>
-                        {fmtRupiah(log.anggaran)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
           </div>
         </Modal>
       )}

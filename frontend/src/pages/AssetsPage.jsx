@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { listAssets, createAsset, updateAsset, deleteAsset, uploadAssetsExcel } from '../api/capex'
+import { listAssets, createAsset, updateAsset, deleteAsset, uploadAssetsExcel, exportAssetsExcel } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
-import { fmtRupiah, fmtShort } from '../utils'
-import { Pencil, Trash2, Plus, Upload, Filter } from 'lucide-react'
+import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
+import { Pencil, Trash2, Plus, Upload, Filter, Download } from 'lucide-react'
 
 const EMPTY_FORM = {
   kajian_no: '', kajian_tanggal: '', kajian_perihal: '',
@@ -59,6 +59,7 @@ export default function AssetsPage() {
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [saving,  setSaving]  = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const fileInputRef = useRef(null)
   
   const [startYear, setStartYear] = useState('')
@@ -157,6 +158,18 @@ export default function AssetsPage() {
     })
   }
 
+  const handleDownloadExcel = async () => {
+    setDownloading(true)
+    try {
+      const res = await exportAssetsExcel()
+      downloadBlob(res.data, 'Data_Aset.xlsx')
+    } catch (err) {
+      dialog.alert({ title: 'Error', message: 'Gagal mengunduh laporan excel.', variant: 'danger' })
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const tableData = useMemo(() => {
@@ -201,12 +214,24 @@ export default function AssetsPage() {
               ref={fileInputRef} 
               onChange={handleFileChange} 
             />
-            <button className="btn btn-success" onClick={handleUploadClick} disabled={uploading}>
+            <button className="btn btn-outline" onClick={handleUploadClick} disabled={uploading}>
               <Upload size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
               {uploading ? 'Mengunggah...' : 'Upload Excel'}
             </button>
+            <button className="btn btn-outline" onClick={handleDownloadExcel} disabled={downloading}>
+              <Download size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
+              {downloading ? 'Unduh...' : 'Download Excel'}
+            </button>
             <button className="btn btn-primary" id="btn-tambah-aset" onClick={openCreate}>
               <Plus size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> Tambah Aset
+            </button>
+          </div>
+        )}
+        {!isAdmin && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-outline" onClick={handleDownloadExcel} disabled={downloading}>
+              <Download size={16} style={{ marginRight: '4px', verticalAlign:'text-bottom' }} /> 
+              {downloading ? 'Unduh...' : 'Download Excel'}
             </button>
           </div>
         )}
