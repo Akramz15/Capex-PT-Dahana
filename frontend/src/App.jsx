@@ -11,10 +11,16 @@ import TimelinePage    from './pages/TimelinePage'
 import AssetsPage      from './pages/AssetsPage'
 import StatusPage      from './pages/StatusPage'
 import LKUPage         from './pages/LKUPage'
+import UsersPage       from './pages/UsersPage'
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   return isAuthenticated ? children : <Navigate to="/login" replace />
+}
+
+function AdminRoute({ children }) {
+  const user = useAuthStore((s) => s.user)
+  return user?.role === 'admin' ? children : <Navigate to="/dashboard" replace />
 }
 
 function AppRoutes() {
@@ -36,6 +42,7 @@ function AppRoutes() {
                   <Route path="/timeline"   element={<TimelinePage    tahun={tahun} />} />
                   <Route path="/lku"        element={<LKUPage         tahun={tahun} />} />
                   <Route path="/aset"       element={<AssetsPage />} />
+                  <Route path="/users"      element={<AdminRoute><UsersPage /></AdminRoute>} />
                   <Route path="*"           element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               )}

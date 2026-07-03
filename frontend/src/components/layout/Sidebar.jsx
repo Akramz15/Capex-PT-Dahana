@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { logout as apiLogout } from '../../api/auth'
-import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Key, Eye } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye } from 'lucide-react'
 import { useDialog } from '../../contexts/DialogContext'
 
 import logoUrl from '../../assets/MONITORING CAPEX.png'
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/realisasi',   icon: <TrendingUp size={18} />, label: 'Realisasi' },
   { to: '/timeline',    icon: <Calendar size={18} />, label: 'Timeline' },
   { to: '/aset',        icon: <Factory size={18} />, label: 'Data Aset' },
+  { to: '/users',       icon: <Users size={18} />, label: 'Manajemen User', adminOnly: true },
 ]
 
 export default function Sidebar() {
@@ -29,6 +30,8 @@ export default function Sidebar() {
     ? user.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
     : 'U'
 
+  const filteredNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'admin')
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', padding: '24px 24px 12px 24px' }}>
@@ -39,7 +42,7 @@ export default function Sidebar() {
 
       <nav className="sidebar-nav">
         <div className="sidebar-section-label">Menu Utama</div>
-        {NAV_ITEMS.map(({ to, icon, label }) => (
+        {filteredNavItems.map(({ to, icon, label }) => (
           <NavLink
             key={to}
             to={to}
