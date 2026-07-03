@@ -621,6 +621,13 @@ img, svg { display: block; }
 
 .btn-success:hover { background: hsl(145, 63%, 36%); }
 
+.btn-warning {
+  background: hsl(38, 92%, 50%); /* Amber/Orange color */
+  color: white;
+  border-color: hsl(38, 92%, 50%);
+}
+.btn-warning:hover { background: hsl(38, 92%, 40%); }
+
 .btn-danger {
   background: var(--clr-danger);
   color: #fff;
