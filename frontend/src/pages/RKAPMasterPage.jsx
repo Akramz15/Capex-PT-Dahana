@@ -371,7 +371,7 @@ export default function RKAPMasterPage({ tahun }) {
         )}
       </div>
 
-      {modal && (
+      {(modal === 'create' || modal === 'edit') && (
         <Modal
           title={modal === 'create' ? 'Tambah Capex Baru' : 'Edit Capex'}
           onClose={closeModal}
