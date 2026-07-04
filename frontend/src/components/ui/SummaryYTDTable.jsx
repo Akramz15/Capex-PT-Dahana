@@ -30,18 +30,18 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
     <div style={{ overflowX: 'auto', marginBottom: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'right' }}>
         <thead>
-          <tr style={{ backgroundColor: '#0f172a', color: 'white' }}>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>URAIAN</th>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>Budget RKAP {tahun}</th>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>RKAP sd {bulanName} {tahun}</th>
-            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
-            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #334155', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
+          <tr style={{ backgroundColor: '#002B5B', color: 'white' }}>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>URAIAN</th>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>Budget RKAP {tahun}</th>
+            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>RKAP sd {bulanName} {tahun}</th>
+            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
+            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
           </tr>
-          <tr style={{ backgroundColor: '#1e293b', color: 'white' }}>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By PO</th>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By BAST</th>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By PO</th>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #334155' }}>By BAST</th>
+          <tr style={{ backgroundColor: '#003366', color: 'white' }}>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By PO</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By BAST</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By PO</th>
+            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By BAST</th>
           </tr>
         </thead>
         <tbody>
@@ -74,14 +74,14 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
               </tr>
             </React.Fragment>
           ))}
-          <tr style={{ backgroundColor: '#0f172a', color: 'white', fontWeight: 'bold' }}>
-            <td style={{ padding: '12px', textAlign: 'left', border: '1px solid #334155' }}>Total Realisasi Aset</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandBudget)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandRkapYtd)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandRealPo)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{formatRp(grandRealBast)}</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{grandPctPo}%</td>
-            <td style={{ padding: '12px', border: '1px solid #334155' }}>{grandPctBast}%</td>
+          <tr style={{ backgroundColor: '#002B5B', color: 'white', fontWeight: 'bold' }}>
+            <td style={{ padding: '12px', textAlign: 'left', border: '1px solid #004b99' }}>Total Realisasi Aset</td>
+            <td style={{ padding: '12px', border: '1px solid #004b99' }}>{formatRp(grandBudget)}</td>
+            <td style={{ padding: '12px', border: '1px solid #004b99' }}>{formatRp(grandRkapYtd)}</td>
+            <td style={{ padding: '12px', border: '1px solid #004b99' }}>{formatRp(grandRealPo)}</td>
+            <td style={{ padding: '12px', border: '1px solid #004b99' }}>{formatRp(grandRealBast)}</td>
+            <td style={{ padding: '12px', border: '1px solid #004b99' }}>{grandPctPo}%</td>
+            <td style={{ padding: '12px', border: '1px solid #004b99' }}>{grandPctBast}%</td>
           </tr>
         </tbody>
       </table>

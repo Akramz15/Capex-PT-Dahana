@@ -4,7 +4,7 @@ import { logout as apiLogout } from '../../api/auth'
 import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye, History } from 'lucide-react'
 import { useDialog } from '../../contexts/DialogContext'
 
-import logoUrl from '../../assets/MONITORING CAPEX.png'
+import logoUrl from '../../assets/Logo_DAHANA_CAGEUR.png'
 
 const NAV_ITEMS = [
   { to: '/dashboard',   icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
@@ -43,8 +43,8 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', padding: '24px 24px 12px 24px' }}>
-        <div style={{ backgroundColor: 'white', width: '100%', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', overflow: 'hidden', padding: '0', display: 'flex', justifyContent: 'center' }}>
-          <img src={logoUrl} alt="Monitoring Capex Logo" style={{ height: '150px', width: 'auto', maxWidth: 'none', display: 'block', margin: '-50px 0 -45px 0' }} />
+        <div style={{ backgroundColor: 'white', width: '100%', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', overflow: 'hidden', padding: '0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img src={logoUrl} alt="Monitoring Capex Logo" style={{ width: '115%', height: 'auto', maxWidth: 'none', display: 'block', margin: '-85px 0 -90px 0', objectFit: 'contain' }} />
         </div>
       </div>
 

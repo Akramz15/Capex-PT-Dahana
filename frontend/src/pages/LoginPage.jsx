@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { login } from '../api/auth'
 import { AlertTriangle } from 'lucide-react'
 import { Briefcase } from 'lucide-react'
-import logoUrl from '../assets/MONITORING CAPEX.png'
+import logoUrl from '../assets/Logo_DAHANA_CAGEUR.png'
 
 export default function LoginPage() {
   const navigate  = useNavigate()
@@ -38,7 +38,18 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header" style={{ textAlign: 'center' }}>
-          <img src={logoUrl} alt="Logo PT Dahana" style={{ height: '300px', width: 'auto', display: 'block', margin: '-100px auto -100px' }} />
+          <img 
+            src={logoUrl} 
+            alt="Logo PT Dahana" 
+            style={{ 
+              width: '100%', 
+              maxWidth: '450px', 
+              height: 'auto', 
+              display: 'block', 
+              margin: '-150px auto -163px auto', /* Margin minus yang jauh lebih besar untuk merapatkan kontainer */
+              objectFit: 'contain'
+            }} 
+          />
           {/* <h1 className="login-title" style={{ marginTop: 0 }}>Monitoring Capex</h1> */}
           <p className="login-sub">PT Dahana Sistem Monitoring Investasi</p>
         </div>
