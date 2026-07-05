@@ -1,7 +1,7 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { logout as apiLogout } from '../../api/auth'
-import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye, History } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye, History, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react'
 import { useDialog } from '../../contexts/DialogContext'
 
 import logoUrl from '../../assets/Logo_DAHANA_CAGEUR.png'
@@ -22,7 +22,7 @@ const NAV_ITEMS = [
   { to: '/users',       icon: <Users size={18} />, label: 'Manajemen User', adminOnly: true },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ isCollapsed, onToggle }) {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -42,9 +42,13 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', padding: '24px 24px 12px 24px' }}>
+      <button className="sidebar-toggle-btn" onClick={onToggle} aria-label="Toggle Sidebar">
+        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
+      <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', padding: isCollapsed ? '24px 12px 12px 12px' : '24px 24px 12px 24px' }}>
         <div style={{ backgroundColor: 'white', width: '100%', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', overflow: 'hidden', padding: '0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img src={logoUrl} alt="Monitoring Capex Logo" style={{ width: '115%', height: 'auto', maxWidth: 'none', display: 'block', margin: '-85px 0 -90px 0', objectFit: 'contain' }} />
+          <img src={logoUrl} alt="Monitoring Capex Logo" style={{ width: '115%', height: 'auto', maxWidth: 'none', display: 'block', margin: isCollapsed ? '-20px 0 -22px 0' : '-85px 0 -90px 0', objectFit: 'contain' }} />
         </div>
       </div>
 
@@ -60,20 +64,19 @@ export default function Sidebar() {
                 className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
               >
                 <span className="sidebar-icon">{icon}</span>
-                {label}
+                <span className="sidebar-label">{label}</span>
               </NavLink>
               
               {subItems && isParentActive && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '26px', paddingLeft: '12px', borderLeft: '2px solid rgba(255,255,255,0.15)', marginTop: '2px' }}>
+                <div className="sidebar-subitems">
                   {subItems.map(sub => (
                     <NavLink
                       key={sub.to}
                       to={sub.to}
                       className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
-                      style={{ padding: '8px 12px', fontSize: '13px', minHeight: '36px' }}
                     >
                       <span className="sidebar-icon" style={{ opacity: 0.7, transform: 'scale(0.9)' }}>{sub.icon}</span>
-                      {sub.label}
+                      <span className="sidebar-label">{sub.label}</span>
                     </NavLink>
                   ))}
                 </div>

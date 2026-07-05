@@ -106,8 +106,7 @@ img, svg { display: block; }
   display: flex;
   flex-direction: column;
   z-index: 100;
-  transition: transform var(--transition-md);
-  overflow: hidden;
+  transition: width var(--transition-md), transform var(--transition-md);
 }
 
 .sidebar-brand {
@@ -929,4 +928,98 @@ img, svg { display: block; }
   .main-content { margin-left: 0; }
   .header { left: 0; }
   .page-body { padding: 20px 16px; }
+}
+
+/* ── Collapsed Sidebar Modifiers ─────────────────────────────────────────────── */
+.app-shell.sidebar-collapsed .sidebar {
+  width: 80px;
+}
+
+.app-shell.sidebar-collapsed .main-content {
+  margin-left: 80px;
+}
+
+.app-shell.sidebar-collapsed .header {
+  left: 80px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-brand {
+  padding: 24px 12px 12px 12px;
+}
+
+.sidebar-subitems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 26px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  margin-top: 2px;
+}
+
+.sidebar-subitems .sidebar-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  min-height: 36px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-subitems {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
+}
+
+.app-shell.sidebar-collapsed .sidebar-item {
+  justify-content: center;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 8px auto;
+  border-radius: var(--radius-md);
+}
+
+.app-shell.sidebar-collapsed .sidebar-label,
+.app-shell.sidebar-collapsed .sidebar-section-label,
+.app-shell.sidebar-collapsed .sidebar-subitem,
+.app-shell.sidebar-collapsed .sidebar-user-info,
+.app-shell.sidebar-collapsed .sidebar-logout,
+.app-shell.sidebar-collapsed .sidebar-item.active::before {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .sidebar-user {
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.app-shell.sidebar-collapsed .sidebar-item.active {
+  background: var(--clr-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px hsl(214 80% 38% / 0.4);
+}
+
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  border: 1px solid var(--clr-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(222, 10%, 45%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 101;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f8fafc;
+  color: var(--clr-primary);
+  transform: translateY(-50%) scale(1.1);
 }
