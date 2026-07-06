@@ -354,17 +354,35 @@ export default function RealizationPage({ tahun }) {
           <>
             {(() => {
               // Calculate status distribution for the chart at the top
-              const sumTotalReal = data.reduce((acc, r) => acc + (r.total_real || 0), 0)
-              const sumRKAP = data.reduce((acc, r) => acc + (r.anggaran_perubahan || r.anggaran_rkap || 0), 0)
-              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAADK: 0 }
+              // De-duplicate by capex_id so each project's budget is only counted once
+              const seenCapex = new Map()
+              data.forEach(r => {
+                if (!seenCapex.has(r.capex_id)) {
+                  seenCapex.set(r.capex_id, {
+                    rkap: r.anggaran_rkap || 0,
+                    perubahan: r.anggaran_perubahan || 0
+                  })
+                }
+              })
+              let totalRKAP = 0
+              let totalPerubahan = 0
+              for (const vals of seenCapex.values()) {
+                totalRKAP += vals.rkap
+                totalPerubahan += vals.perubahan
+              }
+              const sumRKAP = totalPerubahan > 0 ? totalPerubahan : totalRKAP
+              
+              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAADK: 0, Lainnya: 0 }
               data.forEach(r => {
                 let st = r.status || ''
                 if (st === 'BA/ADK') st = 'BAADK'
                 if (statSums[st] !== undefined) {
                   statSums[st] += (r.total_real || 0)
+                } else {
+                  statSums.Lainnya += (r.total_real || 0)
                 }
               })
-              const subtotal = statSums.PO + statSums.Kajian + statSums.Tender + statSums.BAADK
+              const subtotal = statSums.PO + statSums.Kajian + statSums.Tender + statSums.BAADK + statSums.Lainnya
               const sisa = sumRKAP - subtotal
               
               return data.length > 0 ? (

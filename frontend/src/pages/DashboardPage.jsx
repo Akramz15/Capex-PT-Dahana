@@ -6,7 +6,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useDialog } from '../contexts/DialogContext'
 import BudgetVsRealizationChart from '../components/charts/BudgetVsRealizationChart'
 import CumulativeTrendChart from '../components/charts/CumulativeTrendChart'
-import StatusDistributionChart from '../components/charts/StatusDistributionChart'
+import AchievementOverviewChart from '../components/charts/AchievementOverviewChart'
 import CategoryDistributionChart from '../components/charts/CategoryDistributionChart'
 import Top5CapexChart from '../components/charts/Top5CapexChart'
 import SummaryYTDTable from '../components/ui/SummaryYTDTable'
@@ -14,7 +14,7 @@ import DataTable from '../components/ui/DataTable'
 import Badge from '../components/ui/Badge'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
 import { BarChart2, TrendingUp } from 'lucide-react'
-import { Hourglass, Download, PieChart } from 'lucide-react'
+import { Hourglass, Download } from 'lucide-react'
 
 const COLUMNS = [
   { key: 'kode',              label: 'Kode',        sortable: true },
@@ -50,8 +50,10 @@ export default function DashboardPage({ tahun }) {
   const [loading, setLoading] = useState(true)
   const [exportingYtd, setExportingYtd] = useState(false)
 
-  // Chart configuration state
-  const [chartMode, setChartMode] = useState('bar')
+  // Chart configuration state — persisted in localStorage
+  const [chartMode, setChartMode] = useState(
+    () => localStorage.getItem('dashboard_chart_mode') ?? 'line'
+  )
   const [chartRange, setChartRange] = useState(1) // 1=Bulanan, 3=Triwulan, 6=Semester, 12=Tahunan
 
   const [ytdBulan, setYtdBulan] = useState(new Date().getMonth() + 1)
@@ -161,11 +163,11 @@ export default function DashboardPage({ tahun }) {
       <div className="section" style={{ display: 'flex', flexDirection: 'column', marginTop: '24px' }}>
         <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="section-title">
-            {chartMode === 'bar' && <><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Anggaran vs Realisasi</>}
-            {chartMode === 'line' && <><TrendingUp size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Tren Kumulatif (S-Curve)</>}
-            {chartMode === 'status' && <><PieChart size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Distribusi Status</>}
-            {chartMode === 'kategori' && <><PieChart size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Distribusi Kategori</>}
-            {chartMode === 'top5' && <><BarChart2 size={18} style={{display:'inline', verticalAlign:'text-bottom', marginRight:'6px'}} /> Top 5 Capex Terbesar</>}
+            {chartMode === 'bar' && 'Anggaran vs Realisasi per Bulan'}
+            {chartMode === 'line' && 'Tren Kumulatif (S-Curve)'}
+            {chartMode === 'achievement' && 'Ikhtisar Pencapaian Realisasi'}
+            {chartMode === 'kategori' && 'Distribusi Anggaran per Kategori'}
+            {chartMode === 'top5' && 'Top 5 Capex Terbesar'}
           </span>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {chartMode === 'line' && (
@@ -182,27 +184,28 @@ export default function DashboardPage({ tahun }) {
             )}
             <select
               className="form-select"
-              style={{ padding: '6px 12px', fontSize: '13px', minWidth: '220px', fontWeight: 600, border: '1px solid var(--clr-border)', borderRadius: '6px' }}
+              style={{ padding: '6px 12px', fontSize: '13px', minWidth: '240px', fontWeight: 500, border: '1px solid var(--clr-border)', borderRadius: '6px' }}
               value={chartMode}
-              onChange={(e) => setChartMode(e.target.value)}
+              onChange={(e) => { setChartMode(e.target.value); localStorage.setItem('dashboard_chart_mode', e.target.value) }}
             >
-              <option value="bar">Anggaran vs Realisasi (Bar)</option>
-              <option value="line">Tren Kumulatif / S-Curve (Line)</option>
-              <option value="status">Distribusi Status (Pie)</option>
-              <option value="kategori">Distribusi Kategori (Pie)</option>
-              <option value="top5">Top 5 Capex Terbesar (Bar)</option>
+              <option value="achievement">Ikhtisar Pencapaian Realisasi</option>
+              <option value="bar">Anggaran vs Realisasi per Bulan</option>
+              <option value="line">Tren Kumulatif / S-Curve</option>
+              <option value="kategori">Distribusi per Kategori</option>
+              <option value="top5">Top 5 Capex Terbesar</option>
             </select>
           </div>
         </div>
         <div className="section-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           {chartMode === 'bar' && <BudgetVsRealizationChart data={monthly} />}
           {chartMode === 'line' && <CumulativeTrendChart data={monthly} range={chartRange} />}
-          {chartMode === 'status' && (
-            <StatusDistributionChart 
-              data={summary?.status_distribution ?? {}} 
-              totalRKAP={summary?.total_anggaran_rkap || 0}
-              totalReal={summary?.total_realisasi || 0}
-              sisa={summary?.sisa_anggaran || 0}
+          {chartMode === 'achievement' && (
+            <AchievementOverviewChart
+              totalAnggaran={(summary?.total_anggaran_perubahan > 0 ? summary.total_anggaran_perubahan : summary?.total_anggaran_rkap) || 0}
+              totalRealisasi={summary?.total_realisasi || 0}
+              sisaAnggaran={summary?.sisa_anggaran || 0}
+              persenRealisasi={summary?.persen_realisasi || 0}
+              totalItems={summary?.total_capex_items || 0}
             />
           )}
           {chartMode === 'kategori' && (
@@ -213,13 +216,13 @@ export default function DashboardPage({ tahun }) {
           )}
           {chartMode === 'top5' && <Top5CapexChart data={summary?.top5_capex ?? []} />}
 
-          <div style={{ marginTop: '24px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', borderLeft: '4px solid var(--clr-primary)', fontSize: '0.875rem', color: '#475569' }}>
-            <strong>Fungsi Grafik:</strong> 
-            {chartMode === 'bar' && ' Membandingkan total Anggaran dengan Realisasi secara per bulan.'}
-            {chartMode === 'line' && ' Kurva-S (S-Curve) untuk melihat kumulatif tren penyerapan anggaran dari waktu ke waktu.'}
-            {chartMode === 'status' && ' Menjabarkan porsi uang yang sedang berada di fase Kajian, Tender, PO, dan BA/ADK.'}
-            {chartMode === 'kategori' && ' Menampilkan porsi alokasi anggaran terbesar berdasarkan kategori atau departemen.'}
-            {chartMode === 'top5' && ' Menyoroti 5 proyek raksasa yang paling banyak memakan porsi anggaran perusahaan tahun ini.'}
+          <div style={{ marginTop: '24px', padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '6px', borderLeft: '4px solid var(--clr-primary)', fontSize: '0.875rem', color: '#475569' }}>
+            <strong>Fungsi Grafik:</strong>{' '}
+            {chartMode === 'achievement' && 'Ikhtisar tunggal kemajuan penyerapan anggaran secara keseluruhan: seberapa besar dari total anggaran yang sudah berhasil direalisasikan, dilengkapi sinyal status (Baik / Perlu Diperhatikan / Kritis). Gunakan grafik ini untuk jawaban cepat: "Kita sudah sampai mana?"'}
+            {chartMode === 'bar' && 'Membandingkan total Anggaran yang direncanakan dengan nilai Realisasi aktual secara per bulan selama tahun ini.'}
+            {chartMode === 'line' && 'Kurva-S (S-Curve): memantau tren kumulatif penyerapan anggaran dari waktu ke waktu. Berguna untuk melihat apakah laju penyerapan sesuai target.'}
+            {chartMode === 'kategori' && 'Menampilkan porsi alokasi anggaran terbesar berdasarkan kategori Capex (Rutin, Pengembangan, dll.) sehingga bisa diketahui kelompok mana yang mendominasi investasi tahun ini.'}
+            {chartMode === 'top5' && 'Menyoroti 5 proyek dengan nilai anggaran terbesar di tahun ini. Berguna untuk memantau proyek-proyek strategis prioritas yang perlu perhatian khusus.'}
           </div>
         </div>
       </div>
