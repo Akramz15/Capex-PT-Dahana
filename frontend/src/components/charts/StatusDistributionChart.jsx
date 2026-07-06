@@ -36,6 +36,9 @@ export default function StatusDistributionChart({ data = {}, totalRKAP = 0, tota
     </div>
   )
 
+  const subtotal = chartData.reduce((acc, item) => acc + item.value, 0)
+  const sisaWip = totalRKAP - subtotal
+
   const getPct = (val) => {
     if (totalRKAP <= 0) return '0%'
     const pct = (val / totalRKAP * 100)
@@ -83,14 +86,14 @@ export default function StatusDistributionChart({ data = {}, totalRKAP = 0, tota
             <tr><td colSpan={3} style={{ borderBottom: '2px solid #000', padding: '4px' }}></td></tr>
             
             <tr>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(totalReal)}</td>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{getPct(totalReal)}</td>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Total Realisasi</td>
+              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(subtotal)}</td>
+              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{getPct(subtotal)}</td>
+              <td style={{ padding: '12px', fontWeight: 'bold' }}>Subtotal (Berjalan)</td>
             </tr>
             <tr>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(sisa)}</td>
-              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{getPct(sisa)}</td>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Sisa</td>
+              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(sisaWip)}</td>
+              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{getPct(sisaWip)}</td>
+              <td style={{ padding: '12px', fontWeight: 'bold' }}>Sisa (Belum Berjalan)</td>
             </tr>
             <tr>
               <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{fmtRupiah(totalRKAP)}</td>

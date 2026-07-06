@@ -11,19 +11,50 @@ def get_dashboard_summary(tahun: int) -> dict:
     total_perubahan = sum(r["anggaran_perubahan"] for r in master_result.data)
     total_capex_items = len(master_result.data)
 
-    status_result = client.table("capex_status_log").select("status_type, rekap_nilai").eq("tahun", tahun).execute()
+    realization_data = []
+    offset = 0
+    limit = 1000
+    while True:
+        res = client.table("capex_realization").select("capex_id, nilai_realisasi, status, bulan").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
+        realization_data.extend(res.data)
+        if len(res.data) < limit:
+            break
+        offset += limit
     
+    total_realisasi = sum((r.get("nilai_realisasi") or 0) for r in realization_data)
+    
+    latest_status_map = {}
+    real_by_capex = {}
+    for r in realization_data:
+        cid = r["capex_id"]
+        
+        # Accumulate actual realization per project
+        real_by_capex[cid] = real_by_capex.get(cid, 0) + (r.get("nilai_realisasi") or 0)
+        
+        st = r.get("status")
+        mth = r.get("bulan") or 0
+        if st is not None and st != "":
+            if cid not in latest_status_map or mth > latest_status_map[cid]["bulan"]:
+                latest_status_map[cid] = {"status": st, "bulan": mth}
+                
+    budget_map = {}
+    for r in master_result.data:
+        b = r.get("anggaran_perubahan")
+        budget_map[str(r["id"])] = b if b else (r.get("anggaran_rkap") or 0)
+        
     status_amounts: dict[str, int] = {}
-    total_realisasi = 0
-    
-    for r in status_result.data:
-        st = r["status_type"]
-        if st == "Lainnya": 
+    for cid, s_info in latest_status_map.items():
+        st = s_info["status"]
+        if st == "Lainnya":
             continue
+        
+        # In case status is 'BA/ADK', normalize to match frontend logic or just use whatever is stored
+        if st == 'BA/ADK':
+            st = 'BAADK'
             
-        val = r.get("rekap_nilai") or 0
+        # Use actual realization instead of budget
+        val = real_by_capex.get(cid, 0)
         status_amounts[st] = status_amounts.get(st, 0) + val
-        total_realisasi += val
 
     # Category Distribution & Top 5 Capex
     category_amounts = {}
@@ -75,10 +106,18 @@ def get_capex_progress_table(tahun: int) -> list[dict]:
     client = get_supabase_admin()
 
     master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic").eq("tahun", tahun).execute()
-    real = client.table("capex_realization").select("capex_id, nilai_realisasi, status").eq("tahun", tahun).execute()
+    real_data = []
+    offset = 0
+    limit = 1000
+    while True:
+        res = client.table("capex_realization").select("capex_id, nilai_realisasi, status").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
+        real_data.extend(res.data)
+        if len(res.data) < limit:
+            break
+        offset += limit
 
     real_by_capex: dict[str, dict] = {}
-    for r in real.data:
+    for r in real_data:
         cid = r["capex_id"]
         if cid not in real_by_capex:
             real_by_capex[cid] = {"total_realisasi": 0, "statuses": set()}

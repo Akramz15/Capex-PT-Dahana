@@ -7,6 +7,7 @@ import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
+import StatusDistributionChart from '../components/charts/StatusDistributionChart'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
 import { UploadCloud, Download, Hourglass } from 'lucide-react'
 import { uploadRealizationExcel, exportRealizationExcel } from '../api/capex'
@@ -63,6 +64,7 @@ export default function RealizationPage({ tahun }) {
           status: '',
           keterangan: '',
           pic: c.pic || '',
+          status_month: 0,
           items_raw: []
         }
       })
@@ -75,8 +77,13 @@ export default function RealizationPage({ tahun }) {
         c.total_rkap += r.nilai_rkap || 0
         c.total_real += r.nilai_realisasi || 0
         
-        // Take the latest status/keterangan
-        if (r.status) c.status = r.status
+        // Take the latest status based on month
+        if (r.status && r.bulan > c.status_month) {
+          c.status = r.status
+          c.status_month = r.bulan
+        }
+        
+        // Take keterangan and pic if they exist (last encountered or similar to old logic)
         if (r.keterangan) c.keterangan = r.keterangan
         if (r.pic) c.pic = r.pic
         
@@ -309,53 +316,6 @@ export default function RealizationPage({ tahun }) {
     )
   }
 
-  const renderSummary = () => {
-    const sumRKAP = data.reduce((acc, r) => acc + (r.anggaran_perubahan || 0), 0)
-    
-    const statSums = { PO: 0, Kajian: 0, Tender: 0, BAADK: 0, Lainnya: 0 }
-    data.forEach(r => {
-      let st = r.status || ''
-      if (st === 'BA/ADK') st = 'BAADK'
-      if (statSums[st] !== undefined) {
-        statSums[st] += (r.anggaran_perubahan || 0)
-      }
-    })
-    
-    const subtotal = statSums.PO + statSums.Kajian + statSums.Tender + statSums.BAADK
-    const sisa = sumRKAP - subtotal
-    
-    const fmt = (val) => val.toLocaleString('id-ID')
-    const pct = (val) => sumRKAP ? ((val / sumRKAP) * 100).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '%' : '0%'
-
-    return (
-      <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', fontSize: '13px', color: 'black' }}>
-        <table style={{ borderCollapse: 'collapse', textAlign: 'right' }}>
-          <tbody>
-            <tr><td style={{ padding: '2px 12px' }}>{fmt(statSums.PO)}</td><td style={{ padding: '2px 12px', width: '60px' }}>{pct(statSums.PO)}</td><td style={{ textAlign: 'left', padding: '2px 12px', background: '#d4edda', border: '1px solid #ccc' }}>PO</td></tr>
-            <tr><td style={{ padding: '2px 12px' }}>{fmt(statSums.Kajian)}</td><td style={{ padding: '2px 12px' }}>{pct(statSums.Kajian)}</td><td style={{ textAlign: 'left', padding: '2px 12px', background: '#f8d7da', border: '1px solid #ccc' }}>Kajian</td></tr>
-            <tr><td style={{ padding: '2px 12px' }}>{fmt(statSums.Tender)}</td><td style={{ padding: '2px 12px' }}>{pct(statSums.Tender)}</td><td style={{ textAlign: 'left', padding: '2px 12px', background: '#cce5ff', border: '1px solid #ccc' }}>Tender</td></tr>
-            <tr><td style={{ padding: '2px 12px' }}>{fmt(statSums.BAADK)}</td><td style={{ padding: '2px 12px' }}>{pct(statSums.BAADK)}</td><td style={{ textAlign: 'left', padding: '2px 12px', background: '#ffff00', border: '1px solid #ccc' }}>BA/ADK</td></tr>
-            <tr style={{ fontWeight: 'bold', borderTop: '2px solid black' }}>
-              <td style={{ padding: '4px 12px' }}>{fmt(subtotal)}</td>
-              <td style={{ padding: '4px 12px' }}>{pct(subtotal)}</td>
-              <td style={{ textAlign: 'left', padding: '4px 12px' }}>Total Realisasi</td>
-            </tr>
-            <tr style={{ fontWeight: 'bold' }}>
-              <td style={{ padding: '16px 12px 4px' }}>{fmt(sisa)}</td>
-              <td style={{ padding: '16px 12px 4px' }}>{pct(sisa)}</td>
-              <td style={{ textAlign: 'left', padding: '16px 12px 4px' }}>Sisa</td>
-            </tr>
-            <tr style={{ fontWeight: 'bold' }}>
-              <td style={{ padding: '16px 12px 4px' }}>{fmt(sumRKAP)}</td>
-              <td style={{ padding: '16px 12px 4px' }}>100%</td>
-              <td style={{ textAlign: 'left', padding: '16px 12px 4px' }}>Total</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-
   return (
     <>
       <div className="page-header">
@@ -392,6 +352,34 @@ export default function RealizationPage({ tahun }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {loading ? <LoadingSpinner /> : (
           <>
+            {(() => {
+              // Calculate status distribution for the chart at the top
+              const sumTotalReal = data.reduce((acc, r) => acc + (r.total_real || 0), 0)
+              const sumRKAP = data.reduce((acc, r) => acc + (r.anggaran_perubahan || r.anggaran_rkap || 0), 0)
+              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAADK: 0 }
+              data.forEach(r => {
+                let st = r.status || ''
+                if (st === 'BA/ADK') st = 'BAADK'
+                if (statSums[st] !== undefined) {
+                  statSums[st] += (r.total_real || 0)
+                }
+              })
+              const subtotal = statSums.PO + statSums.Kajian + statSums.Tender + statSums.BAADK
+              const sisa = sumRKAP - subtotal
+              
+              return data.length > 0 ? (
+                <div className="section mb-6" style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '24px', border: '1px solid var(--clr-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: '#1e293b' }}>Distribusi Status Realisasi (Berdasarkan Nilai Aktual)</h3>
+                  <StatusDistributionChart 
+                    data={statSums} 
+                    totalRKAP={sumRKAP} 
+                    totalReal={subtotal} 
+                    sisa={sisa} 
+                  />
+                </div>
+              ) : null
+            })()}
+
             <ComplexDataTable 
               columns={columns} 
               data={data}
@@ -408,7 +396,6 @@ export default function RealizationPage({ tahun }) {
               renderGroupHeader={renderGroupHeader}
               onFilterChange={setCurrentFilters}
             />
-            {data.length > 0 && renderSummary()}
           </>
         )}
       </div>

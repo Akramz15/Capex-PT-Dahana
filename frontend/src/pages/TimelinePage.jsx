@@ -45,8 +45,9 @@ export default function TimelinePage({ tahun }) {
   const [capexList, setCapexList] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [saving, setSaving] = useState(false)
+  const [form,    setForm]    = useState(EMPTY_FORM)
+  const [saving,  setSaving]  = useState(false)
+  const [currentFilters, setCurrentFilters] = useState({})
   
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState(false)
@@ -148,7 +149,7 @@ export default function TimelinePage({ tahun }) {
   const handleDownloadExcel = async () => {
     setDownloading(true)
     try {
-      const res = await exportTimelineExcel({ tahun })
+      const res = await exportTimelineExcel({ tahun, ...currentFilters })
       downloadBlob(res.data, `Timeline_${tahun}.xlsx`)
     } catch (err) {
       dialog.alert({ title: 'Error', message: 'Gagal mengunduh laporan excel.', variant: 'danger' })
@@ -299,6 +300,7 @@ export default function TimelinePage({ tahun }) {
               customToolbarContent={legendContent}
               groupBy="kategori"
               renderGroupHeader={renderGroupHeader}
+              onFilterChange={setCurrentFilters}
             />
         )}
       </div>

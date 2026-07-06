@@ -151,14 +151,23 @@ def export_assets_excel(
 def export_timeline_excel(
     tahun: int = Query(...),
     capex_id: Optional[str] = None,
+    kategori: Optional[str] = None,
+    departemen: Optional[str] = None,
+    search: Optional[str] = None,
     _user: dict = Depends(get_current_user),
 ):
-    capex_data = list_capex(tahun=tahun, _user=_user)
+    capex_data = list_capex(tahun=tahun, kategori=kategori, _user=_user)
     timeline_data = list_timeline(tahun=tahun, capex_id=capex_id, _user=_user)
     
     formatted_data = []
     for c in capex_data:
         if capex_id and str(c.get("id")) != capex_id:
+            continue
+            
+        if search and search.lower() not in (c.get("daftar_capex") or "").lower() and search.lower() not in (c.get("pic") or "").lower() and search.lower() not in (c.get("keterangan") or "").lower():
+            continue
+            
+        if departemen and c.get("pic") != departemen:
             continue
             
         c_dict = c.copy()

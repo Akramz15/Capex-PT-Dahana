@@ -59,36 +59,46 @@ export default function RiwayatPengalihanPage({ tahun }) {
             {auditLogs.length === 0 ? (
               <p style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>Belum ada riwayat pengalihan anggaran di tahun {tahun}.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', border: '1px solid #e2e8f0' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#1e1b4b', color: 'white', borderBottom: '2px solid #e2e8f0' }}>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', borderRight: '1px solid #4338ca' }}>No</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'left', borderRight: '1px solid #4338ca' }}>Nama Kajian</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'right', borderRight: '1px solid #4338ca' }}>Usulan Nilai Awal</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'right', borderRight: '1px solid #4338ca' }}>Nilai RKAP</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'right', borderRight: '1px solid #4338ca' }}>Selisih</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'left', borderRight: '1px solid #4338ca' }}>Anggaran Pengganti</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'right', borderRight: '1px solid #4338ca' }}>Anggaran Awal</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'right', borderRight: '1px solid #4338ca' }}>Anggaran Sisa</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'left', borderRight: '1px solid #4338ca' }}>ND Persetujuan</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'left', borderRight: '1px solid #4338ca' }}>User</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'left' }}>Waktu</th>
+                  <tr style={{ backgroundColor: '#f8fafc', color: '#334155', borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
+                    <th style={{ padding: '12px 16px', width: '50px', textAlign: 'center' }}>No</th>
+                    <th style={{ padding: '12px 16px', minWidth: '120px' }}>Waktu</th>
+                    <th style={{ padding: '12px 16px', minWidth: '200px' }}>Penerima Dana (Tujuan)</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', minWidth: '150px' }}>Nilai Dialihkan</th>
+                    <th style={{ padding: '12px 16px', minWidth: '200px' }}>Sumber Dana (Asal)</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', minWidth: '180px' }}>Saldo Penerima</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', minWidth: '180px' }}>Saldo Sumber</th>
+                    <th style={{ padding: '12px 16px', minWidth: '150px' }}>ND Persetujuan</th>
+                    <th style={{ padding: '12px 16px' }}>PIC</th>
                   </tr>
                 </thead>
                 <tbody>
                   {auditLogs.map((log, index) => (
-                    <tr key={log.id} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                      <td style={{ padding: '8px', textAlign: 'center', borderRight: '1px solid #e2e8f0' }}>{index + 1}</td>
-                      <td style={{ padding: '8px', borderRight: '1px solid #e2e8f0' }}>{log.source_capex_name}</td>
-                      <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>{fmtRupiah(log.source_nilai_awal)}</td>
-                      <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>{fmtRupiah(log.source_nilai_akhir)}</td>
-                      <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>{fmtRupiah(log.anggaran)}</td>
-                      <td style={{ padding: '8px', borderRight: '1px solid #e2e8f0' }}>{log.target_capex_name}</td>
-                      <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>{fmtRupiah(log.target_nilai_awal)}</td>
-                      <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>{fmtRupiah(log.target_nilai_akhir)}</td>
-                      <td style={{ padding: '8px', borderRight: '1px solid #e2e8f0' }}>{log.nd_persetujuan}</td>
-                      <td style={{ padding: '8px', borderRight: '1px solid #e2e8f0' }}>{log.user_name}</td>
-                      <td style={{ padding: '8px' }}>{new Date(log.created_at).toLocaleString('id-ID')}</td>
+                    <tr key={log.id} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8fafc', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#f8fafc'}>
+                      <td style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>{index + 1}</td>
+                      <td style={{ padding: '16px', color: '#475569' }}>
+                        <div>{new Date(log.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>
+                      </td>
+                      <td style={{ padding: '16px', fontWeight: '500', color: '#0f172a' }}>{log.target_capex_name}</td>
+                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: '#059669' }}>
+                        + Rp {fmtRupiah(log.anggaran)}
+                      </td>
+                      <td style={{ padding: '16px', color: '#334155' }}>{log.source_capex_name}</td>
+                      
+                      <td style={{ padding: '16px', textAlign: 'right' }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{fmtRupiah(log.target_nilai_awal)}</div>
+                        <div style={{ color: '#059669', fontWeight: '500' }}>{fmtRupiah(log.target_nilai_akhir)}</div>
+                      </td>
+                      
+                      <td style={{ padding: '16px', textAlign: 'right' }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{fmtRupiah(log.source_nilai_awal)}</div>
+                        <div style={{ color: '#dc2626', fontWeight: '500' }}>{fmtRupiah(log.source_nilai_akhir)}</div>
+                      </td>
+                      
+                      <td style={{ padding: '16px', color: '#475569' }}>{log.nd_persetujuan || '-'}</td>
+                      <td style={{ padding: '16px', color: '#475569' }}>{log.user_name}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -58,6 +58,7 @@ export default function AssetsPage() {
   const [modal,   setModal]   = useState(null)
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [saving,  setSaving]  = useState(false)
+  const [currentFilters, setCurrentFilters] = useState({})
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const fileInputRef = useRef(null)
@@ -161,8 +162,8 @@ export default function AssetsPage() {
   const handleDownloadExcel = async () => {
     setDownloading(true)
     try {
-      const res = await exportAssetsExcel()
-      downloadBlob(res.data, 'Data_Aset.xlsx')
+      const res = await exportAssetsExcel(currentFilters)
+      downloadBlob(res.data, `Data_Aset_${new Date().getFullYear()}.xlsx`)
     } catch (err) {
       dialog.alert({ title: 'Error', message: 'Gagal mengunduh laporan excel.', variant: 'danger' })
     } finally {
@@ -244,12 +245,12 @@ export default function AssetsPage() {
             data={tableData}
             onEdit={isAdmin ? openEdit : undefined}
             onDelete={isAdmin ? handleDelete : undefined}
-            searchKeys={['no_po', 'asset_description', 'category', 'lokasi']}
+            searchKeys={['asset_description', 'kajian_no', 'no_po', 'no_asset', 'lokasi', 'room', 'keterangan']}
             filterOptions={[
-              { key: 'category', label: 'Kategori Aset' },
-              { key: 'kajian_tahun', label: 'Tahun Kajian' },
+              { key: 'category', label: 'Kategori' },
               { key: 'lokasi', label: 'Lokasi' }
             ]}
+            onFilterChange={setCurrentFilters}
             customToolbarContent={
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--clr-text-muted)', fontWeight: 500, fontSize: '13.5px', whiteSpace: 'nowrap' }}>

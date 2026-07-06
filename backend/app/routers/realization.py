@@ -36,8 +36,17 @@ def list_realization(
     if bulan is not None and isinstance(bulan, int):
         query = query.eq("bulan", bulan)
 
-    result = query.execute()
-    return result.data
+    all_data = []
+    offset = 0
+    limit_size = 1000
+    while True:
+        res = query.range(offset, offset + limit_size - 1).execute()
+        all_data.extend(res.data)
+        if len(res.data) < limit_size:
+            break
+        offset += limit_size
+
+    return all_data
 
 
 @router.get("/{realization_id}", response_model=RealizationResponse)
