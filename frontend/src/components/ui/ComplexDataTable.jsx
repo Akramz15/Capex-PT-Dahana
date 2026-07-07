@@ -14,7 +14,7 @@ import { Pencil, Trash2, Inbox, Search, Filter } from 'lucide-react';
  *   children: [ ... nested columns ... ] (optional)
  * }
  */
-function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emptyMessage = "Data belum tersedia", searchKeys = [], filterOptions = [], renderFooter = null, groupBy = null, renderGroupHeader = null, customToolbarContent = null, onFilterChange = null }) {
+function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emptyMessage = "Data belum tersedia", searchKeys = [], filterOptions = [], renderFooter = null, groupBy = null, renderGroupHeader = null, groupOrder = null, customToolbarContent = null, onFilterChange = null }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState({});
 
@@ -280,7 +280,19 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
               })
               
               let globalRowIndex = 0;
-              return Object.keys(groups).map((g, gIndex) => {
+              let sortedGroupKeys = Object.keys(groups);
+              if (groupOrder && Array.isArray(groupOrder)) {
+                sortedGroupKeys.sort((a, b) => {
+                  const idxA = groupOrder.indexOf(a);
+                  const idxB = groupOrder.indexOf(b);
+                  if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                  if (idxA !== -1) return -1;
+                  if (idxB !== -1) return 1;
+                  return a.localeCompare(b);
+                });
+              }
+
+              return sortedGroupKeys.map((g, gIndex) => {
                 const gData = groups[g]
                 return (
                   <React.Fragment key={`group-${gIndex}`}>

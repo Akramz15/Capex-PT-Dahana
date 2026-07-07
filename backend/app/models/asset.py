@@ -23,6 +23,7 @@ class AssetBase(BaseModel):
     lokasi: Optional[str] = Field(None, max_length=150)
     room: Optional[str] = Field(None, max_length=100)
     keterangan: Optional[str] = None
+    kategori_aset: Optional[str] = Field(None, max_length=255)
 
 
 class AssetCreate(AssetBase):
@@ -45,6 +46,7 @@ class AssetUpdate(BaseModel):
     lokasi: Optional[str] = Field(None, max_length=150)
     room: Optional[str] = Field(None, max_length=100)
     keterangan: Optional[str] = None
+    kategori_aset: Optional[str] = Field(None, max_length=255)
 
 
 class AssetResponse(AssetBase):

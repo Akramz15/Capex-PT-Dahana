@@ -102,11 +102,20 @@ def upload_assets(
     try:
         content = file.file.read()
         wb = openpyxl.load_workbook(BytesIO(content), data_only=True)
-        sheet = wb.active
+        sheet_names = wb.sheetnames
+        sheet = wb["Per Kategori"] if "Per Kategori" in sheet_names else wb.active
         
         insert_data = []
-        for row in sheet.iter_rows(min_row=6, values_only=True):
-            if not row[10]: # Asset description is empty, probably end of table
+        current_kategori = None
+        
+        for row in sheet.iter_rows(min_row=5, values_only=True): # start from row 5 because header is at 4
+            # Check for category header in 'Per Kategori' tab
+            if row[0] is None and row[1] is not None and str(row[1]).strip() != "":
+                if row[10] is None or str(row[10]).strip() == "":
+                    current_kategori = str(row[1]).strip()
+                    continue
+            
+            if not row[10]: # Asset description is empty, probably end of table or empty row
                 continue
             
             def get_val(val, default=None):
@@ -143,6 +152,7 @@ def upload_assets(
                 "lokasi": str(get_val(row[16])) if get_val(row[16]) else None,
                 "room": str(get_val(row[17])) if get_val(row[17]) else None,
                 "keterangan": str(get_val(row[18])) if get_val(row[18]) else None,
+                "kategori_aset": current_kategori,
             }
             insert_data.append(item)
             

@@ -13,7 +13,7 @@ const EMPTY_FORM = {
   kajian_no: '', kajian_tanggal: '', kajian_perihal: '',
   no_po: '', tanggal_po: '', no_asset: '', sub_number: '', category: '',
   capitalized_on: '', asset_description: '', acquis_val: 0, accum_dep: 0,
-  book_val: 0, currency: 'IDR', location_code: '', lokasi: '', room: '', keterangan: '',
+  book_val: 0, currency: 'IDR', location_code: '', lokasi: '', room: '', keterangan: '', kategori_aset: '',
 }
 
 const COLUMNS = [
@@ -31,7 +31,7 @@ const COLUMNS = [
   { header: 'Tanggal PO',        accessor: 'tanggal_po' },
   { header: 'No Asset',          accessor: 'no_asset' },
   { header: 'Sub number',        accessor: 'sub_number' },
-  { header: 'Category',          accessor: 'category' },
+  { header: 'Category (SAP)',    accessor: 'category' },
   { header: 'Capitalized on',    accessor: 'capitalized_on' },
   { header: 'Acquis.val.',       render: (r) => <span className="rupiah">{fmtRupiah(r.acquis_val)}</span> },
   { header: 'Accum.dep.',        render: (r) => <span className="rupiah">{fmtRupiah(r.accum_dep)}</span> },
@@ -189,12 +189,31 @@ export default function AssetsPage() {
     
     return (
       <tr style={{ fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
-        <td colSpan={11} style={{ textAlign: 'right', border: '1px solid var(--clr-border)', padding: '12px 16px' }}>Total</td>
+        <td colSpan={11} style={{ textAlign: 'right', border: '1px solid var(--clr-border)', padding: '12px 16px', position: 'sticky', left: '0', zIndex: 6, backgroundColor: '#f8f9fa' }}>Total</td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}><span className="rupiah">{fmtRupiah(sumAcquis)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}><span className="rupiah">{fmtRupiah(sumAccum)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}><span className="rupiah">{fmtRupiah(sumBook)}</span></td>
         <td colSpan={5} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}></td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)' }}></td>}
+      </tr>
+    )
+  }
+
+  const renderGroupHeader = (g, gData) => {
+    const sumAcquis = gData.reduce((acc, r) => acc + (Number(r.acquis_val) || 0), 0)
+    const sumAccum = gData.reduce((acc, r) => acc + (Number(r.accum_dep) || 0), 0)
+    const sumBook = gData.reduce((acc, r) => acc + (Number(r.book_val) || 0), 0)
+    
+    return (
+      <tr style={{ backgroundColor: '#09255c', color: 'white', fontWeight: 'bold' }}>
+        <td colSpan={11} style={{ padding: '8px 16px', border: '1px solid var(--clr-border)', position: 'sticky', left: '0', zIndex: 6, backgroundColor: '#09255c', color: 'white' }}>
+          {g}
+        </td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '8px 16px', color: 'white' }}><span className="rupiah">{fmtRupiah(sumAcquis)}</span></td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '8px 16px', color: 'white' }}><span className="rupiah">{fmtRupiah(sumAccum)}</span></td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '8px 16px', color: 'white' }}><span className="rupiah">{fmtRupiah(sumBook)}</span></td>
+        <td colSpan={5} style={{ border: '1px solid var(--clr-border)', padding: '8px 16px', color: 'white' }}></td>
+        {isAdmin && <td style={{ border: '1px solid var(--clr-border)', color: 'white' }}></td>}
       </tr>
     )
   }
@@ -245,9 +264,10 @@ export default function AssetsPage() {
             data={tableData}
             onEdit={isAdmin ? openEdit : undefined}
             onDelete={isAdmin ? handleDelete : undefined}
-            searchKeys={['asset_description', 'kajian_no', 'no_po', 'no_asset', 'lokasi', 'room', 'keterangan']}
+            searchKeys={['asset_description', 'kajian_no', 'no_po', 'no_asset', 'lokasi', 'room', 'keterangan', 'kategori_aset']}
             filterOptions={[
-              { key: 'category', label: 'Kategori' },
+              { key: 'kategori_aset', label: 'Kategori Laporan' },
+              { key: 'category', label: 'Category (SAP)' },
               { key: 'lokasi', label: 'Lokasi' }
             ]}
             onFilterChange={setCurrentFilters}
@@ -275,6 +295,20 @@ export default function AssetsPage() {
                 />
               </div>
             }
+            groupBy="kategori_aset"
+            groupOrder={[
+              "Pengembangan Aplikasi Proses Bisnis",
+              "Pengembangan Infrastruktur Perkantoran",
+              "Pembuatan dan Peremajaan Mobile Manufacturing Truck (MMT)",
+              "Pembuatan dan Peremajaan On Site Plant (OSP)",
+              "Blasting Equipment",
+              "Pabrik CE",
+              "Peralatan & Fasilitas Produksi",
+              "Peralatan Laboratorium",
+              "Peralatan & Fasilitas IT",
+              "Pengembangan Bisnis Baru"
+            ]}
+            renderGroupHeader={renderGroupHeader}
             renderFooter={renderFooter}
           />
         )}
@@ -299,6 +333,11 @@ export default function AssetsPage() {
             <div className="form-group">
               <label className="form-label" htmlFor="f-kajian-per">Kajian Investasi Perihal</label>
               <input id="f-kajian-per" type="text" className="form-input" value={form.kajian_perihal} onChange={set('kajian_perihal')} />
+            </div>
+            
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label" htmlFor="f-kategori-lap">Kategori Laporan</label>
+              <input id="f-kategori-lap" type="text" className="form-input" placeholder="Misal: Pengembangan Infrastruktur Perkantoran" value={form.kategori_aset} onChange={set('kategori_aset')} />
             </div>
           </div>
           <div className="form-grid-2">
