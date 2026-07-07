@@ -126,6 +126,26 @@ def export_realisasi_excel(
         headers=headers,
     )
 
+@router.get("/audit-logs")
+def export_audit_logs_excel(
+    tahun: int = Query(...),
+    _user: dict = Depends(get_current_user),
+):
+    audit_data = get_audit_logs(tahun=tahun, _user=_user)
+    formatted_data = [a.copy() for a in audit_data]
+    output = generate_audit_logs_excel(formatted_data, tahun)
+    
+    filename = f"Riwayat_Pengalihan_{tahun}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
 @router.get("/assets")
 def export_assets_excel(
     category: Optional[str] = None,

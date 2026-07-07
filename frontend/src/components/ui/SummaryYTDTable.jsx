@@ -27,21 +27,21 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
   const formatRp = (val) => val == null ? '—' : val === 0 ? 'Rp0' : 'Rp' + fmtShort(val)
 
   return (
-    <div style={{ overflowX: 'auto', marginBottom: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+    <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '68vh', position: 'relative', marginBottom: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'right' }}>
         <thead>
           <tr style={{ backgroundColor: '#002B5B', color: 'white' }}>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>URAIAN</th>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>Budget RKAP {tahun}</th>
-            <th rowSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>RKAP sd {bulanName} {tahun}</th>
-            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
-            <th colSpan={2} style={{ padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
+            <th rowSpan={2} style={{ position: 'sticky', top: 0, height: '66px', zIndex: 10, backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>URAIAN</th>
+            <th rowSpan={2} style={{ position: 'sticky', top: 0, height: '66px', zIndex: 10, backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>Budget RKAP {tahun}</th>
+            <th rowSpan={2} style={{ position: 'sticky', top: 0, height: '66px', zIndex: 10, backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>RKAP sd {bulanName} {tahun}</th>
+            <th colSpan={2} style={{ position: 'sticky', top: 0, height: '66px', zIndex: 10, backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>Realisasi sd {bulanName}-{tahun.toString().slice(-2)}</th>
+            <th colSpan={2} style={{ position: 'sticky', top: 0, height: '66px', zIndex: 10, backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', border: '1px solid #004b99', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
           </tr>
           <tr style={{ backgroundColor: '#003366', color: 'white' }}>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By PO</th>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By BAST</th>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By PO</th>
-            <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By BAST</th>
+            <th style={{ position: 'sticky', top: '66px', zIndex: 10, backgroundColor: '#003366', padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By PO</th>
+            <th style={{ position: 'sticky', top: '66px', zIndex: 10, backgroundColor: '#003366', padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By BAST</th>
+            <th style={{ position: 'sticky', top: '66px', zIndex: 10, backgroundColor: '#003366', padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By PO</th>
+            <th style={{ position: 'sticky', top: '66px', zIndex: 10, backgroundColor: '#003366', padding: '8px', textAlign: 'center', border: '1px solid #004b99' }}>By BAST</th>
           </tr>
         </thead>
         <tbody>

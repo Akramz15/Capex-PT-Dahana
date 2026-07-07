@@ -222,9 +222,9 @@ export default function RKAPMasterPage({ tahun }) {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const columns = [
-    { header: 'No', render: (_, i) => i + 1, sticky: true },
-    { header: 'Kode', accessor: 'kode', sticky: true },
-    { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true },
+    { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '60px' },
+    { header: 'Kode', accessor: 'kode', sticky: true, stickyLeft: '59px', width: '120px' },
+    { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true, stickyLeft: '178px', width: '250px' },
     { header: 'PIC', accessor: 'pic' },
     { header: 'Tahun', accessor: 'tahun' },
     { header: 'Status', accessor: 'status' },

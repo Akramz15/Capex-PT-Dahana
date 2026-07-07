@@ -337,7 +337,12 @@ export default function AssetsPage() {
             
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label className="form-label" htmlFor="f-kategori-lap">Kategori Laporan</label>
-              <input id="f-kategori-lap" type="text" className="form-input" placeholder="Misal: Pengembangan Infrastruktur Perkantoran" value={form.kategori_aset} onChange={set('kategori_aset')} />
+              <input list="kategori-lap-options" id="f-kategori-lap" type="text" className="form-input" placeholder="Pilih atau ketik Kategori Laporan baru" value={form.kategori_aset} onChange={set('kategori_aset')} />
+              <datalist id="kategori-lap-options">
+                {Array.from(new Set(data.map(d => d.kategori_aset).filter(Boolean))).sort().map(k => (
+                  <option key={k} value={k} />
+                ))}
+              </datalist>
             </div>
           </div>
           <div className="form-grid-2">

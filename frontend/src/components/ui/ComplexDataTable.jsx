@@ -177,7 +177,7 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
         </div>
       )}
       <div className="table-card" style={{ backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
-        <div className="table-scroll" style={{ overflowX: 'auto', position: 'relative' }}>
+        <div className="table-scroll" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '68vh', position: 'relative' }}>
           <table className="data-table" style={{ minWidth: 'max-content', width: '100%' }}>
           <thead>
           {headerRows.map((row, rowIndex) => (
@@ -190,10 +190,12 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                   style={{
                     textAlign: 'center',
                     border: '1px solid var(--clr-border)',
-                    position: col.sticky ? 'sticky' : 'static',
+                    position: 'sticky',
+                    top: rowIndex === 0 ? 0 : '46px', /* Use 46px and set first row height */
+                    height: rowIndex === 0 ? '46px' : 'auto',
                     left: col.stickyLeft || 'auto',
-                    zIndex: col.sticky ? 10 : 'auto',
-                    backgroundColor: col.sticky ? 'var(--clr-surface)' : 'inherit',
+                    zIndex: col.sticky ? 20 : 10,
+                    backgroundColor: 'var(--clr-bg)',
                     width: col.width || 'auto',
                     minWidth: col.width || 'auto',
                     maxWidth: col.width || 'none'
@@ -208,7 +210,7 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
               ))}
               {/* Action column header only on the first row */}
               {rowIndex === 0 && (onEdit || onDelete || onCustomAction) && (
-                <th rowSpan={depth} style={{ width: '100px', border: '1px solid var(--clr-border)', textAlign: 'center' }}>Aksi</th>
+                <th rowSpan={depth} style={{ width: '100px', border: '1px solid var(--clr-border)', textAlign: 'center', position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--clr-bg)' }}>Aksi</th>
               )}
             </tr>
           ))}

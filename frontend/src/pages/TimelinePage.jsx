@@ -191,8 +191,8 @@ export default function TimelinePage({ tahun }) {
   const setF = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const columns = [
-    { header: 'No', render: (_, i) => i + 1 },
-    { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true },
+    { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '60px' },
+    { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true, stickyLeft: '59px', width: '250px' },
     { header: 'Keterangan', accessor: 'keterangan' },
     { header: 'Nilai (RKAP)', render: (r) => <span className="rupiah">{fmtRupiah(r.anggaran_rkap)}</span> },
     { header: 'Dept / PIC', accessor: 'departemen' },
