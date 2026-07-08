@@ -179,7 +179,7 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
       <div className="table-card" style={{ backgroundColor: 'var(--clr-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--clr-border)', boxShadow: 'var(--shadow-sm)' }}>
         <div className="table-scroll" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '68vh', position: 'relative' }}>
           <table className="data-table" style={{ minWidth: 'max-content', width: '100%' }}>
-          <thead>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: 'var(--clr-bg)' }}>
           {headerRows.map((row, rowIndex) => (
             <tr key={`header-row-${rowIndex}`}>
               {row.map((col, colIndex) => (
@@ -189,12 +189,11 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                   rowSpan={col.rowSpan}
                   style={{
                     textAlign: 'center',
-                    border: '1px solid var(--clr-border)',
-                    position: 'sticky',
-                    top: rowIndex === 0 ? 0 : '46px', /* Use 46px and set first row height */
-                    height: rowIndex === 0 ? '46px' : 'auto',
+                    boxShadow: 'inset 0 0 0 1px var(--clr-border)',
+                    border: 'none',
+                    position: col.sticky ? 'sticky' : 'static',
                     left: col.stickyLeft || 'auto',
-                    zIndex: col.sticky ? 20 : 10,
+                    zIndex: col.sticky ? 30 : 'auto',
                     backgroundColor: 'var(--clr-bg)',
                     width: col.width || 'auto',
                     minWidth: col.width || 'auto',
@@ -208,9 +207,8 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                   ) : col.header}
                 </th>
               ))}
-              {/* Action column header only on the first row */}
               {rowIndex === 0 && (onEdit || onDelete || onCustomAction) && (
-                <th rowSpan={depth} style={{ width: '100px', border: '1px solid var(--clr-border)', textAlign: 'center', position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--clr-bg)' }}>Aksi</th>
+                <th rowSpan={depth} style={{ width: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', textAlign: 'center', position: 'static', backgroundColor: 'var(--clr-bg)' }}>Aksi</th>
               )}
             </tr>
           ))}
@@ -236,7 +234,8 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                   <td 
                     key={`cell-${row.id || rowIndex}-${colIndex}`}
                     style={{ 
-                      border: '1px solid var(--clr-border)',
+                      boxShadow: 'inset 0 0 0 1px var(--clr-border)',
+                    border: 'none',
                       position: col.sticky ? 'sticky' : 'static',
                       left: col.stickyLeft || 'auto',
                       zIndex: col.sticky ? 5 : 'auto',
@@ -254,7 +253,7 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
                   </td>
                 ))}
                 {(onEdit || onDelete || onCustomAction) && (
-                  <td style={{ textAlign: 'center', border: '1px solid var(--clr-border)', whiteSpace: 'nowrap' }}>
+                  <td style={{ textAlign: 'center', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'nowrap', alignItems: 'center' }}>
                       {onCustomAction && onCustomAction(row)}
                       {onEdit && (
