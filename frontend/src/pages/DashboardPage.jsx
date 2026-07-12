@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd, exportDashboardSummaryYtd } from '../api/capex'
+import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd, exportDashboardSummaryYtd, exportRKAPVsRealisasiExcel } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
@@ -49,6 +49,7 @@ export default function DashboardPage({ tahun }) {
   const [progress, setProgress] = useState([])
   const [loading, setLoading] = useState(true)
   const [exportingYtd, setExportingYtd] = useState(false)
+  const [exportingGabungan, setExportingGabungan] = useState(false)
 
   // Chart configuration state — persisted in localStorage
   const [chartMode, setChartMode] = useState(
@@ -120,6 +121,18 @@ export default function DashboardPage({ tahun }) {
     }
   }
 
+  const handleExportGabungan = async () => {
+    setExportingGabungan(true)
+    try {
+      const res = await exportRKAPVsRealisasiExcel({ tahun })
+      downloadBlob(res.data, `Laporan_Gabungan_RKAP_vs_Realisasi_${tahun}.xlsx`)
+    } catch (e) {
+      dialog.alert({ title: 'Gagal Mengunduh', message: 'Terjadi kesalahan saat mengekspor laporan gabungan.', variant: 'danger' })
+    } finally {
+      setExportingGabungan(false)
+    }
+  }
+
   if (loading) return <LoadingSpinner message="Memuat dashboard..." />
 
   return (
@@ -129,6 +142,13 @@ export default function DashboardPage({ tahun }) {
           <h2 className="page-title">Dashboard Monitoring Capex {tahun}</h2>
           <p className="page-desc">Ringkasan anggaran, realisasi, dan progress investasi PT Dahana.</p>
         </div>
+        {isAdmin && (
+          <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-outline" onClick={handleExportGabungan} disabled={exportingGabungan} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {exportingGabungan ? <><Hourglass size={18} /> Mengekspor...</> : <><Download size={18} /> Excel Laporan Gabungan (RKAP vs Realisasi)</>}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="cards-grid">

@@ -230,26 +230,20 @@ export default function RKAPMasterPage({ tahun }) {
     { header: 'Status', accessor: 'status' },
     ...BULAN.map((bln, i) => ({
       header: bln,
-      children: [
-        { header: 'RKAP', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_rkap`])}</span> },
-        { header: 'Realisasi', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_real`])}</span> }
-      ]
+      render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_rkap`])}</span>
     })),
     { header: 'Total', children: [
       { header: 'RKAP Awal', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_rkap)}</span> },
-      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_perubahan)}</span> },
-      { header: 'Realisasi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> }
+      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_perubahan)}</span> }
     ]}
   ]
 
   const renderGroupHeader = (groupName, groupData) => {
     let totalRkapSum = 0;
     let totalPerubahanSum = 0;
-    let totalRealSum = 0;
     groupData.forEach(r => {
       totalRkapSum += r.anggaran_rkap || 0;
       totalPerubahanSum += r.anggaran_perubahan || 0;
-      totalRealSum += r.total_real || 0;
     });
 
     return (
@@ -262,13 +256,9 @@ export default function RKAPMasterPage({ tahun }) {
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white' }}></td>
         {BULAN.flatMap((_, i) => {
           const sumBlnRkap = groupData.reduce((acc, r) => acc + (r[`b${i+1}_rkap`] || 0), 0)
-          const sumBlnReal = groupData.reduce((acc, r) => acc + (r[`b${i+1}_real`] || 0), 0)
           return [
             <td key={`gh-rkap-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
               {sumBlnRkap > 0 ? <span className="rupiah">{fmtRupiah(sumBlnRkap)}</span> : '-'}
-            </td>,
-            <td key={`gh-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
-              {sumBlnReal > 0 ? <span className="rupiah">{fmtRupiah(sumBlnReal)}</span> : '-'}
             </td>
           ]
         })}
@@ -277,9 +267,6 @@ export default function RKAPMasterPage({ tahun }) {
         </td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
           {totalPerubahanSum > 0 ? <span className="rupiah">{fmtRupiah(totalPerubahanSum)}</span> : '-'}
-        </td>
-        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
-          {totalRealSum > 0 ? <span className="rupiah">{fmtRupiah(totalRealSum)}</span> : '-'}
         </td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)' }}></td>}
       </tr>
@@ -296,13 +283,9 @@ export default function RKAPMasterPage({ tahun }) {
         <td colSpan={6} style={{ textAlign: 'center', border: '1px solid var(--clr-border)', padding: '12px 16px' }}>Total Keseluruhan</td>
         {BULAN.flatMap((_, i) => {
           const sumBlnRkap = filteredData.reduce((acc, r) => acc + (r[`b${i+1}_rkap`] || 0), 0)
-          const sumBlnReal = filteredData.reduce((acc, r) => acc + (r[`b${i+1}_real`] || 0), 0)
           return [
             <td key={`ft-rkap-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>
               {sumBlnRkap > 0 ? <span className="rupiah">{fmtRupiah(sumBlnRkap)}</span> : '-'}
-            </td>,
-            <td key={`ft-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>
-              {sumBlnReal > 0 ? <span className="rupiah">{fmtRupiah(sumBlnReal)}</span> : '-'}
             </td>
           ]
         })}
@@ -311,9 +294,6 @@ export default function RKAPMasterPage({ tahun }) {
         </td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>
           {sumTotalPerubahan > 0 ? <span className="rupiah">{fmtRupiah(sumTotalPerubahan)}</span> : '-'}
-        </td>
-        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>
-          {sumTotalReal > 0 ? <span className="rupiah">{fmtRupiah(sumTotalReal)}</span> : '-'}
         </td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)' }}></td>}
       </tr>

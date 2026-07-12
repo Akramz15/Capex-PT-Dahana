@@ -61,18 +61,15 @@ def generate_rkap_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
     
     for m in months:
         ws.cell(row=3, column=col_idx, value=m)
-        ws.merge_cells(start_row=3, start_column=col_idx, end_row=3, end_column=col_idx+1)
-        ws.cell(row=4, column=col_idx, value="RKAP")
-        ws.cell(row=4, column=col_idx+1, value="REALISASI")
-        col_idx += 2
+        ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+        col_idx += 1
         
     ws.cell(row=3, column=col_idx, value="Total")
-    ws.merge_cells(start_row=3, start_column=col_idx, end_row=3, end_column=col_idx+2)
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=3, end_column=col_idx+1)
     ws.cell(row=4, column=col_idx, value="RKAP Awal")
     ws.cell(row=4, column=col_idx+1, value="RKAP Revisi")
-    ws.cell(row=4, column=col_idx+2, value="Realisasi")
     
-    max_col = col_idx + 2
+    max_col = col_idx + 1
 
     for r in [3, 4]:
         for c in range(1, max_col + 1):
@@ -87,7 +84,7 @@ def generate_rkap_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
         groups[cat].append(row)
         
     current_row = 5
-    overall_totals = [0] * (24 + 3) # 12*2 + 3
+    overall_totals = [0] * (12 + 2) # 12 months + 2 totals
     
     for cat in sorted(groups.keys()):
         # Group Header
@@ -97,7 +94,7 @@ def generate_rkap_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
         for c in range(5, max_col + 1):
             ws.cell(row=current_row, column=c, value="")
             
-        group_totals = [0] * (24 + 3)
+        group_totals = [0] * (12 + 2)
         for c in range(1, max_col + 1):
             _apply_group_style(ws.cell(row=current_row, column=c))
         
@@ -115,24 +112,18 @@ def generate_rkap_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
             c_idx = 7
             for i in range(1, 13):
                 rkap = item.get(f"b{i}_rkap") or 0
-                real = item.get(f"b{i}_real") or 0
                 ws.cell(row=current_row, column=c_idx, value=rkap)
-                ws.cell(row=current_row, column=c_idx+1, value=real)
-                group_totals[(i-1)*2] += rkap
-                group_totals[(i-1)*2+1] += real
-                c_idx += 2
+                group_totals[i-1] += rkap
+                c_idx += 1
                 
             rkap_awal = item.get("anggaran_rkap") or 0
             rkap_rev = item.get("anggaran_perubahan") or 0
-            tot_real = item.get("total_real") or 0
             
             ws.cell(row=current_row, column=c_idx, value=rkap_awal)
             ws.cell(row=current_row, column=c_idx+1, value=rkap_rev)
-            ws.cell(row=current_row, column=c_idx+2, value=tot_real)
             
-            group_totals[-3] += rkap_awal
-            group_totals[-2] += rkap_rev
-            group_totals[-1] += tot_real
+            group_totals[-2] += rkap_awal
+            group_totals[-1] += rkap_rev
             
             for c in range(1, 7):
                 _apply_data_style(ws.cell(row=current_row, column=c), align="center" if c in [1,5,6] else "left")
@@ -185,6 +176,118 @@ def generate_realization_excel(data: List[Dict[str, Any]], tahun: int) -> BytesI
 
     ws.merge_cells("A1:K1")
     ws["A1"] = f"Realisasi {tahun}"
+    ws["A1"].font = Font(bold=True, size=14)
+
+    # Headers
+    headers_row1 = ["NO", "DAFTAR CAPEX"]
+    months = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"]
+    
+    col_idx = 1
+    for h in headers_row1:
+        ws.cell(row=3, column=col_idx, value=h)
+        ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+        col_idx += 1
+        
+    ws.cell(row=3, column=col_idx, value="ANGGARAN")
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=3, end_column=col_idx+1)
+    ws.cell(row=4, column=col_idx, value="RKAP")
+    ws.cell(row=4, column=col_idx+1, value="PERUBAHAN")
+    col_idx += 2
+    
+    ws.cell(row=3, column=col_idx, value="STATUS")
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+    col_idx += 1
+    
+    ws.cell(row=3, column=col_idx, value="KETERANGAN")
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+    col_idx += 1
+    
+    for m in months:
+        ws.cell(row=3, column=col_idx, value=m)
+        ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+        col_idx += 1
+        
+    max_col = col_idx - 1
+
+    for r in [3, 4]:
+        for c in range(1, max_col + 1):
+            _apply_header_style(ws.cell(row=r, column=c))
+            
+    current_row = 5
+    overall_totals = [0] * (12 + 2) # 2 anggaran + 12 bulan
+    
+    for idx, item in enumerate(data):
+        ws.cell(row=current_row, column=1, value=idx + 1)
+        ws.cell(row=current_row, column=2, value=item.get("daftar_capex") or "")
+        
+        rkap = item.get("anggaran_rkap") or 0
+        perubahan = item.get("anggaran_perubahan") or 0
+        ws.cell(row=current_row, column=3, value=rkap)
+        ws.cell(row=current_row, column=4, value=perubahan)
+        
+        overall_totals[0] += rkap
+        overall_totals[1] += perubahan
+        
+
+        ws.cell(row=current_row, column=5, value=item.get("status") or "")
+        ws.cell(row=current_row, column=6, value=item.get("keterangan") or "")
+        
+        c_idx = 7
+        for i in range(1, 13):
+            bln_real = item.get(f"b{i}_real") or 0
+            ws.cell(row=current_row, column=c_idx, value=bln_real)
+            
+            overall_totals[2 + (i-1)] += bln_real
+            c_idx += 1
+            
+        for c in range(1, max_col + 1):
+            is_rupiah = c in [3, 4] or c >= 7
+            align = "center" if c in [1, 5] else ("right" if is_rupiah else "left")
+            _apply_data_style(ws.cell(row=current_row, column=c), is_rupiah=is_rupiah, align=align)
+            
+        current_row += 1
+        
+    # Write Footer
+    ws.cell(row=current_row, column=1, value="Total")
+    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=2)
+    
+    ws.cell(row=current_row, column=3, value=overall_totals[0])
+    ws.cell(row=current_row, column=4, value=overall_totals[1])
+    ws.cell(row=current_row, column=5, value="")
+    ws.cell(row=current_row, column=6, value="")
+    
+    g_idx = 7
+    for v in overall_totals[2:]:
+        ws.cell(row=current_row, column=g_idx, value=v)
+        g_idx += 1
+        
+    for c in range(1, max_col + 1):
+        _apply_footer_style(ws.cell(row=current_row, column=c), is_rupiah=(c in [3,4] or c >= 7))
+        if c in [5, 6]:
+             ws.cell(row=current_row, column=c).fill = PatternFill(start_color="002060", end_color="002060", fill_type="solid")
+        
+    # Set Column Widths
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 35
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 12
+    ws.column_dimensions['F'].width = 25
+    for c in range(7, max_col + 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(c)].width = 15
+        
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+def generate_gabungan_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    _setup_worksheet(ws, f"RKAP vs Realisasi {tahun}")
+
+    ws.merge_cells("A1:K1")
+    ws["A1"] = f"RKAP vs Realisasi {tahun}"
     ws["A1"].font = Font(bold=True, size=14)
 
     # Headers
@@ -294,6 +397,7 @@ def generate_realization_excel(data: List[Dict[str, Any]], tahun: int) -> BytesI
     wb.save(output)
     output.seek(0)
     return output
+
 
 def generate_audit_logs_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
     wb = openpyxl.Workbook()

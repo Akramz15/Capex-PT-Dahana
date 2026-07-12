@@ -9,7 +9,7 @@ from .realization import list_realization
 from .assets import list_assets
 from .timeline import list_timeline
 from ..services.export_dynamic import (
-    generate_rkap_excel, generate_realization_excel, 
+    generate_rkap_excel, generate_realization_excel, generate_gabungan_excel,
     generate_audit_logs_excel, generate_assets_excel, generate_timeline_excel
 )
 
@@ -115,6 +115,59 @@ def export_realisasi_excel(
     output = generate_realization_excel(formatted_data, tahun)
 
     filename = f"Realisasi_{tahun}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Access-Control-Expose-Headers": "Content-Disposition",
+    }
+
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+@router.get("/gabungan")
+def export_gabungan_excel(
+    tahun: int = Query(...),
+    kategori: Optional[str] = None,
+    status: Optional[str] = None,
+    pic: Optional[str] = None,
+    search: Optional[str] = None,
+    _user: dict = Depends(get_current_user),
+):
+    capex_data = list_capex(tahun=tahun, kategori=kategori, _user=_user)
+    real_data = list_realization(tahun=tahun, _user=_user)
+    
+    formatted_data = []
+    for c in capex_data:
+        c_dict = c.copy()
+        c_reals = [r for r in real_data if str(r.get("capex_id")) == str(c.get("id"))]
+        
+        status_val = ""
+        ket_val = ""
+        for r in c_reals:
+            if r.get("status"): status_val = r.get("status")
+            if r.get("keterangan"): ket_val = r.get("keterangan")
+            
+        c_dict["status"] = status_val
+        c_dict["keterangan"] = ket_val
+        
+        for r in c_reals:
+            c_dict[f"b{r.get('bulan')}_rkap"] = r.get("nilai_rkap", 0)
+            c_dict[f"b{r.get('bulan')}_real"] = r.get("nilai_realisasi", 0)
+            
+        if search and search.lower() not in (c_dict.get("daftar_capex") or "").lower():
+            continue
+        if status and c_dict.get("status") != status:
+            continue
+        if pic and c_dict.get("pic") != pic:
+            continue
+            
+        formatted_data.append(c_dict)
+
+    output = generate_gabungan_excel(formatted_data, tahun)
+
+    filename = f"Laporan_Gabungan_{tahun}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"',
         "Access-Control-Expose-Headers": "Content-Disposition",

@@ -89,6 +89,12 @@ export const exportRealizationExcel = (params = {}) =>
     responseType: 'blob'
   })
 
+export const exportRKAPVsRealisasiExcel = (params = {}) =>
+  client.get('/export-capex/gabungan', {
+    params,
+    responseType: 'blob'
+  })
+
 export const exportAssetsExcel = (params = {}) =>
   client.get('/export-capex/assets', {
     params,
