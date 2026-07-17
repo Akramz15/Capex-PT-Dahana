@@ -14,7 +14,7 @@ import DataTable from '../components/ui/DataTable'
 import Badge from '../components/ui/Badge'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
 import { BarChart2, TrendingUp } from 'lucide-react'
-import { Hourglass, Download } from 'lucide-react'
+import { Hourglass, Download, Search } from 'lucide-react'
 
 const COLUMNS = [
   { key: 'kode',              label: 'Kode',        sortable: true },
@@ -58,6 +58,7 @@ export default function DashboardPage({ tahun }) {
   const [chartRange, setChartRange] = useState(1) // 1=Bulanan, 3=Triwulan, 6=Semester, 12=Tahunan
 
   const [ytdBulan, setYtdBulan] = useState(new Date().getMonth() + 1)
+  const [ytdSearch, setYtdSearch] = useState('')
   const [ytdData, setYtdData] = useState([])
 
   const fetchDashboard = useCallback(async () => {
@@ -248,10 +249,27 @@ export default function DashboardPage({ tahun }) {
       </div>
 
       <div className="section" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>Ringkasan Anggaran & Realisasi (YTD)</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>s.d. Bulan:</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'nowrap' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, whiteSpace: 'nowrap' }}>Ringkasan Anggaran & Realisasi (YTD)</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap' }}>
+            <div style={{ position: 'relative', width: '180px', flexShrink: 0 }}>
+              <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input 
+                type="text" 
+                placeholder="Cari Uraian..." 
+                value={ytdSearch}
+                onChange={(e) => setYtdSearch(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '6px 12px 6px 30px', 
+                  borderRadius: '6px', 
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.875rem',
+                  outline: 'none'
+                }} 
+              />
+            </div>
+            <span style={{ fontSize: '0.875rem', color: '#64748b', whiteSpace: 'nowrap', marginLeft: '4px' }}>s.d. Bulan:</span>
             <select
               value={ytdBulan}
               onChange={(e) => setYtdBulan(parseInt(e.target.value))}
@@ -282,7 +300,7 @@ export default function DashboardPage({ tahun }) {
                 className="btn btn-outline" 
                 onClick={handleExportYtd} 
                 disabled={exportingYtd}
-                style={{ padding: '6px 12px', fontSize: '0.875rem' }}
+                style={{ padding: '6px 12px', fontSize: '0.875rem', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 <Download size={14} style={{ marginRight: 6 }} />
                 {exportingYtd ? 'Mengekspor...' : 'Download Excel'}
@@ -290,7 +308,7 @@ export default function DashboardPage({ tahun }) {
             )}
           </div>
         </div>
-        <SummaryYTDTable data={ytdData} tahun={tahun} bulan={ytdBulan} />
+        <SummaryYTDTable data={ytdData} tahun={tahun} bulan={ytdBulan} searchQuery={ytdSearch} />
       </div>
 
       <div className="section">

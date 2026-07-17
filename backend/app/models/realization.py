@@ -12,6 +12,7 @@ class RealizationBase(BaseModel):
     bulan: int = Field(..., ge=1, le=12, description="1=Jan, 12=Des")
     nilai_rkap: int = Field(default=0, ge=0)
     nilai_realisasi: int = Field(default=0, ge=0)
+    nilai_bast: int = Field(default=0, ge=0)
     status: Optional[str] = None
     keterangan: Optional[str] = None
     pic: Optional[str] = Field(None, max_length=150)
@@ -24,6 +25,7 @@ class RealizationCreate(RealizationBase):
 class RealizationUpdate(BaseModel):
     nilai_rkap: Optional[int] = Field(None, ge=0)
     nilai_realisasi: Optional[int] = Field(None, ge=0)
+    nilai_bast: Optional[int] = Field(None, ge=0)
     status: Optional[str] = None
     keterangan: Optional[str] = None
     pic: Optional[str] = Field(None, max_length=150)

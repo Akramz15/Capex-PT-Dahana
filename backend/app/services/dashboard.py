@@ -148,7 +148,8 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
     master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).execute()
     
     # 2. Ambil data realisasi HANYA untuk bulan <= bulan yang dipilih
-    real = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
+    real = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, nilai_bast, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
+
     
     # Agregasi data YTD per capex_id
     ytd_data = {}
@@ -158,12 +159,14 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
             ytd_data[cid] = {
                 "rkap_ytd": 0,
                 "total_realisasi": 0,
+                "total_bast": 0,
                 "latest_status": None,
                 "latest_status_month": -1
             }
         
         ytd_data[cid]["rkap_ytd"] += r.get("nilai_rkap") or 0
         ytd_data[cid]["total_realisasi"] += r.get("nilai_realisasi") or 0
+        ytd_data[cid]["total_bast"] += r.get("nilai_bast") or 0
         
         st = r.get("status")
         mth = r.get("bulan") or 0
@@ -194,18 +197,12 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
         ytd = ytd_data.get(cid, {})
         rkap_ytd = ytd.get("rkap_ytd", 0)
         total_real = ytd.get("total_realisasi", 0)
-        overall_status = ytd.get("latest_status")
+        total_bast = ytd.get("total_bast", 0)
         
-        real_po = 0
-        real_bast = 0
-        
-        # Determine where to put the realization based on overall status
-        if overall_status == "BAADK":
-            real_bast = total_real
-        else:
-            # If it's PO, Tender, Kajian, Lainnya, or None, put it in PO 
-            # (as PO acts as the catch-all for in-progress realization before BAST in their template)
-            real_po = total_real
+        real_bast = total_bast
+        real_po = total_real - total_bast
+        if real_po < 0: 
+            real_po = 0
         
         pct_po = round((real_po / rkap_ytd * 100), 2) if rkap_ytd > 0 else 0
         pct_bast = round((real_bast / rkap_ytd * 100), 2) if rkap_ytd > 0 else 0

@@ -25,29 +25,29 @@ INSERT INTO capex_master (tahun, kode, daftar_capex, kategori, anggaran_rkap, an
 -- SEED: capex_realization (Realisasi Bulanan 2026)
 -- =============================================================================
 -- Aplikasi E-Audit (APP-01) — Realisasi Juli
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 7, 1000000000, 0, 'Kajian', 'Dalam proses kajian internal', 'Divisi IT'
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 7, 1000000000, 0, 0, 'Kajian', 'Dalam proses kajian internal', 'Divisi IT'
 FROM capex_master WHERE kode = 'APP-01';
 
 -- Aplikasi E-Office (APP-03) — PO Terbit
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 5, 600000000, 600000000, 'PO', '48-771 / Mei 2026', 'Divisi IT'
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 5, 600000000, 600000000, 600000000, 'PO', '48-771 / Mei 2026', 'Divisi IT'
 FROM capex_master WHERE kode = 'APP-03';
 
 -- Cubicle Switchgear Listrik (EQP-02) — Kajian
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 3, 450000000, 450000000, 'Kajian', 'Kajian selesai, menunggu approval', 'Divisi Umum'
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 3, 450000000, 450000000, 0, 'Kajian', 'Kajian selesai, menunggu approval', 'Divisi Umum'
 FROM capex_master WHERE kode = 'EQP-02';
 
 -- MMT-01 — Realisasi Januari sampai April
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 1, 0,           0,           'Rencana', NULL, 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 2, 0,           0,           'Rencana', NULL, 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 3, 25050000000, 25050000000, 'PO',      'SPMK diterbitkan', 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
-INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, status, keterangan, pic)
-SELECT id, 2026, 4, 8570000000,  8570000000,  'PO',      'Progress 25%', 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 1, 0,           0,           0, 'Rencana', NULL, 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 2, 0,           0,           0, 'Rencana', NULL, 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 3, 25050000000, 25050000000, 0, 'PO',      'SPMK diterbitkan', 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
+INSERT INTO capex_realization (capex_id, tahun, bulan, nilai_rkap, nilai_realisasi, nilai_bast, status, keterangan, pic)
+SELECT id, 2026, 4, 8570000000,  8570000000,  2000000000, 'PO',      'Progress 25%', 'Divisi Produksi' FROM capex_master WHERE kode = 'MMT-01';
 
 -- =============================================================================
 -- SEED: capex_status_log (dari sheet PO, Kajian, Lainnya)

@@ -101,6 +101,7 @@ def export_realisasi_excel(
         for r in c_reals:
             c_dict[f"b{r.get('bulan')}_rkap"] = r.get("nilai_rkap", 0)
             c_dict[f"b{r.get('bulan')}_real"] = r.get("nilai_realisasi", 0)
+            c_dict[f"b{r.get('bulan')}_bast"] = r.get("nilai_bast", 0)
             
         # Apply Filters
         if search and search.lower() not in (c_dict.get("daftar_capex") or "").lower():
@@ -155,6 +156,7 @@ def export_gabungan_excel(
         for r in c_reals:
             c_dict[f"b{r.get('bulan')}_rkap"] = r.get("nilai_rkap", 0)
             c_dict[f"b{r.get('bulan')}_real"] = r.get("nilai_realisasi", 0)
+            c_dict[f"b{r.get('bulan')}_bast"] = r.get("nilai_bast", 0)
             
         if search and search.lower() not in (c_dict.get("daftar_capex") or "").lower():
             continue

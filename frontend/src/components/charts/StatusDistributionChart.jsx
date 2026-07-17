@@ -6,7 +6,7 @@ const COLORS = {
   PO:      'hsl(214, 80%, 52%)',
   Tender:  'hsl(38, 92%, 50%)',
   Kajian:  'hsl(199, 89%, 48%)',
-  BAADK:   'hsl(145, 63%, 42%)',
+  BAST:    'hsl(145, 63%, 42%)',
   Lainnya: 'hsl(270, 60%, 55%)',
   Rencana: 'hsl(220, 10%, 70%)',
 }
@@ -27,7 +27,7 @@ const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) =>
 export default function StatusDistributionChart({ data = {}, totalRKAP = 0, totalReal = 0, sisa = 0 }) {
   const chartData = Object.entries(data)
     .map(([name, value]) => ({ name, value }))
-    .filter(item => item.value > 0 || ['PO', 'Kajian', 'Tender', 'BAADK', 'Lainnya'].includes(item.name))
+    .filter(item => item.value > 0 || ['PO', 'Kajian', 'Tender', 'BAST', 'Lainnya'].includes(item.name))
 
   if (!chartData.length) return (
     <div className="table-empty">

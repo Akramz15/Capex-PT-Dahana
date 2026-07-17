@@ -6,6 +6,7 @@ class RealizationBulkItem(BaseModel):
     bulan: int = Field(..., ge=1, le=12)
     nilai_rkap: int = 0
     nilai_realisasi: int = 0
+    nilai_bast: int = 0
 
 class RealizationBulkRequest(BaseModel):
     capex_id: UUID

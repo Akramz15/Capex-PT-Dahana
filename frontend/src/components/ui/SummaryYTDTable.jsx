@@ -1,10 +1,27 @@
 import React from 'react'
 import { fmtShort, BULAN_NAMES } from '../../utils'
 
-export default function SummaryYTDTable({ data, tahun, bulan }) {
+export default function SummaryYTDTable({ data, tahun, bulan, searchQuery = '' }) {
   if (!data || data.length === 0) {
     return <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Tidak ada data summary</div>
   }
+
+  const filteredData = data.map(kat => {
+    const filteredItems = kat.items.filter(item => item.uraian.toLowerCase().includes(searchQuery.toLowerCase()))
+    const subtotal_budget = filteredItems.reduce((acc, item) => acc + (item.budget || 0), 0)
+    const subtotal_rkap_ytd = filteredItems.reduce((acc, item) => acc + (item.rkap_ytd || 0), 0)
+    const subtotal_real_po = filteredItems.reduce((acc, item) => acc + (item.real_po || 0), 0)
+    const subtotal_real_bast = filteredItems.reduce((acc, item) => acc + (item.real_bast || 0), 0)
+    
+    return {
+      ...kat,
+      items: filteredItems,
+      subtotal_budget,
+      subtotal_rkap_ytd,
+      subtotal_real_po,
+      subtotal_real_bast
+    }
+  }).filter(kat => kat.items.length > 0)
 
   // Calculate Grand Totals
   let grandBudget = 0
@@ -12,7 +29,7 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
   let grandRealPo = 0
   let grandRealBast = 0
 
-  data.forEach(kat => {
+  filteredData.forEach(kat => {
     grandBudget += kat.subtotal_budget || 0
     grandRkapYtd += kat.subtotal_rkap_ytd || 0
     grandRealPo += kat.subtotal_real_po || 0
@@ -45,7 +62,7 @@ export default function SummaryYTDTable({ data, tahun, bulan }) {
           </tr>
         </thead>
         <tbody>
-          {data.map((kat, idx) => (
+          {filteredData.map((kat, idx) => (
             <React.Fragment key={idx}>
               <tr>
                 <td colSpan={7} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0' }}>

@@ -13,7 +13,7 @@ import { UploadCloud, Download, Hourglass } from 'lucide-react'
 import { uploadRealizationExcel, exportRealizationExcel } from '../api/capex'
 
 const BULAN_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-const STATUS_OPTIONS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya', 'Rencana']
+const STATUS_OPTIONS = ['PO', 'Tender', 'Kajian', 'BAST', 'Lainnya', 'Rencana']
 
 const EMPTY_FORM = {
   capex_id: '',
@@ -61,6 +61,7 @@ export default function RealizationPage({ tahun }) {
           anggaran_perubahan: c.anggaran_perubahan,
           total_rkap: 0,
           total_real: 0,
+          total_bast: 0,
           status: '',
           keterangan: '',
           pic: c.pic || '',
@@ -74,8 +75,10 @@ export default function RealizationPage({ tahun }) {
         const c = capexMap[r.capex_id]
         c[`b${r.bulan}_rkap`] = r.nilai_rkap
         c[`b${r.bulan}_real`] = r.nilai_realisasi
+        c[`b${r.bulan}_bast`] = r.nilai_bast
         c.total_rkap += r.nilai_rkap || 0
         c.total_real += r.nilai_realisasi || 0
+        c.total_bast += r.nilai_bast || 0
         
         // Take the latest status based on month
         if (r.status && r.bulan > c.status_month) {
@@ -102,7 +105,7 @@ export default function RealizationPage({ tahun }) {
     const items = {}
     // Pre-fill existing months
     row.items_raw.forEach(r => {
-      items[r.bulan] = { rkap: r.nilai_rkap, real: r.nilai_realisasi }
+      items[r.bulan] = { rkap: r.nilai_rkap, real: r.nilai_realisasi, bast: r.nilai_bast }
     })
     
     setForm({
@@ -186,7 +189,8 @@ export default function RealizationPage({ tahun }) {
           payload.items.push({
             bulan: i,
             nilai_rkap: Number(item.rkap || 0),
-            nilai_realisasi: Number(item.real || 0)
+            nilai_realisasi: Number(item.real || 0),
+            nilai_bast: Number(item.bast || 0)
           })
         }
       }
@@ -209,7 +213,7 @@ export default function RealizationPage({ tahun }) {
       items: {
         ...f.items,
         [bulan]: {
-          ...(f.items[bulan] || { rkap: 0, real: 0 }),
+          ...(f.items[bulan] || { rkap: 0, real: 0, bast: 0 }),
           [key]: val
         }
       }
@@ -221,12 +225,14 @@ export default function RealizationPage({ tahun }) {
     let totalAnggaranPerubahan = 0;
     let totalRkapSum = 0;
     let totalRealSum = 0;
+    let totalBastSum = 0;
 
     groupData.forEach(r => {
       totalAnggaranRkap += r.anggaran_rkap || 0;
       totalAnggaranPerubahan += r.anggaran_perubahan || 0;
       totalRkapSum += r.total_rkap || 0;
       totalRealSum += r.total_real || 0;
+      totalBastSum += r.total_bast || 0;
     });
 
     return (
@@ -252,6 +258,9 @@ export default function RealizationPage({ tahun }) {
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
           {totalRealSum > 0 ? <span className="rupiah">{fmtRupiah(totalRealSum)}</span> : '-'}
         </td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
+          {totalBastSum > 0 ? <span className="rupiah">{fmtRupiah(totalBastSum)}</span> : '-'}
+        </td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white' }}></td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)' }}></td>}
       </tr>
@@ -272,7 +281,8 @@ export default function RealizationPage({ tahun }) {
       render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_real`])}</span>
     })),
     { header: 'Total', children: [
-      { header: 'Realisasi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> }
+      { header: 'PO', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> },
+      { header: 'BAST', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_bast)}</span> }
     ]},
     { header: 'PIC', accessor: 'pic' }
   ]
@@ -282,6 +292,7 @@ export default function RealizationPage({ tahun }) {
     const sumAnggaranPerub = filteredData.reduce((acc, r) => acc + (r.anggaran_perubahan || 0), 0)
     const sumTotalRKAP = filteredData.reduce((acc, r) => acc + (r.total_rkap || 0), 0)
     const sumTotalReal = filteredData.reduce((acc, r) => acc + (r.total_real || 0), 0)
+    const sumTotalBast = filteredData.reduce((acc, r) => acc + (r.total_bast || 0), 0)
     
     return (
       <tr style={{ backgroundColor: '#001a4d', color: 'white', fontWeight: 'bold' }}>
@@ -296,11 +307,13 @@ export default function RealizationPage({ tahun }) {
           ]
         })}
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumTotalReal)}</span></td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumTotalBast)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}></td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}></td>}
       </tr>
     )
   }
+  const isInvalidBast = Object.values(form.items || {}).some(item => Number(item.bast || 0) > Number(item.real || 0));
 
   return (
     <>
@@ -358,17 +371,17 @@ export default function RealizationPage({ tahun }) {
               }
               const sumRKAP = totalPerubahan > 0 ? totalPerubahan : totalRKAP
               
-              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAADK: 0, Lainnya: 0 }
+              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAST: 0, Lainnya: 0 }
               data.forEach(r => {
                 let st = r.status || ''
-                if (st === 'BA/ADK') st = 'BAADK'
+                if (st === 'BA/ADK' || st === 'BAADK') st = 'BAST'
                 if (statSums[st] !== undefined) {
                   statSums[st] += (r.total_real || 0)
                 } else {
                   statSums.Lainnya += (r.total_real || 0)
                 }
               })
-              const subtotal = statSums.PO + statSums.Kajian + statSums.Tender + statSums.BAADK + statSums.Lainnya
+              const subtotal = statSums.PO + statSums.Kajian + statSums.Tender + statSums.BAST + statSums.Lainnya
               const sisa = sumRKAP - subtotal
               
               return data.length > 0 ? (
@@ -410,6 +423,7 @@ export default function RealizationPage({ tahun }) {
           onClose={closeModal}
           onSubmit={handleSave}
           submitLoading={saving}
+          submitDisabled={isInvalidBast}
           width="800px"
         >
           <div className="form-group">
@@ -447,12 +461,26 @@ export default function RealizationPage({ tahun }) {
               {BULAN_NAMES.map((bulan, idx) => {
                 const b = idx + 1
                 return (
-                  <div key={b} style={{ border: '1px solid var(--clr-border)', padding: '10px', borderRadius: '4px' }}>
-                    <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '13px', textAlign: 'center' }}>{bulan}</div>
+                  <div key={b} style={{ border: `1px solid ${Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#ef4444' : 'var(--clr-border)'}`, padding: '10px', borderRadius: '4px', backgroundColor: Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#fef2f2' : 'transparent' }}>
+                    <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '13px', textAlign: 'center', color: Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#ef4444' : 'inherit' }}>{bulan}</div>
+                    
+                    <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>Realisasi PO</div>
                     <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
                       value={form.items[b]?.real ?? ''} 
                       onChange={(e) => setBulan(b, 'real', e.target.value)} 
                       placeholder="Rp 0" />
+                      
+                    <div style={{ fontSize: '11px', color: '#666', marginTop: '8px', marginBottom: '4px' }}>Realisasi BAST</div>
+                    <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right', borderColor: Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#ef4444' : '' }} 
+                      value={form.items[b]?.bast ?? ''} 
+                      onChange={(e) => setBulan(b, 'bast', e.target.value)} 
+                      placeholder="Rp 0" />
+                      
+                    {Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) && (
+                      <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '4px', textAlign: 'center' }}>
+                        BAST melebihi PO
+                      </div>
+                    )}
                   </div>
                 )
               })}

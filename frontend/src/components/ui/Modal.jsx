@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useDialog } from '../../contexts/DialogContext'
 
-export default function Modal({ title, onClose, onSubmit, submitLabel = 'Simpan', submitLoading = false, width, children }) {
+export default function Modal({ title, onClose, onSubmit, submitLabel = 'Simpan', submitLoading = false, submitDisabled = false, width, children }) {
   const dialog = useDialog()
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function Modal({ title, onClose, onSubmit, submitLabel = 'Simpan'
                 variant: 'primary',
                 onConfirm: onSubmit
               });
-            }} disabled={submitLoading} id="modal-submit-btn">
+            }} disabled={submitLoading || submitDisabled} id="modal-submit-btn">
               {submitLoading ? 'Menyimpan...' : submitLabel}
             </button>
           </div>

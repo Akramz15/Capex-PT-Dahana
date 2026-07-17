@@ -207,6 +207,14 @@ def generate_realization_excel(data: List[Dict[str, Any]], tahun: int) -> BytesI
         ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
         col_idx += 1
         
+    ws.cell(row=3, column=col_idx, value="TOTAL REALISASI PO")
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+    col_idx += 1
+    
+    ws.cell(row=3, column=col_idx, value="TOTAL BAST")
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+    col_idx += 1
+        
     max_col = col_idx - 1
 
     for r in [3, 4]:
@@ -214,7 +222,7 @@ def generate_realization_excel(data: List[Dict[str, Any]], tahun: int) -> BytesI
             _apply_header_style(ws.cell(row=r, column=c))
             
     current_row = 5
-    overall_totals = [0] * (12 + 2) # 2 anggaran + 12 bulan
+    overall_totals = [0] * (12 + 2 + 2) # 2 anggaran + 12 bulan + 2 totals
     
     for idx, item in enumerate(data):
         ws.cell(row=current_row, column=1, value=idx + 1)
@@ -239,6 +247,17 @@ def generate_realization_excel(data: List[Dict[str, Any]], tahun: int) -> BytesI
             
             overall_totals[2 + (i-1)] += bln_real
             c_idx += 1
+            
+        total_real_po = sum((item.get(f"b{i}_real") or 0) for i in range(1, 13))
+        total_bast = sum((item.get(f"b{i}_bast") or 0) for i in range(1, 13))
+        
+        ws.cell(row=current_row, column=c_idx, value=total_real_po)
+        overall_totals[2 + 12] += total_real_po
+        c_idx += 1
+        
+        ws.cell(row=current_row, column=c_idx, value=total_bast)
+        overall_totals[2 + 13] += total_bast
+        c_idx += 1
             
         for c in range(1, max_col + 1):
             is_rupiah = c in [3, 4] or c >= 7

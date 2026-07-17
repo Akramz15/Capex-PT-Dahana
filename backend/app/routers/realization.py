@@ -94,6 +94,7 @@ def upsert_realization_bulk(
             "bulan": item.bulan,
             "nilai_rkap": item.nilai_rkap,
             "nilai_realisasi": item.nilai_realisasi,
+            "nilai_bast": item.nilai_bast,
             "status": payload.status,
             "keterangan": payload.keterangan,
             "pic": payload.pic

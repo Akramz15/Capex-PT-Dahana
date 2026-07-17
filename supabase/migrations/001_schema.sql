@@ -54,6 +54,7 @@ CREATE TABLE capex_realization (
     bulan           SMALLINT NOT NULL CHECK (bulan BETWEEN 1 AND 12),
     nilai_rkap      BIGINT NOT NULL DEFAULT 0,
     nilai_realisasi BIGINT NOT NULL DEFAULT 0,
+    nilai_bast      BIGINT NOT NULL DEFAULT 0,
     status          VARCHAR(50),
     keterangan      TEXT,
     pic             VARCHAR(150),
