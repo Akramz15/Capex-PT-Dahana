@@ -14,6 +14,7 @@ class CapexMasterBase(BaseModel):
     pic: Optional[str] = Field(None, max_length=150)
     source_capex_id: Optional[UUID] = None
     nd_persetujuan: Optional[str] = Field(None, max_length=150)
+    is_carryover: bool = Field(default=False)
 
 class CapexMasterCreate(CapexMasterBase):
     pass
@@ -26,6 +27,7 @@ class CapexMasterUpdate(BaseModel):
     anggaran_rkap: Optional[int] = Field(None, ge=0)
     anggaran_perubahan: Optional[int] = Field(None, ge=0)
     pic: Optional[str] = Field(None, max_length=150)
+    is_carryover: Optional[bool] = None
 
 
 class CapexMasterResponse(CapexMasterBase):

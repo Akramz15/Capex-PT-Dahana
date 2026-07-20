@@ -16,6 +16,7 @@ _TABLE = "capex_master"
 def list_capex(
     tahun: Optional[int] = None,
     kategori: Optional[str] = None,
+    is_carryover: bool = False,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
@@ -25,6 +26,8 @@ def list_capex(
         query = query.eq("tahun", tahun)
     if kategori is not None and isinstance(kategori, str):
         query = query.eq("kategori", kategori)
+        
+    query = query.eq("is_carryover", is_carryover)
 
     result = query.execute()
     return result.data
@@ -290,6 +293,7 @@ def get_audit_logs(
 @router.post("/upload")
 def upload_capex_excel(
     tahun: int = Query(...),
+    is_carryover: bool = Query(False),
     file: UploadFile = File(...),
     _admin: dict = Depends(require_admin),
 ):
@@ -309,27 +313,89 @@ def upload_capex_excel(
         
         inserted = 0
         data_to_insert = []
+        carryover_realizations = []
+        main_kategori = "INVESTASI RUTIN"
+        current_kategori = "Investasi Rutin"
         
-        # Asumsi baris 1 adalah header: Kode | Daftar Capex | Kategori | Anggaran RKAP | PIC
         for row in sheet.iter_rows(min_row=2, values_only=True):
             if not row or not row[1]: # Jika daftar capex kosong, skip
                 continue
                 
-            kode = str(row[0]) if row[0] else ""
-            daftar_capex = str(row[1])
-            kategori = str(row[2]) if row[2] else ""
-            
-            # Parsing anggaran (bisa int, float, atau string berformat)
-            try:
-                anggaran_str = str(row[3]).replace(',', '').replace('.', '') if row[3] else "0"
-                # If there are trailing zeros from float conversion, handle it
-                if '.' in anggaran_str:
-                    anggaran_str = anggaran_str.split('.')[0]
-                anggaran = int(anggaran_str)
-            except ValueError:
-                anggaran = 0
+            if is_carryover:
+                uraian = str(row[1]).strip()
                 
-            pic = str(row[4]) if len(row) > 4 and row[4] else ""
+                if uraian.upper() == "URAIAN":
+                    continue
+                
+                pic = str(row[3]).strip() if len(row) > 3 and row[3] else ""
+                
+                if not pic:
+                    upper_uraian = uraian.upper()
+                    if "TOTAL" in upper_uraian or "JUMLAH" in upper_uraian:
+                        continue
+                    if upper_uraian == "INVESTASI RUTIN" or upper_uraian == "INVESTASI PENGEMBANGAN":
+                        # This is a Main Kategori
+                        main_kategori = uraian
+                        continue
+                    
+                    # This is a sub-category header (e.g. "Tanah & Bangunan")
+                    current_kategori = uraian
+                    continue
+                    
+                kode = main_kategori
+                daftar_capex = uraian
+                kategori = current_kategori
+                
+                try:
+                    anggaran_str = str(row[2]).replace(',', '').replace('.', '') if row[2] else "0"
+                    if '.' in anggaran_str:
+                        anggaran_str = anggaran_str.split('.')[0]
+                    anggaran = int(anggaran_str)
+                except ValueError:
+                    anggaran = 0
+                
+                # Parse monthly realizations
+                realizations = []
+                for i in range(12):
+                    col_ba = 4 + (i * 2)
+                    col_po = 5 + (i * 2)
+                    
+                    try:
+                        ba_val_str = str(row[col_ba]).replace(',', '').replace('.', '') if len(row) > col_ba and row[col_ba] else "0"
+                        if '.' in ba_val_str: ba_val_str = ba_val_str.split('.')[0]
+                        ba_val = int(ba_val_str)
+                    except ValueError:
+                        ba_val = 0
+                        
+                    try:
+                        po_val_str = str(row[col_po]).replace(',', '').replace('.', '') if len(row) > col_po and row[col_po] else "0"
+                        if '.' in po_val_str: po_val_str = po_val_str.split('.')[0]
+                        po_val = int(po_val_str)
+                    except ValueError:
+                        po_val = 0
+                        
+                    realizations.append({
+                        "bulan": i + 1,
+                        "nilai_bast": ba_val,
+                        "nilai_realisasi": po_val
+                    })
+                    
+                carryover_realizations.append(realizations)
+                
+            else:
+                kode = str(row[0]) if row[0] else ""
+                daftar_capex = str(row[1])
+                kategori = str(row[2]) if row[2] else ""
+                
+                try:
+                    anggaran_str = str(row[3]).replace(',', '').replace('.', '') if row[3] else "0"
+                    if '.' in anggaran_str:
+                        anggaran_str = anggaran_str.split('.')[0]
+                    anggaran = int(anggaran_str)
+                except ValueError:
+                    anggaran = 0
+                    
+                pic = str(row[4]) if len(row) > 4 and row[4] else ""
             
             data_to_insert.append({
                 "tahun": tahun,
@@ -337,13 +403,32 @@ def upload_capex_excel(
                 "daftar_capex": daftar_capex,
                 "kategori": kategori,
                 "anggaran_rkap": anggaran,
-                "anggaran_perubahan": anggaran, # Set default anggaran_perubahan sama dengan RKAP
-                "pic": pic
+                "anggaran_perubahan": anggaran,
+                "pic": pic,
+                "is_carryover": is_carryover
             })
             
         if data_to_insert:
-            client.table(_TABLE).insert(data_to_insert).execute()
+            res = client.table(_TABLE).insert(data_to_insert).execute()
             inserted = len(data_to_insert)
+            
+            # Insert carryover realizations if present
+            if is_carryover and carryover_realizations and res.data:
+                real_inserts = []
+                for idx, capex_row in enumerate(res.data):
+                    if idx < len(carryover_realizations):
+                        capex_id = capex_row['id']
+                        for r in carryover_realizations[idx]:
+                            if r["nilai_bast"] > 0 or r["nilai_realisasi"] > 0:
+                                real_inserts.append({
+                                    "capex_id": capex_id,
+                                    "bulan": r["bulan"],
+                                    "nilai_bast": r["nilai_bast"],
+                                    "nilai_realisasi": r["nilai_realisasi"],
+                                    "tahun": tahun
+                                })
+                if real_inserts:
+                    client.table("capex_realization").insert(real_inserts).execute()
             
         return {"message": f"Berhasil upload {inserted} data capex untuk tahun {tahun}."}
         

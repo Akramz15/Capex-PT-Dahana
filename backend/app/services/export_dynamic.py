@@ -169,13 +169,14 @@ def generate_rkap_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
     output.seek(0)
     return output
 
-def generate_realization_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
+def generate_realization_excel(data: List[Dict[str, Any]], tahun: int, is_carryover: bool = False) -> BytesIO:
     wb = openpyxl.Workbook()
     ws = wb.active
-    _setup_worksheet(ws, f"Realisasi {tahun}")
+    title = f"Realisasi Carry Over {tahun}" if is_carryover else f"Realisasi {tahun}"
+    _setup_worksheet(ws, title[:31]) # Excel sheet name limit
 
     ws.merge_cells("A1:K1")
-    ws["A1"] = f"Realisasi {tahun}"
+    ws["A1"] = title
     ws["A1"].font = Font(bold=True, size=14)
 
     # Headers
@@ -682,3 +683,176 @@ def generate_timeline_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
     wb.save(stream)
     stream.seek(0)
     return stream
+
+def generate_carryover_excel(data: List[Dict[str, Any]], tahun: int) -> BytesIO:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    title = f"Carry Over {tahun}"
+    _setup_worksheet(ws, title[:31])
+
+    ws.merge_cells("A1:AE1")
+    ws["A1"] = title
+    ws["A1"].font = Font(bold=True, size=14)
+
+    # Headers Row 3
+    headers_row1 = ["NO", "URAIAN PEKERJAAN", f"Carryover {tahun-1}", "User"]
+    months = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"]
+    
+    col_idx = 1
+    for h in headers_row1:
+        ws.cell(row=3, column=col_idx, value=h)
+        ws.merge_cells(start_row=3, start_column=col_idx, end_row=4, end_column=col_idx)
+        col_idx += 1
+        
+    for m in months:
+        ws.cell(row=3, column=col_idx, value=m)
+        ws.merge_cells(start_row=3, start_column=col_idx, end_row=3, end_column=col_idx+1)
+        ws.cell(row=4, column=col_idx, value="BA")
+        ws.cell(row=4, column=col_idx+1, value="PO")
+        col_idx += 2
+        
+    ws.cell(row=3, column=col_idx, value="TOTAL")
+    ws.merge_cells(start_row=3, start_column=col_idx, end_row=3, end_column=col_idx+1)
+    ws.cell(row=4, column=col_idx, value="By PO")
+    ws.cell(row=4, column=col_idx+1, value="By BA")
+    col_idx += 2
+    
+    max_col = col_idx - 1
+
+    for r in [3, 4]:
+        for c in range(1, max_col + 1):
+            _apply_header_style(ws.cell(row=r, column=c))
+            
+    # Grouping Data by main_kategori (kode) and then kategori
+    groups = {}
+    for row in data:
+        mk = row.get("kode") or "INVESTASI RUTIN"
+        kat = row.get("kategori") or "Lain-lain"
+        if mk not in groups:
+            groups[mk] = {}
+        if kat not in groups[mk]:
+            groups[mk][kat] = []
+        groups[mk][kat].append(row)
+            
+    current_row = 5
+    overall_totals = [0] * (1 + 24 + 2) # Carryover + 12*2 + 2 totals
+    
+    for mk in sorted(groups.keys()):
+        # MAIN KATEGORI HEADER
+        ws.cell(row=current_row, column=1, value="")
+        ws.cell(row=current_row, column=2, value=mk.upper())
+        ws.merge_cells(start_row=current_row, start_column=2, end_row=current_row, end_column=max_col)
+        for c in range(1, max_col + 1):
+            _apply_group_style(ws.cell(row=current_row, column=c))
+        ws.cell(row=current_row, column=2).font = Font(bold=True, color="FFFFFF")
+        ws.cell(row=current_row, column=2).fill = PatternFill(start_color="002060", end_color="002060", fill_type="solid")
+        current_row += 1
+        
+        for kat in sorted(groups[mk].keys()):
+            # SUB KATEGORI HEADER
+            ws.cell(row=current_row, column=1, value="")
+            ws.cell(row=current_row, column=2, value=kat)
+            ws.merge_cells(start_row=current_row, start_column=2, end_row=current_row, end_column=max_col)
+            for c in range(1, max_col + 1):
+                _apply_group_style(ws.cell(row=current_row, column=c))
+            ws.cell(row=current_row, column=2).font = Font(bold=True, color="334155")
+            ws.cell(row=current_row, column=2).fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+            current_row += 1
+            
+            group_totals = [0] * (1 + 24 + 2)
+            for idx, item in enumerate(groups[mk][kat]):
+                ws.cell(row=current_row, column=1, value=idx + 1)
+                ws.cell(row=current_row, column=2, value=item.get("daftar_capex") or "")
+                
+                rkap = item.get("anggaran_rkap") or 0
+                ws.cell(row=current_row, column=3, value=rkap)
+                ws.cell(row=current_row, column=4, value=item.get("pic") or "")
+                
+                group_totals[0] += rkap
+                overall_totals[0] += rkap
+                
+                c_idx = 5
+                total_real = 0
+                total_bast = 0
+                for i in range(1, 13):
+                    bln_bast = item.get(f"b{i}_bast") or 0
+                    bln_real = item.get(f"b{i}_real") or 0
+                    ws.cell(row=current_row, column=c_idx, value=bln_bast)
+                    ws.cell(row=current_row, column=c_idx+1, value=bln_real)
+                    
+                    group_totals[1 + (i-1)*2] += bln_bast
+                    group_totals[2 + (i-1)*2] += bln_real
+                    overall_totals[1 + (i-1)*2] += bln_bast
+                    overall_totals[2 + (i-1)*2] += bln_real
+                    
+                    total_bast += bln_bast
+                    total_real += bln_real
+                    c_idx += 2
+                    
+                ws.cell(row=current_row, column=c_idx, value=total_real)
+                group_totals[-2] += total_real
+                overall_totals[-2] += total_real
+                c_idx += 1
+                
+                ws.cell(row=current_row, column=c_idx, value=total_bast)
+                group_totals[-1] += total_bast
+                overall_totals[-1] += total_bast
+                c_idx += 1
+                
+                for c in range(1, max_col + 1):
+                    is_rupiah = c == 3 or c >= 5
+                    align = "center" if c in [1, 4] else ("right" if is_rupiah else "left")
+                    _apply_data_style(ws.cell(row=current_row, column=c), is_rupiah=is_rupiah, align=align)
+                    
+                current_row += 1
+                
+            # SUB KATEGORI FOOTER
+            ws.cell(row=current_row, column=1, value="")
+            ws.cell(row=current_row, column=2, value=f"Jumlah {kat}")
+            ws.cell(row=current_row, column=3, value=group_totals[0])
+            ws.cell(row=current_row, column=4, value="")
+            
+            g_idx = 5
+            for v in group_totals[1:]:
+                ws.cell(row=current_row, column=g_idx, value=v)
+                g_idx += 1
+                
+            for c in range(1, max_col + 1):
+                _apply_footer_style(ws.cell(row=current_row, column=c), is_rupiah=(c == 3 or c >= 5))
+                ws.cell(row=current_row, column=c).fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+                ws.cell(row=current_row, column=c).font = Font(bold=True, color="92400E")
+                if c == 2:
+                    ws.cell(row=current_row, column=c).alignment = Alignment(horizontal="right", vertical="center")
+                    
+            current_row += 1
+        
+    # Write Footer
+    ws.cell(row=current_row, column=1, value="")
+    ws.cell(row=current_row, column=2, value="TOTAL KESELURUHAN")
+    ws.cell(row=current_row, column=3, value=overall_totals[0])
+    ws.cell(row=current_row, column=4, value="")
+    
+    g_idx = 5
+    for v in overall_totals[1:]:
+        ws.cell(row=current_row, column=g_idx, value=v)
+        g_idx += 1
+        
+    for c in range(1, max_col + 1):
+        _apply_footer_style(ws.cell(row=current_row, column=c), is_rupiah=(c == 3 or c >= 5))
+        ws.cell(row=current_row, column=c).fill = PatternFill(start_color="002060", end_color="002060", fill_type="solid")
+        ws.cell(row=current_row, column=c).font = Font(bold=True, color="FFFFFF")
+        if c == 2:
+            ws.cell(row=current_row, column=c).alignment = Alignment(horizontal="right", vertical="center")
+        
+    # Set Column Widths
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 45
+    ws.column_dimensions['C'].width = 18
+    ws.column_dimensions['D'].width = 15
+    for c in range(5, max_col + 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(c)].width = 16
+        
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output

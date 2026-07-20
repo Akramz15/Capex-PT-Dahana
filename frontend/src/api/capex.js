@@ -4,9 +4,16 @@ export const getDashboardSummary  = (tahun) => client.get('/dashboard/summary', 
 export const getMonthlyChart      = (tahun) => client.get('/dashboard/monthly-chart',  { params: { tahun } })
 export const getProgressTable     = (tahun) => client.get('/dashboard/progress-table', { params: { tahun } })
 export const getDashboardSummaryYtd = (tahun, bulan) => client.get('/dashboard/summary-ytd', { params: { tahun, bulan } })
+export const getDashboardSummaryCarryoverYtd = (tahun, bulan) => client.get('/dashboard/summary-carryover-ytd', { params: { tahun, bulan } })
 
 export const exportDashboardSummaryYtd = (tahun, bulan) => 
   client.get('/dashboard/export-summary-ytd', { 
+    params: { tahun, bulan },
+    responseType: 'blob'
+  })
+
+export const exportDashboardSummaryCarryoverYtd = (tahun, bulan) => 
+  client.get('/dashboard/export-summary-carryover-ytd', { 
     params: { tahun, bulan },
     responseType: 'blob'
   })
@@ -17,14 +24,14 @@ export const createCapex  = (data)        => client.post('/capex',      data)
 export const updateCapex  = (id, data)    => client.put(`/capex/${id}`, data)
 export const deleteCapex  = (id)          => client.delete(`/capex/${id}`)
 export const getAuditLogs = (tahun)       => client.get('/capex/audit-logs/all', { params: { tahun } })
-export const uploadCapexExcel = (tahun, file) => {
+export const uploadCapexExcel = (tahun, file, is_carryover = false) => {
   const formData = new FormData();
   formData.append('file', file);
   return client.post('/capex/upload', formData, {
-    params: { tahun },
+    params: { tahun, is_carryover },
     headers: { 'Content-Type': 'multipart/form-data' }
   });
-}
+};
 
 export const listRealization   = (params = {}) => client.get('/realization',       { params })
 export const createRealization = (data)        => client.post('/realization',      data)

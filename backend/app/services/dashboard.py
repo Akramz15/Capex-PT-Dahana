@@ -3,10 +3,10 @@ from ..core.database import get_supabase_admin
 BULAN_NAMES = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
 
-def get_dashboard_summary(tahun: int) -> dict:
+def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
     client = get_supabase_admin()
 
-    master_result = client.table("capex_master").select("id, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).execute()
+    master_result = client.table("capex_master").select("id, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
     total_rkap = sum(r["anggaran_rkap"] for r in master_result.data)
     total_perubahan = sum(r["anggaran_perubahan"] for r in master_result.data)
     total_capex_items = len(master_result.data)
@@ -86,26 +86,32 @@ def get_dashboard_summary(tahun: int) -> dict:
     }
 
 
-def get_monthly_chart_data(tahun: int) -> list[dict]:
+def get_monthly_chart_data(tahun: int, is_carryover: bool = False) -> list[dict]:
     client = get_supabase_admin()
-    result = client.table("capex_realization").select("bulan, nilai_rkap, nilai_realisasi").eq("tahun", tahun).execute()
+    
+    # 1. Get all RKAP items (is_carryover filtered)
+    master_result = client.table("capex_master").select("id").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
+    master_ids = {str(m["id"]) for m in master_result.data}
+    
+    result = client.table("capex_realization").select("capex_id, bulan, nilai_rkap, nilai_realisasi").eq("tahun", tahun).execute()
 
     monthly: dict[int, dict] = {
         m: {"bulan": BULAN_NAMES[m - 1], "rkap": 0, "realisasi": 0}
         for m in range(1, 13)
     }
     for r in result.data:
-        b = r["bulan"]
-        monthly[b]["rkap"] += r["nilai_rkap"]
-        monthly[b]["realisasi"] += r["nilai_realisasi"]
+        if str(r["capex_id"]) in master_ids:
+            b = r["bulan"]
+            monthly[b]["rkap"] += r["nilai_rkap"]
+            monthly[b]["realisasi"] += r["nilai_realisasi"]
 
     return list(monthly.values())
 
 
-def get_capex_progress_table(tahun: int) -> list[dict]:
+def get_capex_progress_table(tahun: int, is_carryover: bool = False) -> list[dict]:
     client = get_supabase_admin()
 
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic").eq("tahun", tahun).execute()
+    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
     real_data = []
     offset = 0
     limit = 1000
@@ -141,11 +147,12 @@ def get_capex_progress_table(tahun: int) -> list[dict]:
 
     return rows
 
-def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
+def get_summary_table_ytd(tahun: int, bulan: int, is_carryover: bool = False) -> list[dict]:
     client = get_supabase_admin()
     
     # 1. Ambil data master
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).execute()
+    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
+    master_ids = [str(r["id"]) for r in master.data]
     
     # 2. Ambil data realisasi HANYA untuk bulan <= bulan yang dipilih
     real = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, nilai_bast, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
@@ -180,11 +187,13 @@ def get_summary_table_ytd(tahun: int, bulan: int) -> list[dict]:
     kategori_map = {}
     for m in master.data:
         kat = m.get("kategori") or "Lainnya"
+        main_kat = m.get("kode") or "INVESTASI RUTIN"
         cid = str(m["id"])
         
         if kat not in kategori_map:
             kategori_map[kat] = {
                 "kategori": kat,
+                "main_kategori": main_kat,
                 "items": [],
                 "subtotal_budget": 0,
                 "subtotal_rkap_ytd": 0,

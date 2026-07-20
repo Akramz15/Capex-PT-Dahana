@@ -20,12 +20,13 @@ def list_realization(
     capex_id: Optional[UUID] = None,
     tahun: Optional[int] = None,
     bulan: Optional[int] = None,
+    is_carryover: bool = False,
     _user: dict = Depends(get_current_user),
 ):
     client = get_supabase_admin()
     query = (
         client.table(_TABLE)
-        .select("*, capex_master(daftar_capex, kode)")
+        .select("*, capex_master!inner(daftar_capex, kode, is_carryover)")
         .order("tahun")
         .order("bulan")
     )
@@ -35,6 +36,8 @@ def list_realization(
         query = query.eq("tahun", tahun)
     if bulan is not None and isinstance(bulan, int):
         query = query.eq("bulan", bulan)
+        
+    query = query.eq("capex_master.is_carryover", is_carryover)
 
     all_data = []
     offset = 0

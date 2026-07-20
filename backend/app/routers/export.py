@@ -10,7 +10,8 @@ from .assets import list_assets
 from .timeline import list_timeline
 from ..services.export_dynamic import (
     generate_rkap_excel, generate_realization_excel, generate_gabungan_excel,
-    generate_audit_logs_excel, generate_assets_excel, generate_timeline_excel
+    generate_audit_logs_excel, generate_assets_excel, generate_timeline_excel,
+    generate_carryover_excel
 )
 
 router = APIRouter(prefix="/export-capex", tags=["Export"])
@@ -78,10 +79,11 @@ def export_realisasi_excel(
     status: Optional[str] = None,
     pic: Optional[str] = None,
     search: Optional[str] = None,
+    is_carryover: bool = False,
     _user: dict = Depends(get_current_user),
 ):
-    capex_data = list_capex(tahun=tahun, kategori=kategori, _user=_user)
-    real_data = list_realization(tahun=tahun, _user=_user)
+    capex_data = list_capex(tahun=tahun, kategori=kategori, is_carryover=is_carryover, _user=_user)
+    real_data = list_realization(tahun=tahun, is_carryover=is_carryover, _user=_user)
     
     formatted_data = []
     for c in capex_data:
@@ -113,9 +115,13 @@ def export_realisasi_excel(
             
         formatted_data.append(c_dict)
 
-    output = generate_realization_excel(formatted_data, tahun)
+    if is_carryover:
+        output = generate_carryover_excel(formatted_data, tahun)
+    else:
+        output = generate_realization_excel(formatted_data, tahun)
 
-    filename = f"Realisasi_{tahun}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    prefix = "CarryOver" if is_carryover else "Realisasi"
+    filename = f"{prefix}_{tahun}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"',
         "Access-Control-Expose-Headers": "Content-Disposition",

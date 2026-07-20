@@ -13,6 +13,7 @@ import StatusPage      from './pages/StatusPage'
 import LKUPage         from './pages/LKUPage'
 import UsersPage       from './pages/UsersPage'
 import RiwayatPengalihanPage from './pages/RiwayatPengalihanPage'
+import CarryOverPage from './pages/CarryOverPage'
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -44,6 +45,7 @@ function AppRoutes() {
                   <Route path="/timeline"   element={<TimelinePage    tahun={tahun} />} />
                   <Route path="/lku"        element={<LKUPage         tahun={tahun} />} />
                   <Route path="/aset"       element={<AssetsPage />} />
+                  <Route path="/carry-over" element={<CarryOverPage tahun={tahun} />} />
                   <Route path="/users"      element={<AdminRoute><UsersPage /></AdminRoute>} />
                   <Route path="*"           element={<Navigate to="/dashboard" replace />} />
                 </Routes>
@@ -57,12 +59,16 @@ function AppRoutes() {
 }
 
 
+import ErrorBoundary from './components/ErrorBoundary'
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <DialogProvider>
-        <AppRoutes />
-      </DialogProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <DialogProvider>
+          <AppRoutes />
+        </DialogProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

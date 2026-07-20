@@ -306,17 +306,17 @@ def generate_export(tahun: int) -> BytesIO:
     return output
 
 
-def export_ytd_summary_excel(tahun: int, bulan: int) -> BytesIO:
+def export_ytd_summary_excel(tahun: int, bulan: int, is_carryover: bool = False) -> BytesIO:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from .dashboard import get_summary_table_ytd
     
     # Ambil data
-    data = get_summary_table_ytd(tahun, bulan)
+    data = get_summary_table_ytd(tahun, bulan, is_carryover)
     
     wb = Workbook()
     ws = wb.active
-    ws.title = f"Summary YTD {tahun}"
+    ws.title = f"Summary {'Carry Over ' if is_carryover else ''}YTD {tahun}"
     
     bulan_names = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
     bulan_name = bulan_names[bulan - 1] if 1 <= bulan <= 12 else str(bulan)

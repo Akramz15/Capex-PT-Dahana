@@ -249,9 +249,13 @@ export default function RealizationPage({ tahun }) {
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white' }}></td>
         {BULAN_NAMES.flatMap((_, i) => {
           const sumBlnReal = groupData.reduce((acc, r) => acc + (r[`b${i+1}_real`] || 0), 0);
+          const sumBlnBast = groupData.reduce((acc, r) => acc + (r[`b${i+1}_bast`] || 0), 0);
           return [
             <td key={`gh-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
               {sumBlnReal > 0 ? <span className="rupiah">{fmtRupiah(sumBlnReal)}</span> : '-'}
+            </td>,
+            <td key={`gh-bast-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
+              {sumBlnBast > 0 ? <span className="rupiah">{fmtRupiah(sumBlnBast)}</span> : '-'}
             </td>
           ];
         })}
@@ -278,7 +282,10 @@ export default function RealizationPage({ tahun }) {
     { header: 'Keterangan', accessor: 'keterangan' },
     ...BULAN_NAMES.map((bln, i) => ({
       header: bln,
-      render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_real`])}</span>
+      children: [
+        { header: 'PO', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_real`])}</span> },
+        { header: 'BAST', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_bast`])}</span> }
+      ]
     })),
     { header: 'Total', children: [
       { header: 'PO', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> },
@@ -302,8 +309,10 @@ export default function RealizationPage({ tahun }) {
         <td colSpan={2} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}></td>
         {BULAN_NAMES.flatMap((_, i) => {
           const sumBlnReal = filteredData.reduce((acc, r) => acc + (r[`b${i+1}_real`] || 0), 0)
+          const sumBlnBast = filteredData.reduce((acc, r) => acc + (r[`b${i+1}_bast`] || 0), 0)
           return [
-            <td key={`ft-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumBlnReal)}</span></td>
+            <td key={`ft-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumBlnReal)}</span></td>,
+            <td key={`ft-bast-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumBlnBast)}</span></td>
           ]
         })}
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumTotalReal)}</span></td>

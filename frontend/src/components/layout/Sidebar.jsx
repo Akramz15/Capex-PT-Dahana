@@ -1,7 +1,7 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { logout as apiLogout } from '../../api/auth'
-import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye, History, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, TrendingUp, Calendar, Factory, Users, Key, Eye, History, ChevronLeft, ChevronRight, BarChart2, Archive } from 'lucide-react'
 import { useDialog } from '../../contexts/DialogContext'
 
 import logoUrl from '../../assets/Logo_DAHANA_CAGEUR.png'
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
     ]
   },
   { to: '/realisasi',   icon: <TrendingUp size={18} />, label: 'Realisasi' },
+  { to: '/carry-over',  icon: <Archive size={18} />, label: 'Carry Over' },
   { to: '/timeline',    icon: <Calendar size={18} />, label: 'Timeline' },
   { to: '/aset',        icon: <Factory size={18} />, label: 'Data Aset' },
   { to: '/users',       icon: <Users size={18} />, label: 'Manajemen User', adminOnly: true },
