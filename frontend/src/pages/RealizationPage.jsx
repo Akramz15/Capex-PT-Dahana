@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { listRealization, listCapex, createRealizationBulk, deleteRealization } from '../api/capex'
+import { listRealization, listCapex, createRealizationBulk, deleteRealization, uploadRealizationExcel, exportRealizationExcel } from '../api/capex'
+import { getRkapLockStatus } from '../api/settings'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
@@ -8,6 +9,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import StatusDistributionChart from '../components/charts/StatusDistributionChart'
+import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
 import { UploadCloud, Download, Hourglass } from 'lucide-react'
 import { uploadRealizationExcel, exportRealizationExcel } from '../api/capex'
@@ -329,7 +331,8 @@ export default function RealizationPage({ tahun }) {
       <div className="page-header">
         <div className="page-header-text">
           <h2 className="page-title">Realisasi {tahun}</h2>
-          <p className="page-desc">Log realisasi investasi bulanan setiap item Capex.</p>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Log realisasi investasi bulanan setiap item Capex.</p>
+          <LastUpdatedInfo moduleName="Realisasi" />
         </div>
         {isAdmin && (
           <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>

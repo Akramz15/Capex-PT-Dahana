@@ -5,6 +5,7 @@ import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah, fmtShort, downloadBlob } from '../utils'
 import { Pencil, Trash2, Plus, Upload, Filter, Download } from 'lucide-react'
@@ -223,7 +224,8 @@ export default function AssetsPage() {
       <div className="page-header">
         <div className="page-header-text">
           <h2 className="page-title">Data Aset</h2>
-          <p className="page-desc">Laporan Aktiva Tetap PT Dahana dari hasil kapitalisasi investasi.</p>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Laporan Aktiva Tetap PT Dahana dari hasil kapitalisasi investasi.</p>
+          <LastUpdatedInfo moduleName="Aset Tetap" />
         </div>
         {isAdmin && (
           <div style={{ display: 'flex', gap: '8px' }}>

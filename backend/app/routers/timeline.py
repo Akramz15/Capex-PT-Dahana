@@ -7,6 +7,7 @@ from uuid import UUID
 from ..core.database import get_supabase_admin
 from ..core.security import get_current_user, require_admin
 from ..models.user import TimelineCreate, TimelineUpdate, TimelineResponse
+from ..services.audit import log_module_update
 
 router = APIRouter(prefix="/timeline", tags=["Timeline"])
 
@@ -45,6 +46,7 @@ def create_timeline(
     data = payload.model_dump()
     data["capex_id"] = str(data["capex_id"])
     result = client.table(_TABLE).insert(data).execute()
+    log_module_update(client, "Timeline", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 from ..models.timeline_bulk import TimelineBulkRequest
@@ -68,6 +70,7 @@ def upsert_timeline_bulk(
         })
         
     result = client.table(_TABLE).upsert(data_list, on_conflict="capex_id,tahun,bulan,minggu").execute()
+    log_module_update(client, "Timeline", _admin.get("full_name", "Admin"))
     return result.data
 
 
@@ -85,6 +88,7 @@ def update_timeline(
     result = client.table(_TABLE).update(update_data).eq("id", str(timeline_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data timeline tidak ditemukan.")
+    log_module_update(client, "Timeline", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 
@@ -97,6 +101,7 @@ def delete_timeline(
     result = client.table(_TABLE).delete().eq("id", str(timeline_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data timeline tidak ditemukan.")
+    log_module_update(client, "Timeline", _admin.get("full_name", "Admin"))
 
 @router.post("/upload")
 def upload_timeline_excel(
@@ -156,6 +161,7 @@ def upload_timeline_excel(
             if getattr(res, 'data', None):
                 total += len(res.data)
             
+        log_module_update(client, "Timeline", _admin.get("full_name", "Admin"))
         return {"message": f"Berhasil mengupload jadwal timeline untuk {total} record."}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Gagal memproses file: {str(e)}")

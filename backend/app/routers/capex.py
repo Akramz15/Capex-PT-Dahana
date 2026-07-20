@@ -6,6 +6,7 @@ import openpyxl
 from ..core.database import get_supabase_admin
 from ..core.security import get_current_user, require_admin
 from ..models.capex import CapexMasterCreate, CapexMasterUpdate, CapexMasterResponse
+from ..services.audit import log_module_update
 
 router = APIRouter(prefix="/capex", tags=["RKAP Master"])
 
@@ -127,6 +128,7 @@ def create_capex(
                 }
                 client.table("capex_audit_logs").insert(audit_data).execute()
                 
+                log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
                 return new_capex
             except Exception as inner_e:
                 # Rollback anggaran sumber jika insert gagal
@@ -145,6 +147,7 @@ def create_capex(
         new_data = payload.model_dump(mode='json', exclude_unset=True)
         new_data.pop("nd_persetujuan", None) # Buang jika dikirim
         result = client.table(_TABLE).insert(new_data).execute()
+        log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
         return result.data[0]
 
 @router.put("/{capex_id}", response_model=CapexMasterResponse)
@@ -193,6 +196,8 @@ def update_capex(
     result = client.table(_TABLE).update(update_data).eq("id", str(capex_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data Capex tidak ditemukan.")
+        
+    log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 
@@ -233,6 +238,7 @@ def delete_capex(
             
     # 3. Hapus data capex
     client.table(_TABLE).delete().eq("id", str(capex_id)).execute()
+    log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
 
 
 @router.get("/audit-logs/all")
@@ -430,7 +436,10 @@ def upload_capex_excel(
                 if real_inserts:
                     client.table("capex_realization").insert(real_inserts).execute()
             
+        module_name = "Carry Over" if is_carryover else "RKAP Master"
+        log_module_update(client, module_name, _admin.get("full_name", "Admin"))
         return {"message": f"Berhasil upload {inserted} data capex untuk tahun {tahun}."}
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Terjadi kesalahan saat memproses file Excel: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+        pass

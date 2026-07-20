@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { fmtRupiah, BULAN_NAMES, downloadBlob } from '../utils'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Modal from '../components/ui/Modal'
+import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { useDialog } from '../contexts/DialogContext'
 
 export default function CarryOverPage({ tahun }) {
@@ -243,7 +244,8 @@ export default function CarryOverPage({ tahun }) {
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div className="page-header-text">
           <h2 className="page-title">CARRY OVER {tahun}</h2>
-          <p className="page-desc">Monitoring realisasi investasi Carry Over.</p>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Monitoring realisasi investasi Carry Over.</p>
+          <LastUpdatedInfo moduleName="Carry Over" />
         </div>
         <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
             
@@ -272,12 +274,6 @@ export default function CarryOverPage({ tahun }) {
               {exporting ? <><Hourglass size={18} /> Mengekspor...</> : <><Download size={18} /> Download Excel</>}
             </button>
 
-            {isAdmin && (
-              <button className="btn btn-primary" onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Tambah Carry Over
-              </button>
-            )}
         </div>
       </div>
 

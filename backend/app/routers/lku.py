@@ -5,6 +5,7 @@ from uuid import UUID
 from ..core.database import get_supabase_admin
 from ..core.security import get_current_user, require_admin
 from ..models.asset import LKUCreate, LKUUpdate, LKUResponse
+from ..services.audit import log_module_update
 
 router = APIRouter(prefix="/lku", tags=["LKU"])
 
@@ -39,6 +40,7 @@ def create_lku(
     if data.get("capex_id"):
         data["capex_id"] = str(data["capex_id"])
     result = client.table(_TABLE).insert(data).execute()
+    log_module_update(client, "LKU", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 
@@ -56,6 +58,7 @@ def update_lku(
     result = client.table(_TABLE).update(update_data).eq("id", str(lku_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data LKU tidak ditemukan.")
+    log_module_update(client, "LKU", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 
@@ -68,3 +71,4 @@ def delete_lku(
     result = client.table(_TABLE).delete().eq("id", str(lku_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data LKU tidak ditemukan.")
+    log_module_update(client, "LKU", _admin.get("full_name", "Admin"))

@@ -11,6 +11,12 @@ router = APIRouter(prefix="/status", tags=["Status Log"])
 _TABLE = "capex_status_log"
 StatusTypeFilter = Literal["PO", "Tender", "Kajian", "BAADK", "Lainnya"]
 
+@router.get("/module-updates")
+def get_module_updates(_user: dict = Depends(get_current_user)):
+    client = get_supabase_admin()
+    res = client.table("app_module_updates").select("*").execute()
+    return res.data
+
 
 @router.get("", response_model=list[StatusLogResponse])
 def list_status_log(

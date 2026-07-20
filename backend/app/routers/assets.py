@@ -7,6 +7,7 @@ from uuid import UUID
 from ..core.database import get_supabase_admin
 from ..core.security import get_current_user, require_admin
 from ..models.asset import AssetCreate, AssetUpdate, AssetResponse
+from ..services.audit import log_module_update
 
 router = APIRouter(prefix="/assets", tags=["Aset"])
 
@@ -57,6 +58,7 @@ def create_asset(
         if data.get(date_field):
             data[date_field] = str(data[date_field])
     result = client.table(_TABLE).insert(data).execute()
+    log_module_update(client, "Aset Tetap", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 
@@ -78,6 +80,7 @@ def update_asset(
     result = client.table(_TABLE).update(update_data).eq("id", str(asset_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data aset tidak ditemukan.")
+    log_module_update(client, "Aset Tetap", _admin.get("full_name", "Admin"))
     return result.data[0]
 
 
@@ -90,6 +93,7 @@ def delete_asset(
     result = client.table(_TABLE).delete().eq("id", str(asset_id)).execute()
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data aset tidak ditemukan.")
+    log_module_update(client, "Aset Tetap", _admin.get("full_name", "Admin"))
 
 @router.post("/upload", status_code=status.HTTP_200_OK)
 def upload_assets(
@@ -169,6 +173,7 @@ def upload_assets(
             chunk = insert_data[i:i + chunk_size]
             client.table(_TABLE).insert(chunk).execute()
             
+        log_module_update(client, "Aset Tetap", _admin.get("full_name", "Admin"))
         return {"message": f"Berhasil mengupload {len(insert_data)} data aset.", "count": len(insert_data)}
         
     except Exception as e:

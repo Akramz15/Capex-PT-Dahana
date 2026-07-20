@@ -5,6 +5,7 @@ import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import { useDialog } from '../contexts/DialogContext'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { fmtRupiah, downloadBlob } from '../utils'
 import { Upload, Download } from 'lucide-react'
 
@@ -255,7 +256,8 @@ export default function TimelinePage({ tahun }) {
       <div className="page-header">
         <div className="page-header-text">
           <h2 className="page-title">Timeline (Gantt Chart) {tahun}</h2>
-          <p className="page-desc">Jadwal pelaksanaan proyek investasi dari Kajian hingga BAST.</p>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Jadwal pelaksanaan proyek investasi dari Kajian hingga BAST.</p>
+          <LastUpdatedInfo moduleName="Timeline" />
         </div>
         {isAdmin && (
           <div style={{ display: 'flex', gap: '8px' }}>

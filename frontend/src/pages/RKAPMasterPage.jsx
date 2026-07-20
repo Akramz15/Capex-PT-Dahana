@@ -6,6 +6,7 @@ import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { useDialog } from '../contexts/DialogContext'
 import { fmtRupiah, fmtShort } from '../utils'
 
@@ -305,7 +306,8 @@ export default function RKAPMasterPage({ tahun }) {
       <div className="page-header">
         <div className="page-header-text">
           <h2 className="page-title">RKAP Master {tahun}</h2>
-          <p className="page-desc">Daftar rencana investasi Capex berdasarkan buku RKAP.</p>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Daftar rencana investasi Capex berdasarkan buku RKAP.</p>
+          <LastUpdatedInfo moduleName="RKAP Master" />
         </div>
         {isAdmin && (
           <div className="page-header-actions" style={{ display: 'flex', gap: '8px' }}>
