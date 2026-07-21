@@ -277,21 +277,21 @@ export default function RealizationPage({ tahun }) {
     { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '60px' },
     { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true, stickyLeft: '59px', width: '250px' },
     { header: 'Anggaran', children: [
-      { header: 'RKAP', render: (r) => <span className="rupiah">{fmtRupiah(r.anggaran_rkap)}</span> },
-      { header: 'Perubahan', render: (r) => <span className="rupiah">{fmtRupiah(r.anggaran_perubahan)}</span> }
+      { header: 'RKAP', render: (r) => <span className="rupiah">{r.anggaran_rkap > 0 ? fmtRupiah(r.anggaran_rkap) : '—'}</span> },
+      { header: 'Perubahan', render: (r) => <span className="rupiah">{r.anggaran_perubahan > 0 ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }
     ]},
     { header: 'Status', accessor: 'status' },
     { header: 'Keterangan', accessor: 'keterangan' },
     ...BULAN_NAMES.map((bln, i) => ({
       header: bln,
       children: [
-        { header: 'PO', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_real`])}</span> },
-        { header: 'BAST', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_bast`])}</span> }
+        { header: 'PO', render: (r) => <span className="rupiah">{r[`b${i+1}_rkap`] > 0 || r[`b${i+1}_real`] > 0 ? fmtRupiah(r[`b${i+1}_real`]) : '—'}</span> },
+        { header: 'BAST', render: (r) => <span className="rupiah">{r[`b${i+1}_rkap`] > 0 || r[`b${i+1}_bast`] > 0 ? fmtRupiah(r[`b${i+1}_bast`]) : '—'}</span> }
       ]
     })),
     { header: 'Total', children: [
-      { header: 'PO', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> },
-      { header: 'BAST', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_bast)}</span> }
+      { header: 'PO', render: (r) => <span className="rupiah fw-bold">{r.total_rkap > 0 || r.total_real > 0 ? fmtRupiah(r.total_real) : '—'}</span> },
+      { header: 'BAST', render: (r) => <span className="rupiah fw-bold">{r.total_rkap > 0 || r.total_bast > 0 ? fmtRupiah(r.total_bast) : '—'}</span> }
     ]},
     { header: 'PIC', accessor: 'pic' }
   ]

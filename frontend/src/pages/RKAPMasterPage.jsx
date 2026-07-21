@@ -244,11 +244,11 @@ export default function RKAPMasterPage({ tahun }) {
     { header: 'Status', accessor: 'status' },
     ...BULAN.map((bln, i) => ({
       header: bln,
-      render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_rkap`])}</span>
+      render: (r) => <span className="rupiah">{r[`b${i+1}_rkap`] > 0 ? fmtRupiah(r[`b${i+1}_rkap`]) : '—'}</span>
     })),
     { header: 'Total', children: [
-      { header: 'RKAP Awal', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_rkap)}</span> },
-      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.anggaran_perubahan)}</span> }
+      { header: 'RKAP Awal', render: (r) => <span className="rupiah fw-bold">{r.anggaran_rkap > 0 ? fmtRupiah(r.anggaran_rkap) : '—'}</span> },
+      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{r.anggaran_perubahan > 0 ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }
     ]}
   ]
 
