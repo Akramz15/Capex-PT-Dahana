@@ -433,19 +433,30 @@ def upload_capex_excel(
                 carryover_realizations.append(realizations)
                 
             else:
-                kode = str(row[0])[:50] if row[0] else ""
-                daftar_capex = str(row[1])
-                kategori = str(row[2])[:50] if row[2] else ""
+                # Handle RKAP_Master_2026 format
+                no_str = str(row[0]).strip() if row[0] else ""
+                
+                # Check if it's a category header (e.g. 'A', 'B' with empty Kode)
+                is_kode_empty = not row[1] or str(row[1]).strip().lower() == 'nan'
+                if no_str.isalpha() and is_kode_empty:
+                    uraian_val = str(row[2]).strip()
+                    if uraian_val:
+                        current_kategori = uraian_val
+                    continue
+                
+                kode = str(row[1]).strip()[:50] if not is_kode_empty else ""
+                daftar_capex = str(row[2]).strip() if row[2] else ""
+                kategori = current_kategori[:50]
+                
+                pic = str(row[3]).strip()[:50] if len(row) > 3 and row[3] and str(row[3]).lower() != 'nan' else ""
                 
                 try:
-                    anggaran_str = str(row[3]).replace(',', '').replace('.', '') if row[3] else "0"
+                    anggaran_str = str(row[6]).replace(',', '').replace('.', '') if len(row) > 6 and row[6] and str(row[6]).lower() != 'nan' else "0"
                     if '.' in anggaran_str:
                         anggaran_str = anggaran_str.split('.')[0]
                     anggaran = int(anggaran_str)
                 except ValueError:
                     anggaran = 0
-                    
-                pic = str(row[4]) if len(row) > 4 and row[4] else ""
             
             data_to_insert.append({
                 "tahun": tahun,
