@@ -433,9 +433,9 @@ def upload_capex_excel(
                 carryover_realizations.append(realizations)
                 
             else:
-                kode = str(row[0]) if row[0] else ""
+                kode = str(row[0])[:50] if row[0] else ""
                 daftar_capex = str(row[1])
-                kategori = str(row[2]) if row[2] else ""
+                kategori = str(row[2])[:50] if row[2] else ""
                 
                 try:
                     anggaran_str = str(row[3]).replace(',', '').replace('.', '') if row[3] else "0"
