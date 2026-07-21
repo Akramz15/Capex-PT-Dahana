@@ -72,7 +72,7 @@ export default function SummaryCarryOverTable({ data, tahun, bulan, searchQuery 
               </th>
             </tr>
             <tr>
-              <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>Sisa PO</th>
+              <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By PO</th>
               <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By BA</th>
               <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By PO</th>
               <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By BA</th>

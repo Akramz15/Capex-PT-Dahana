@@ -332,10 +332,10 @@ export default function CarryOverPage({ tahun }) {
                     {BULAN_NAMES.map(m => (
                       <React.Fragment key={m + '-sub'}>
                         <th style={{ minWidth: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'normal' }}>BA</th>
-                        <th style={{ minWidth: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'normal' }}>Sisa PO</th>
+                        <th style={{ minWidth: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'normal' }}>PO</th>
                       </React.Fragment>
                     ))}
-                    <th style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>Sisa PO</th>
+                    <th style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>By PO</th>
                     <th style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>By BA</th>
                   </tr>
                 </thead>

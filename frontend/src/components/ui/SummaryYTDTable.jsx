@@ -63,7 +63,7 @@ export default function SummaryYTDTable({ data, tahun, bulan, searchQuery = '' }
             <th colSpan={2} style={{ backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
           </tr>
           <tr style={{ backgroundColor: '#003366', color: 'white' }}>
-            <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>Sisa PO</th>
+            <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By PO</th>
             <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By BAST</th>
             <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By PO</th>
             <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By BAST</th>

@@ -285,12 +285,12 @@ export default function RealizationPage({ tahun }) {
     ...BULAN_NAMES.map((bln, i) => ({
       header: bln,
       children: [
-        { header: 'Sisa PO', render: (r) => { const s = (r[`b${i+1}_real`] || 0) - (r[`b${i+1}_bast`] || 0); return <span className="rupiah">{s > 0 ? fmtRupiah(s) : '-'}</span> } },
+        { header: 'PO', render: (r) => { const s = (r[`b${i+1}_real`] || 0) - (r[`b${i+1}_bast`] || 0); return <span className="rupiah">{s > 0 ? fmtRupiah(s) : '-'}</span> } },
         { header: 'BAST', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_bast`])}</span> }
       ]
     })),
     { header: 'Total', children: [
-      { header: 'Sisa PO', render: (r) => { const s = (r.total_real || 0) - (r.total_bast || 0); return <span className="rupiah fw-bold">{s > 0 ? fmtRupiah(s) : '-'}</span> } },
+      { header: 'PO', render: (r) => { const s = (r.total_real || 0) - (r.total_bast || 0); return <span className="rupiah fw-bold">{s > 0 ? fmtRupiah(s) : '-'}</span> } },
       { header: 'BAST', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_bast)}</span> }
     ]},
     { header: 'PIC', accessor: 'pic' }
