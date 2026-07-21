@@ -160,15 +160,16 @@ def update_capex(
 
     # 1. Cek apakah ada perubahan pada anggaran_rkap saat RKAP dikunci
     if payload.anggaran_rkap is not None:
-        existing = client.table(_TABLE).select("tahun").eq("id", str(capex_id)).single().execute()
+        existing = client.table(_TABLE).select("tahun, anggaran_rkap").eq("id", str(capex_id)).single().execute()
         if existing.data:
-            tahun = existing.data["tahun"]
-            lock_res = client.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
-            if lock_res.data and lock_res.data[0]["is_locked"]:
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Tahun RKAP ini sudah dikunci! Anda tidak bisa mengubah Anggaran RKAP awal. Silakan Buka Kunci (Unlock) terlebih dahulu jika memang ada salah ketik."
-                )
+            if existing.data.get("anggaran_rkap") != payload.anggaran_rkap:
+                tahun = existing.data["tahun"]
+                lock_res = client.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
+                if lock_res.data and lock_res.data[0]["is_locked"]:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="Tahun RKAP ini sudah dikunci! Anda tidak bisa mengubah Anggaran RKAP awal. Silakan Buka Kunci (Unlock) terlebih dahulu jika memang ada salah ketik."
+                    )
 
     # 2. Penyesuaian anggaran sumber jika anggaran_perubahan diubah (Reallocation on Edit)
     if payload.anggaran_perubahan is not None:
