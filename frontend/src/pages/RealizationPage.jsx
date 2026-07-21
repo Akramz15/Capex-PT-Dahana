@@ -254,7 +254,7 @@ export default function RealizationPage({ tahun }) {
           const sumBlnBast = groupData.reduce((acc, r) => acc + (r[`b${i+1}_bast`] || 0), 0);
           return [
             <td key={`gh-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
-              {(sumBlnReal - sumBlnBast) > 0 ? <span className="rupiah">{fmtRupiah(sumBlnReal - sumBlnBast)}</span> : '-'}
+              {sumBlnReal > 0 ? <span className="rupiah">{fmtRupiah(sumBlnReal)}</span> : '-'}
             </td>,
             <td key={`gh-bast-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
               {sumBlnBast > 0 ? <span className="rupiah">{fmtRupiah(sumBlnBast)}</span> : '-'}
@@ -262,7 +262,7 @@ export default function RealizationPage({ tahun }) {
           ];
         })}
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
-          {(totalRealSum - totalBastSum) > 0 ? <span className="rupiah">{fmtRupiah(totalRealSum - totalBastSum)}</span> : '-'}
+          {totalRealSum > 0 ? <span className="rupiah">{fmtRupiah(totalRealSum)}</span> : '-'}
         </td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', color: 'white', textAlign: 'right' }}>
           {totalBastSum > 0 ? <span className="rupiah">{fmtRupiah(totalBastSum)}</span> : '-'}
@@ -285,12 +285,12 @@ export default function RealizationPage({ tahun }) {
     ...BULAN_NAMES.map((bln, i) => ({
       header: bln,
       children: [
-        { header: 'PO', render: (r) => { const s = (r[`b${i+1}_real`] || 0) - (r[`b${i+1}_bast`] || 0); return <span className="rupiah">{s > 0 ? fmtRupiah(s) : '-'}</span> } },
+        { header: 'PO', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_real`])}</span> },
         { header: 'BAST', render: (r) => <span className="rupiah">{fmtRupiah(r[`b${i+1}_bast`])}</span> }
       ]
     })),
     { header: 'Total', children: [
-      { header: 'PO', render: (r) => { const s = (r.total_real || 0) - (r.total_bast || 0); return <span className="rupiah fw-bold">{s > 0 ? fmtRupiah(s) : '-'}</span> } },
+      { header: 'PO', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_real)}</span> },
       { header: 'BAST', render: (r) => <span className="rupiah fw-bold">{fmtRupiah(r.total_bast)}</span> }
     ]},
     { header: 'PIC', accessor: 'pic' }
@@ -313,11 +313,11 @@ export default function RealizationPage({ tahun }) {
           const sumBlnReal = filteredData.reduce((acc, r) => acc + (r[`b${i+1}_real`] || 0), 0)
           const sumBlnBast = filteredData.reduce((acc, r) => acc + (r[`b${i+1}_bast`] || 0), 0)
           return [
-            <td key={`ft-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>{(sumBlnReal - sumBlnBast) > 0 ? <span className="rupiah">{fmtRupiah(sumBlnReal - sumBlnBast)}</span> : '-'}</td>,
+            <td key={`ft-real-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumBlnReal)}</span></td>,
             <td key={`ft-bast-${i}`} style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumBlnBast)}</span></td>
           ]
         })}
-        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}>{(sumTotalReal - sumTotalBast) > 0 ? <span className="rupiah">{fmtRupiah(sumTotalReal - sumTotalBast)}</span> : '-'}</td>
+        <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumTotalReal)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px', textAlign: 'right' }}><span className="rupiah">{fmtRupiah(sumTotalBast)}</span></td>
         <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}></td>
         {isAdmin && <td style={{ border: '1px solid var(--clr-border)', padding: '12px 16px' }}></td>}

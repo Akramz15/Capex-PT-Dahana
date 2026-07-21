@@ -446,13 +446,13 @@ export default function CarryOverPage({ tahun }) {
                                           {val_bast > 0 ? <span className="rupiah">{fmtRupiah(val_bast)}</span> : '-'}
                                         </td>,
                                         <td key={`po-${i}`} style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right' }}>
-                                          {(val_po - val_bast) > 0 ? <span className="rupiah">{fmtRupiah(val_po - val_bast)}</span> : '-'}
+                                          {val_po > 0 ? <span className="rupiah">{fmtRupiah(val_po)}</span> : '-'}
                                         </td>
                                       ]
                                     })}
                                     
                                     <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>
-                                      {(rowTotalReal - rowTotalBast) > 0 ? <span className="rupiah">{fmtRupiah(rowTotalReal - rowTotalBast)}</span> : '-'}
+                                      {rowTotalReal > 0 ? <span className="rupiah">{fmtRupiah(rowTotalReal)}</span> : '-'}
                                     </td>
                                     <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>
                                       {rowTotalBast > 0 ? <span className="rupiah" style={{ color: '#002060' }}>{fmtRupiah(rowTotalBast)}</span> : '-'}
