@@ -332,10 +332,10 @@ export default function CarryOverPage({ tahun }) {
                     {BULAN_NAMES.map(m => (
                       <React.Fragment key={m + '-sub'}>
                         <th style={{ minWidth: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'normal' }}>BA</th>
-                        <th style={{ minWidth: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'normal' }}>PO</th>
+                        <th style={{ minWidth: '100px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'normal' }}>Sisa PO</th>
                       </React.Fragment>
                     ))}
-                    <th style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>By PO</th>
+                    <th style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>Sisa PO</th>
                     <th style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>By BA</th>
                   </tr>
                 </thead>
@@ -446,13 +446,13 @@ export default function CarryOverPage({ tahun }) {
                                           {val_bast > 0 ? <span className="rupiah">{fmtRupiah(val_bast)}</span> : '-'}
                                         </td>,
                                         <td key={`po-${i}`} style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right' }}>
-                                          {val_po > 0 ? <span className="rupiah">{fmtRupiah(val_po)}</span> : '-'}
+                                          {(val_po - val_bast) > 0 ? <span className="rupiah">{fmtRupiah(val_po - val_bast)}</span> : '-'}
                                         </td>
                                       ]
                                     })}
                                     
                                     <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>
-                                      {rowTotalReal > 0 ? <span className="rupiah" style={{ color: '#002060' }}>{fmtRupiah(rowTotalReal)}</span> : '-'}
+                                      {(rowTotalReal - rowTotalBast) > 0 ? <span className="rupiah">{fmtRupiah(rowTotalReal - rowTotalBast)}</span> : '-'}
                                     </td>
                                     <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>
                                       {rowTotalBast > 0 ? <span className="rupiah" style={{ color: '#002060' }}>{fmtRupiah(rowTotalBast)}</span> : '-'}

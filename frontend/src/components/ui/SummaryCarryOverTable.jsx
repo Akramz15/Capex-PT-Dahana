@@ -22,7 +22,7 @@ export default function SummaryCarryOverTable({ data, tahun, bulan, searchQuery 
 
     // Recalculate subtotals for filtered items
     const subtotal_budget = filteredItems.reduce((sum, item) => sum + item.budget, 0);
-    const subtotal_real_po = filteredItems.reduce((sum, item) => sum + item.real_po, 0);
+    const subtotal_real_po = filteredItems.reduce((sum, item) => sum + (item.real_po - item.real_bast), 0); // Sisa PO
     const subtotal_real_bast = filteredItems.reduce((sum, item) => sum + item.real_bast, 0);
     const subtotal_pct_po = subtotal_budget > 0 ? (subtotal_real_po / subtotal_budget) * 100 : 0;
     const subtotal_pct_bast = subtotal_budget > 0 ? (subtotal_real_bast / subtotal_budget) * 100 : 0;
@@ -72,7 +72,7 @@ export default function SummaryCarryOverTable({ data, tahun, bulan, searchQuery 
               </th>
             </tr>
             <tr>
-              <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By PO</th>
+              <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>Sisa PO</th>
               <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By BA</th>
               <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By PO</th>
               <th style={{ backgroundColor: '#002060', color: 'white', padding: '8px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)', border: 'none', textAlign: 'center' }}>By BA</th>
@@ -108,7 +108,7 @@ export default function SummaryCarryOverTable({ data, tahun, bulan, searchQuery 
                 return (
                   <React.Fragment key={`main-${mkIdx}`}>
                     <tr>
-                      <td colSpan={6} style={{ backgroundColor: '#002060', color: '#fff', fontWeight: 'bold', padding: '10px 12px', border: '1px solid var(--clr-border)', color: 'white' }}>
+                      <td colSpan={6} style={{ backgroundColor: '#002060', color: 'white', fontWeight: 'bold', padding: '10px 12px', border: '1px solid var(--clr-border)' }}>
                         {mk.toUpperCase()}
                       </td>
                     </tr>
@@ -126,7 +126,7 @@ export default function SummaryCarryOverTable({ data, tahun, bulan, searchQuery 
                               {item.budget > 0 ? fmtShort(item.budget) : '-'}
                             </td>
                             <td style={{ padding: '8px 12px', border: '1px solid var(--clr-border)', textAlign: 'right' }}>
-                              {item.real_po > 0 ? fmtShort(item.real_po) : '-'}
+                              {(item.real_po - item.real_bast) > 0 ? fmtShort(item.real_po - item.real_bast) : '-'}
                             </td>
                             <td style={{ padding: '8px 12px', border: '1px solid var(--clr-border)', textAlign: 'right' }}>
                               {item.real_bast > 0 ? fmtShort(item.real_bast) : '-'}

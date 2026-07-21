@@ -6,20 +6,28 @@ export default function SummaryYTDTable({ data, tahun, bulan, searchQuery = '' }
     return <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Tidak ada data summary</div>
   }
 
-  const filteredData = data.map(kat => {
-    const filteredItems = kat.items.filter(item => item.uraian.toLowerCase().includes(searchQuery.toLowerCase()))
-    const subtotal_budget = filteredItems.reduce((acc, item) => acc + (item.budget || 0), 0)
-    const subtotal_rkap_ytd = filteredItems.reduce((acc, item) => acc + (item.rkap_ytd || 0), 0)
-    const subtotal_real_po = filteredItems.reduce((acc, item) => acc + (item.real_po || 0), 0)
-    const subtotal_real_bast = filteredItems.reduce((acc, item) => acc + (item.real_bast || 0), 0)
+  const processedData = data.map(kat => {
+    const filteredItems = kat.items.filter(item => 
+      !searchQuery || item.uraian.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const subtotal_budget = filteredItems.reduce((sum, item) => sum + (item.budget || 0), 0)
+    const subtotal_rkap_ytd = filteredItems.reduce((sum, item) => sum + (item.rkap_ytd || 0), 0)
+    const subtotal_real_po = filteredItems.reduce((sum, item) => sum + ((item.real_po || 0) - (item.real_bast || 0)), 0)
+    const subtotal_real_bast = filteredItems.reduce((sum, item) => sum + (item.real_bast || 0), 0)
     
+    const subtotal_pct_po = subtotal_rkap_ytd > 0 ? (subtotal_real_po / subtotal_rkap_ytd) * 100 : 0
+    const subtotal_pct_bast = subtotal_rkap_ytd > 0 ? (subtotal_real_bast / subtotal_rkap_ytd) * 100 : 0
+
     return {
       ...kat,
       items: filteredItems,
       subtotal_budget,
       subtotal_rkap_ytd,
       subtotal_real_po,
-      subtotal_real_bast
+      subtotal_real_bast,
+      subtotal_pct_po,
+      subtotal_pct_bast
     }
   }).filter(kat => kat.items.length > 0)
 
@@ -29,7 +37,7 @@ export default function SummaryYTDTable({ data, tahun, bulan, searchQuery = '' }
   let grandRealPo = 0
   let grandRealBast = 0
 
-  filteredData.forEach(kat => {
+  processedData.forEach(kat => {
     grandBudget += kat.subtotal_budget || 0
     grandRkapYtd += kat.subtotal_rkap_ytd || 0
     grandRealPo += kat.subtotal_real_po || 0
@@ -55,14 +63,14 @@ export default function SummaryYTDTable({ data, tahun, bulan, searchQuery = '' }
             <th colSpan={2} style={{ backgroundColor: '#002B5B', padding: '12px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none', verticalAlign: 'middle' }}>% thd RKAP {bulanName} {tahun}</th>
           </tr>
           <tr style={{ backgroundColor: '#003366', color: 'white' }}>
-            <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By PO</th>
+            <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>Sisa PO</th>
             <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By BAST</th>
             <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By PO</th>
             <th style={{ backgroundColor: '#003366', padding: '8px', textAlign: 'center', boxShadow: 'inset 0 0 0 1px #004b99', border: 'none' }}>By BAST</th>
           </tr>
         </thead>
         <tbody>
-          {filteredData.map((kat, idx) => (
+          {processedData.map((kat, idx) => (
             <React.Fragment key={idx}>
               <tr>
                 <td colSpan={7} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0' }}>
@@ -74,7 +82,7 @@ export default function SummaryYTDTable({ data, tahun, bulan, searchQuery = '' }
                   <td style={{ padding: '8px 12px', textAlign: 'left', border: '1px solid #e2e8f0' }}>{item.uraian}</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{formatRp(item.budget)}</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{formatRp(item.rkap_ytd)}</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: item.real_po > 0 ? '#16a34a' : 'inherit' }}>{formatRp(item.real_po)}</td>
+                  <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: (item.real_po - item.real_bast) > 0 ? '#16a34a' : 'inherit' }}>{formatRp(item.real_po - item.real_bast)}</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: item.real_bast > 0 ? '#0284c7' : 'inherit' }}>{formatRp(item.real_bast)}</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{item.pct_po.toFixed(1)}%</td>
                   <td style={{ padding: '8px 12px', border: '1px solid #e2e8f0' }}>{item.pct_bast.toFixed(1)}%</td>
