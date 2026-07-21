@@ -6,6 +6,7 @@ import { fmtRupiah, BULAN_NAMES, downloadBlob } from '../utils'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Modal from '../components/ui/Modal'
 import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
+import CurrencyInput from '../components/ui/CurrencyInput'
 import { useDialog } from '../contexts/DialogContext'
 
 export default function CarryOverPage({ tahun }) {
@@ -642,24 +643,20 @@ export default function CarryOverPage({ tahun }) {
                       <tr key={m} style={{ backgroundColor: errBast ? '#fff5f5' : 'transparent' }}>
                         <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--clr-border)', fontWeight: 500 }}>{bln}</td>
                         <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--clr-border)' }}>
-                          <input 
-                            type="number" 
+                          <CurrencyInput 
                             className="input-field" 
                             value={it.bast || ''} 
                             onChange={(e) => setBulan(m, 'bast', e.target.value)}
                             placeholder="0"
-                            min="0"
                             style={{ borderColor: errBast ? '#ef4444' : undefined, backgroundColor: errBast ? '#fef2f2' : undefined }}
                           />
                         </td>
                         <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--clr-border)' }}>
-                          <input 
-                            type="number" 
+                          <CurrencyInput 
                             className="input-field" 
                             value={it.real || ''} 
                             onChange={(e) => setBulan(m, 'real', e.target.value)}
                             placeholder="0"
-                            min="0"
                           />
                         </td>
                       </tr>
