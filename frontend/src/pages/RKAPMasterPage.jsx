@@ -77,7 +77,7 @@ export default function RKAPMasterPage({ tahun }) {
     for (let i = 1; i <= 12; i++) {
       items[i] = { rkap: row[`b${i}_rkap`] || 0, real: row[`b${i}_real`] || 0 }
     }
-    setForm({ ...row, items })
+    setForm({ ...row, items, original_anggaran_perubahan: row.anggaran_perubahan || 0 })
     setModal('edit')
   }
   
@@ -165,6 +165,18 @@ export default function RKAPMasterPage({ tahun }) {
         const res = await createCapex(form)
         capexId = res.data.id
       } else {
+        if (isLocked && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0)) {
+          if (!form.reallocation_source_id) {
+            dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana untuk penambahan anggaran.', variant: 'warning' })
+            setSaving(false)
+            return
+          }
+          if (!form.nd_persetujuan) {
+            dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Anda WAJIB mengisi ND Persetujuan untuk penambahan anggaran.', variant: 'warning' })
+            setSaving(false)
+            return
+          }
+        }
         await updateCapex(form.id, form)
       }
       
@@ -419,12 +431,12 @@ export default function RKAPMasterPage({ tahun }) {
             </div>
             
             <div className="form-group">
-              {isLocked && modal === 'create' ? (
+              {(isLocked && modal === 'create') || (isLocked && modal === 'edit' && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0)) ? (
                 <>
                   <label className="form-label" htmlFor="f-sumber" style={{ color: '#0284c7' }}>Sumber Dana (Geser Anggaran Dari) <span className="required">*</span></label>
-                  <select id="f-sumber" className="form-select" value={form.source_capex_id || ''} onChange={set('source_capex_id')} style={{ borderColor: '#0ea5e9' }}>
+                  <select id="f-sumber" className="form-select" value={modal === 'edit' ? (form.reallocation_source_id || '') : (form.source_capex_id || '')} onChange={(e) => setForm(f => ({ ...f, [modal === 'edit' ? 'reallocation_source_id' : 'source_capex_id']: e.target.value }))} style={{ borderColor: '#0ea5e9' }}>
                     <option value="">-- Pilih Capex Sumber --</option>
-                    {data.filter(d => d.anggaran_perubahan > 0).map(d => (
+                    {data.filter(d => d.anggaran_perubahan > 0 && d.id !== form.id).map(d => (
                       <option key={d.id} value={d.id}>{d.kode ? `[${d.kode}]` : ''} {d.daftar_capex} (Sisa: {fmtShort(d.anggaran_perubahan)})</option>
                     ))}
                   </select>
@@ -444,6 +456,11 @@ export default function RKAPMasterPage({ tahun }) {
             {isLocked && modal === 'create' && form.source_capex_id && form.anggaran_perubahan > 0 && (
               <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px', fontWeight: 500 }}>
                 ⚠️ Dana sebesar {fmtRupiah(form.anggaran_perubahan)} akan dipotong dari Capex Sumber.
+              </div>
+            )}
+            {isLocked && modal === 'edit' && form.reallocation_source_id && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0) && (
+              <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px', fontWeight: 500 }}>
+                ⚠️ Tambahan dana sebesar {fmtRupiah(Number(form.anggaran_perubahan) - Number(form.original_anggaran_perubahan))} akan dipotong dari Capex Sumber.
               </div>
             )}
           </div>

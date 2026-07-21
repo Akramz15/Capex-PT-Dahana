@@ -170,26 +170,67 @@ def update_capex(
                     detail="Tahun RKAP ini sudah dikunci! Anda tidak bisa mengubah Anggaran RKAP awal. Silakan Buka Kunci (Unlock) terlebih dahulu jika memang ada salah ketik."
                 )
 
-    # 2. Penyesuaian anggaran sumber jika anggaran_perubahan diubah pada item pergeseran
+    # 2. Penyesuaian anggaran sumber jika anggaran_perubahan diubah (Reallocation on Edit)
     if payload.anggaran_perubahan is not None:
-        existing_full = client.table(_TABLE).select("source_capex_id, anggaran_perubahan").eq("id", str(capex_id)).execute()
+        existing_full = client.table(_TABLE).select("tahun, daftar_capex, source_capex_id, anggaran_perubahan").eq("id", str(capex_id)).execute()
         if existing_full.data:
             item_data = existing_full.data[0]
-            source_id = item_data.get("source_capex_id")
+            tahun = item_data.get("tahun")
             old_amount = item_data.get("anggaran_perubahan") or 0
             new_amount = payload.anggaran_perubahan
             delta = new_amount - old_amount
             
-            if source_id and delta != 0:
-                source_res = client.table(_TABLE).select("anggaran_perubahan").eq("id", str(source_id)).execute()
-                if source_res.data:
-                    current_source = source_res.data[0].get("anggaran_perubahan") or 0
-                    if delta > 0 and current_source < delta:
-                        raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi untuk penambahan pergeseran ini.")
+            if delta > 0:
+                # Kenaikan Anggaran
+                lock_res = client.table("rkap_locks").select("is_locked").eq("tahun", tahun).execute()
+                is_locked = lock_res.data and lock_res.data[0]["is_locked"]
+                
+                if is_locked:
+                    source_id = payload.reallocation_source_id or item_data.get("source_capex_id")
+                    if not source_id:
+                        raise HTTPException(status_code=400, detail="Tahun RKAP dikunci. Anda harus memilih Sumber Dana untuk penambahan anggaran.")
                     
-                    client.table(_TABLE).update({"anggaran_perubahan": current_source - delta}).eq("id", str(source_id)).execute()
+                    source_res = client.table(_TABLE).select("daftar_capex, anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
+                    if source_res.data:
+                        source_capex = source_res.data[0]
+                        current_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
+                        if current_source < delta:
+                            raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi untuk penambahan pergeseran ini.")
+                        
+                        new_source_budget = current_source - delta
+                        client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", str(source_id)).execute()
+                        
+                        audit_data = {
+                            "capex_id": str(capex_id),
+                            "tahun": tahun,
+                            "action_type": "UPDATE_REALLOCATION",
+                            "keterangan": f"Penambahan anggaran dari {source_capex['daftar_capex']} ke {item_data['daftar_capex']}",
+                            "user_id": _admin["id"],
+                            "anggaran": delta,
+                            "nd_persetujuan": payload.nd_persetujuan,
+                            "source_capex_name": source_capex["daftar_capex"],
+                            "source_nilai_awal": current_source,
+                            "source_nilai_akhir": new_source_budget,
+                            "target_capex_name": item_data["daftar_capex"],
+                            "target_nilai_awal": old_amount,
+                            "target_nilai_akhir": new_amount
+                        }
+                        client.table("capex_audit_logs").insert(audit_data).execute()
+            
+            elif delta < 0:
+                # Penurunan Anggaran, kembalikan ke source_capex_id bawaan jika ada
+                source_id = item_data.get("source_capex_id")
+                if source_id:
+                    source_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
+                    if source_res.data:
+                        source_capex = source_res.data[0]
+                        current_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
+                        client.table(_TABLE).update({"anggaran_perubahan": current_source - delta}).eq("id", str(source_id)).execute()
 
     update_data = payload.model_dump(exclude_none=True)
+    update_data.pop("reallocation_source_id", None)
+    update_data.pop("nd_persetujuan", None)
+    
     if not update_data:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Tidak ada field yang diupdate.")
 

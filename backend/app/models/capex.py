@@ -28,6 +28,8 @@ class CapexMasterUpdate(BaseModel):
     anggaran_perubahan: Optional[int] = Field(None, ge=0)
     pic: Optional[str] = Field(None, max_length=150)
     is_carryover: Optional[bool] = None
+    reallocation_source_id: Optional[UUID] = None
+    nd_persetujuan: Optional[str] = Field(None, max_length=150)
 
 
 class CapexMasterResponse(CapexMasterBase):
