@@ -433,59 +433,19 @@ def upload_capex_excel(
                 carryover_realizations.append(realizations)
                 
             else:
-                # Handle RKAP_Master_2026 format
-                no_str = str(row[0]).strip() if row[0] else ""
-                
-                # Check if it's a category header (e.g. 'A', 'B' with empty Kode)
-                is_kode_empty = not row[1] or str(row[1]).strip().lower() == 'nan'
-                if no_str.isalpha() and is_kode_empty:
-                    uraian_val = str(row[2]).strip()
-                    if uraian_val:
-                        current_kategori = uraian_val
-                    continue
-                
-                kode = str(row[1]).strip()[:50] if not is_kode_empty else ""
-                daftar_capex = str(row[2]).strip() if row[2] else ""
-                kategori = current_kategori[:50]
-                
-                pic = str(row[3]).strip()[:50] if len(row) > 3 and row[3] and str(row[3]).lower() != 'nan' else ""
+                kode = str(row[0]) if row[0] else ""
+                daftar_capex = str(row[1])
+                kategori = str(row[2]) if row[2] else ""
                 
                 try:
-                    anggaran_str = str(row[6]).replace(',', '').replace('.', '') if len(row) > 6 and row[6] and str(row[6]).lower() != 'nan' else "0"
+                    anggaran_str = str(row[3]).replace(',', '').replace('.', '') if row[3] else "0"
                     if '.' in anggaran_str:
                         anggaran_str = anggaran_str.split('.')[0]
                     anggaran = int(anggaran_str)
                 except ValueError:
                     anggaran = 0
-                
-                # Parse monthly realizations for RKAP format
-                realizations = []
-                for i in range(12):
-                    col_rkap = 8 + (i * 2)
-                    col_real = 9 + (i * 2)
                     
-                    try:
-                        rkap_val_str = str(row[col_rkap]).replace(',', '').replace('.', '') if len(row) > col_rkap and row[col_rkap] and str(row[col_rkap]).lower() != 'nan' else "0"
-                        if '.' in rkap_val_str: rkap_val_str = rkap_val_str.split('.')[0]
-                        rkap_val = int(rkap_val_str)
-                    except ValueError:
-                        rkap_val = 0
-                        
-                    try:
-                        real_val_str = str(row[col_real]).replace(',', '').replace('.', '') if len(row) > col_real and row[col_real] and str(row[col_real]).lower() != 'nan' else "0"
-                        if '.' in real_val_str: real_val_str = real_val_str.split('.')[0]
-                        real_val = int(real_val_str)
-                    except ValueError:
-                        real_val = 0
-                        
-                    realizations.append({
-                        "bulan": i + 1,
-                        "nilai_rkap": rkap_val,
-                        "nilai_realisasi": real_val,
-                        "nilai_bast": 0
-                    })
-                    
-                carryover_realizations.append(realizations)
+                pic = str(row[4]) if len(row) > 4 and row[4] else ""
             
             data_to_insert.append({
                 "tahun": tahun,
@@ -502,20 +462,19 @@ def upload_capex_excel(
             res = client.table(_TABLE).insert(data_to_insert).execute()
             inserted = len(data_to_insert)
             
-            # Insert monthly realizations if present
-            if carryover_realizations and res.data:
+            # Insert carryover realizations if present
+            if is_carryover and carryover_realizations and res.data:
                 real_inserts = []
                 for idx, capex_row in enumerate(res.data):
                     if idx < len(carryover_realizations):
                         capex_id = capex_row['id']
                         for r in carryover_realizations[idx]:
-                            if r.get("nilai_bast", 0) > 0 or r.get("nilai_realisasi", 0) > 0 or r.get("nilai_rkap", 0) > 0:
+                            if r["nilai_bast"] > 0 or r["nilai_realisasi"] > 0:
                                 real_inserts.append({
                                     "capex_id": capex_id,
                                     "bulan": r["bulan"],
-                                    "nilai_bast": r.get("nilai_bast", 0),
-                                    "nilai_realisasi": r.get("nilai_realisasi", 0),
-                                    "nilai_rkap": r.get("nilai_rkap", 0),
+                                    "nilai_bast": r["nilai_bast"],
+                                    "nilai_realisasi": r["nilai_realisasi"],
                                     "tahun": tahun
                                 })
                 if real_inserts:
