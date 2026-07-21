@@ -172,11 +172,13 @@ def update_capex(
 
     # 2. Penyesuaian anggaran sumber jika anggaran_perubahan diubah (Reallocation on Edit)
     if payload.anggaran_perubahan is not None:
-        existing_full = client.table(_TABLE).select("tahun, daftar_capex, source_capex_id, anggaran_perubahan").eq("id", str(capex_id)).execute()
+        existing_full = client.table(_TABLE).select("tahun, daftar_capex, source_capex_id, anggaran_perubahan, anggaran_rkap").eq("id", str(capex_id)).execute()
         if existing_full.data:
             item_data = existing_full.data[0]
             tahun = item_data.get("tahun")
-            old_amount = item_data.get("anggaran_perubahan") or 0
+            anggaran_perubahan = item_data.get("anggaran_perubahan") or 0
+            anggaran_rkap = item_data.get("anggaran_rkap") or 0
+            old_amount = anggaran_perubahan if anggaran_perubahan > 0 else anggaran_rkap
             new_amount = payload.anggaran_perubahan
             delta = new_amount - old_amount
             
