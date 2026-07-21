@@ -200,6 +200,7 @@ export default function RealizationPage({ tahun }) {
       await createRealizationBulk(payload)
       await fetchData()
       closeModal()
+      dialog.alert({ title: 'Sukses', message: 'Data berhasil disimpan.', variant: 'success' })
     } catch (e) {
       dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {

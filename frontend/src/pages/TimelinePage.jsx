@@ -140,6 +140,7 @@ export default function TimelinePage({ tahun }) {
       
       await fetchData()
       closeModal()
+      dialog.alert({ title: 'Sukses', message: 'Data berhasil disimpan.', variant: 'success' })
     } catch (err) {
       dialog.alert({ title: 'Error', message: err.response?.data?.detail ?? 'Gagal menyimpan data.', variant: 'danger' })
     } finally {

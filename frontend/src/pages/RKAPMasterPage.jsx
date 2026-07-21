@@ -202,6 +202,7 @@ export default function RKAPMasterPage({ tahun }) {
 
       await fetchData()
       closeModal()
+      dialog.alert({ title: 'Sukses', message: 'Data berhasil disimpan.', variant: 'success' })
     } catch (e) {
       let msg = 'Gagal menyimpan data.'
       const detail = e.response?.data?.detail
@@ -226,6 +227,7 @@ export default function RKAPMasterPage({ tahun }) {
         try {
           await deleteCapex(row.id)
           await fetchData()
+          dialog.alert({ title: 'Sukses', message: 'Data berhasil dihapus.', variant: 'success' })
         } catch {
           dialog.alert({ title: 'Error', message: 'Gagal menghapus data.', variant: 'danger' })
         }

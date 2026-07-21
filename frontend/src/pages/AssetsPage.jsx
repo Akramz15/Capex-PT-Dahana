@@ -102,6 +102,7 @@ export default function AssetsPage() {
       else await updateAsset(form.id, payload)
       await fetchData()
       closeModal()
+      dialog.alert({ title: 'Sukses', message: 'Data berhasil disimpan.', variant: 'success' })
     } catch (e) {
       dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal menyimpan.', variant: 'danger' })
     } finally {
