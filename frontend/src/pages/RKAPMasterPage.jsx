@@ -77,7 +77,8 @@ export default function RKAPMasterPage({ tahun }) {
     for (let i = 1; i <= 12; i++) {
       items[i] = { rkap: row[`b${i}_rkap`] || 0, real: row[`b${i}_real`] || 0 }
     }
-    setForm({ ...row, items, original_anggaran_perubahan: row.anggaran_perubahan || 0 })
+    const effective_anggaran = row.anggaran_perubahan > 0 ? row.anggaran_perubahan : (row.anggaran_rkap || 0);
+    setForm({ ...row, items, original_anggaran_perubahan: effective_anggaran })
     setModal('edit')
   }
   
