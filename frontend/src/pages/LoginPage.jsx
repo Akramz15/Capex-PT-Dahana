@@ -47,8 +47,9 @@ export default function LoginPage() {
               maxWidth: '450px', 
               height: 'auto', 
               display: 'block', 
-              margin: '-150px auto -163px auto', /* Margin minus yang jauh lebih besar untuk merapatkan kontainer */
-              objectFit: 'contain'
+              margin: '-125px auto -122px auto', /* Margin bawah dikurangi agar jarak dengan teks lebih jauh */
+              objectFit: 'contain',
+              transform: 'scale(1.25)' /* Memperbesar ukuran logo sebesar 25% */
             }} 
           />
           {/* <h1 className="login-title" style={{ marginTop: 0 }}>Monitoring Capex</h1> */}

@@ -786,7 +786,7 @@ img, svg { display: block; }
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 450px;
+  max-width: 370px;
   padding: 32px 32px; /* Dikurangi agar tidak terlalu panjang ke bawah */
   animation: slideUp 300ms ease;
 }
