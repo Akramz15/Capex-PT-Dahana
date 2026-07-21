@@ -457,6 +457,35 @@ def upload_capex_excel(
                     anggaran = int(anggaran_str)
                 except ValueError:
                     anggaran = 0
+                
+                # Parse monthly realizations for RKAP format
+                realizations = []
+                for i in range(12):
+                    col_rkap = 8 + (i * 2)
+                    col_real = 9 + (i * 2)
+                    
+                    try:
+                        rkap_val_str = str(row[col_rkap]).replace(',', '').replace('.', '') if len(row) > col_rkap and row[col_rkap] and str(row[col_rkap]).lower() != 'nan' else "0"
+                        if '.' in rkap_val_str: rkap_val_str = rkap_val_str.split('.')[0]
+                        rkap_val = int(rkap_val_str)
+                    except ValueError:
+                        rkap_val = 0
+                        
+                    try:
+                        real_val_str = str(row[col_real]).replace(',', '').replace('.', '') if len(row) > col_real and row[col_real] and str(row[col_real]).lower() != 'nan' else "0"
+                        if '.' in real_val_str: real_val_str = real_val_str.split('.')[0]
+                        real_val = int(real_val_str)
+                    except ValueError:
+                        real_val = 0
+                        
+                    realizations.append({
+                        "bulan": i + 1,
+                        "nilai_rkap": rkap_val,
+                        "nilai_realisasi": real_val,
+                        "nilai_bast": 0
+                    })
+                    
+                carryover_realizations.append(realizations)
             
             data_to_insert.append({
                 "tahun": tahun,
@@ -473,19 +502,20 @@ def upload_capex_excel(
             res = client.table(_TABLE).insert(data_to_insert).execute()
             inserted = len(data_to_insert)
             
-            # Insert carryover realizations if present
-            if is_carryover and carryover_realizations and res.data:
+            # Insert monthly realizations if present
+            if carryover_realizations and res.data:
                 real_inserts = []
                 for idx, capex_row in enumerate(res.data):
                     if idx < len(carryover_realizations):
                         capex_id = capex_row['id']
                         for r in carryover_realizations[idx]:
-                            if r["nilai_bast"] > 0 or r["nilai_realisasi"] > 0:
+                            if r.get("nilai_bast", 0) > 0 or r.get("nilai_realisasi", 0) > 0 or r.get("nilai_rkap", 0) > 0:
                                 real_inserts.append({
                                     "capex_id": capex_id,
                                     "bulan": r["bulan"],
-                                    "nilai_bast": r["nilai_bast"],
-                                    "nilai_realisasi": r["nilai_realisasi"],
+                                    "nilai_bast": r.get("nilai_bast", 0),
+                                    "nilai_realisasi": r.get("nilai_realisasi", 0),
+                                    "nilai_rkap": r.get("nilai_rkap", 0),
                                     "tahun": tahun
                                 })
                 if real_inserts:
