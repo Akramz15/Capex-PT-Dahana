@@ -54,7 +54,12 @@ export default function RKAPMasterPage({ tahun }) {
         reals.forEach(r => {
           row[`b${r.bulan}_rkap`] = r.nilai_rkap
           row[`b${r.bulan}_real`] = r.nilai_realisasi
-          if (r.status) row.status = r.status
+          if (r.status) {
+            let s = r.status
+            if (s === 'BAADK' || s === 'BA/ADK') s = 'BAST'
+            if (s === 'Draft') s = 'Rencana'
+            row.status = s
+          }
         })
         
         row.total_rkap = capex.anggaran_rkap || 0
