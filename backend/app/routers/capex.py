@@ -510,9 +510,17 @@ def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
     source_id = log.get("source_capex_id")
     target_id = log.get("capex_id")
     
-    # Jika source_capex_id belum terekam di log lama, kita tidak bisa undo otomatis dengan aman
+    # Jika source_capex_id belum terekam di log lama, coba cari berdasarkan nama
     if not source_id:
-        raise HTTPException(status_code=400, detail="Log ini adalah data lama yang tidak memiliki referensi sumber anggaran. Tidak dapat dibatalkan secara otomatis.")
+        source_name = log.get("source_capex_name")
+        if source_name:
+            src_res = client.table(_TABLE).select("id").eq("daftar_capex", source_name).eq("tahun", log["tahun"]).execute()
+            if src_res.data:
+                source_id = src_res.data[0]["id"]
+            else:
+                raise HTTPException(status_code=400, detail=f"Data Capex sumber '{source_name}' tidak ditemukan lagi. Tidak dapat dibatalkan otomatis.")
+        else:
+            raise HTTPException(status_code=400, detail="Log ini adalah data lama yang tidak memiliki referensi sumber anggaran. Tidak dapat dibatalkan secara otomatis.")
         
     # 2. Kembalikan saldo ke Source
     source_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
