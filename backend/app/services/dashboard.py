@@ -40,7 +40,7 @@ def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
     budget_map = {}
     for r in master_result.data:
         b = r.get("anggaran_perubahan")
-        budget_map[str(r["id"])] = b if b else (r.get("anggaran_rkap") or 0)
+        budget_map[str(r["id"])] = b if b is not None else (r.get("anggaran_rkap") or 0)
         
     status_amounts: dict[str, int] = {}
     for cid, s_info in latest_status_map.items():
@@ -62,8 +62,8 @@ def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
     
     for r in master_result.data:
         kat = r.get("kategori") or "Lainnya"
-        budget = r.get("anggaran_perubahan") if r.get("anggaran_perubahan") else r.get("anggaran_rkap")
-        budget = budget or 0
+        budget_val = r.get("anggaran_perubahan")
+        budget = budget_val if budget_val is not None else (r.get("anggaran_rkap") or 0)
         category_amounts[kat] = category_amounts.get(kat, 0) + budget
         top_capex_list.append({"nama": r.get("daftar_capex") or "Unknown", "anggaran": budget})
         
@@ -136,7 +136,8 @@ def get_capex_progress_table(tahun: int, is_carryover: bool = False) -> list[dic
         cid = str(m["id"])
         realisasi = real_by_capex.get(cid, {}).get("total_realisasi", 0)
         statuses = list(real_by_capex.get(cid, {}).get("statuses", set()))
-        anggaran = m.get("anggaran_perubahan") or m.get("anggaran_rkap") or 0
+        budget_val = m.get("anggaran_perubahan")
+        anggaran = budget_val if budget_val is not None else (m.get("anggaran_rkap") or 0)
         persen = round(realisasi / anggaran * 100, 2) if anggaran > 0 else 0
         rows.append({
             **m,
@@ -202,7 +203,8 @@ def get_summary_table_ytd(tahun: int, bulan: int, is_carryover: bool = False) ->
             }
             
         # Use anggaran_perubahan as primary active budget
-        budget = m.get("anggaran_perubahan") or m.get("anggaran_rkap") or 0
+        budget_val = m.get("anggaran_perubahan")
+        budget = budget_val if budget_val is not None else (m.get("anggaran_rkap") or 0)
         ytd = ytd_data.get(cid, {})
         rkap_ytd = ytd.get("rkap_ytd", 0)
         total_real = ytd.get("total_realisasi", 0)
