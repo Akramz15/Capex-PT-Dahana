@@ -179,9 +179,9 @@ def update_capex(
         if existing_full.data:
             item_data = existing_full.data[0]
             tahun = item_data.get("tahun")
-            anggaran_perubahan = item_data.get("anggaran_perubahan") or 0
+            anggaran_perubahan = item_data.get("anggaran_perubahan")
             anggaran_rkap = item_data.get("anggaran_rkap") or 0
-            old_amount = anggaran_perubahan if anggaran_perubahan > 0 else anggaran_rkap
+            old_amount = anggaran_perubahan if anggaran_perubahan is not None else anggaran_rkap
             new_amount = payload.anggaran_perubahan
             delta = new_amount - old_amount
             
@@ -205,6 +205,21 @@ def update_capex(
                         
                         new_source_budget = current_source - delta
                         client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", str(source_id)).execute()
+                        
+                        # Kurangi realisasi bulanan sumber (dari bulan 12 mundur)
+                        try:
+                            src_real_res = client.table("capex_realization").select("*").eq("capex_id", str(source_id)).order("bulan", desc=True).execute()
+                            amount_to_deduct = delta
+                            for r in src_real_res.data:
+                                if amount_to_deduct <= 0:
+                                    break
+                                rkap_val = r.get("nilai_rkap") or 0
+                                if rkap_val > 0:
+                                    deduction = min(rkap_val, amount_to_deduct)
+                                    client.table("capex_realization").update({"nilai_rkap": rkap_val - deduction}).eq("id", r["id"]).execute()
+                                    amount_to_deduct -= deduction
+                        except Exception:
+                            pass
                         
                         audit_data = {
                             "capex_id": str(capex_id),
@@ -234,6 +249,16 @@ def update_capex(
                         val = source_capex.get("anggaran_perubahan")
                         current_source = val if val is not None else source_capex.get("anggaran_rkap", 0)
                         client.table(_TABLE).update({"anggaran_perubahan": current_source - delta}).eq("id", str(source_id)).execute()
+                        
+                        # Tambahkan realisasi bulanan sumber (di bulan dengan rkap terbesar)
+                        try:
+                            real_res = client.table("capex_realization").select("*").eq("capex_id", str(source_id)).execute()
+                            if real_res.data:
+                                target_month = max(real_res.data, key=lambda x: x.get("nilai_rkap") or 0)
+                                old_rkap = target_month.get("nilai_rkap") or 0
+                                client.table("capex_realization").update({"nilai_rkap": old_rkap + abs(delta)}).eq("id", target_month["id"]).execute()
+                        except Exception:
+                            pass
 
     update_data = payload.model_dump(exclude_none=True)
     update_data.pop("reallocation_source_id", None)
