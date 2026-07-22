@@ -24,6 +24,7 @@ export const createCapex  = (data)        => client.post('/capex',      data)
 export const updateCapex  = (id, data)    => client.put(`/capex/${id}`, data)
 export const deleteCapex  = (id)          => client.delete(`/capex/${id}`)
 export const getAuditLogs = (tahun)       => client.get('/capex/audit-logs/all', { params: { tahun } })
+export const undoReallocation = (logId)   => client.post(`/capex/pengalihan/undo/${logId}`)
 export const uploadCapexExcel = (tahun, file, is_carryover = false) => {
   const formData = new FormData();
   formData.append('file', file);

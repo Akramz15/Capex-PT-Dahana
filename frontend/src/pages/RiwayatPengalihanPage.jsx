@@ -1,13 +1,15 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getAuditLogs, exportAuditLogsExcel } from '../api/capex'
+import { getAuditLogs, exportAuditLogsExcel, undoReallocation } from '../api/capex'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah, downloadBlob } from '../utils'
-import { Download } from 'lucide-react'
+import { Download, RotateCcw } from 'lucide-react'
+import { useDialog } from '../contexts/DialogContext'
 
 export default function RiwayatPengalihanPage({ tahun }) {
   const [loading, setLoading] = useState(true)
   const [auditLogs, setAuditLogs] = useState([])
   const [exporting, setExporting] = useState(false)
+  const dialog = useDialog()
 
   const fetchLogs = useCallback(async () => {
     setLoading(true)
@@ -24,6 +26,24 @@ export default function RiwayatPengalihanPage({ tahun }) {
   useEffect(() => {
     fetchLogs()
   }, [fetchLogs])
+
+  const handleUndo = (log) => {
+    dialog.confirm({
+      title: 'Konfirmasi Undo',
+      message: `Anda yakin ingin membatalkan pengalihan sebesar ${fmtRupiah(log.anggaran)} ke ${log.target_capex_name}? Saldo akan otomatis ditarik dan dikembalikan ke ${log.source_capex_name}.`,
+      confirmText: 'Ya, Batalkan',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await undoReallocation(log.id)
+          dialog.alert({ title: 'Sukses', message: 'Pengalihan berhasil dibatalkan.', variant: 'success' })
+          fetchLogs()
+        } catch (e) {
+          dialog.alert({ title: 'Error', message: e.response?.data?.detail ?? 'Gagal membatalkan pengalihan.', variant: 'danger' })
+        }
+      }
+    })
+  }
 
   return (
     <>
@@ -71,28 +91,47 @@ export default function RiwayatPengalihanPage({ tahun }) {
                     <th style={{ padding: '12px 16px', minWidth: '150px', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap', border: '1px solid #cbd5e1' }}>ND Persetujuan</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap', border: '1px solid #cbd5e1' }}>User</th>
                     <th style={{ padding: '12px 16px', minWidth: '120px', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap', border: '1px solid #cbd5e1' }}>Waktu</th>
+                    <th style={{ padding: '12px 16px', minWidth: '80px', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap', border: '1px solid #cbd5e1' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {auditLogs.map((log, index) => (
-                    <tr key={log.id} style={{ backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8fafc', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#f8fafc'}>
-                      <td style={{ padding: '16px', textAlign: 'center', color: '#64748b', border: '1px solid #e2e8f0' }}>{index + 1}</td>
-                      <td style={{ padding: '16px', fontWeight: '500', color: '#0f172a', border: '1px solid #e2e8f0' }}>{log.target_capex_name}</td>
-                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: '#059669', border: '1px solid #e2e8f0' }}>
+                    <tr key={log.id} style={{ 
+                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8fafc', 
+                      transition: 'background-color 0.2s',
+                      opacity: (log.keterangan || '').includes('[DIBATALKAN]') ? 0.5 : 1
+                    }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#f8fafc'}>
+                      <td style={{ padding: '16px', textAlign: 'center', color: '#64748b', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>{index + 1}</td>
+                      <td style={{ padding: '16px', fontWeight: '500', color: '#0f172a', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>{log.target_capex_name}</td>
+                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: '#059669', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>
                         {fmtRupiah(log.anggaran)}
                       </td>
-                      <td style={{ padding: '16px', color: '#334155', border: '1px solid #e2e8f0' }}>{log.source_capex_name}</td>
-                      <td style={{ padding: '16px', textAlign: 'right', color: '#64748b', border: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '16px', color: '#334155', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>{log.source_capex_name}</td>
+                      <td style={{ padding: '16px', textAlign: 'right', color: '#64748b', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>
                         {fmtRupiah(log.source_nilai_awal)}
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: '500', color: '#dc2626', border: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: '500', color: '#dc2626', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>
                         {fmtRupiah(log.source_nilai_akhir)}
                       </td>
-                      <td style={{ padding: '16px', color: '#475569', border: '1px solid #e2e8f0' }}>{log.nd_persetujuan || '-'}</td>
-                      <td style={{ padding: '16px', color: '#475569', border: '1px solid #e2e8f0' }}>{log.user_name}</td>
-                      <td style={{ padding: '16px', color: '#475569', border: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '16px', color: '#475569', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>{log.nd_persetujuan || '-'}</td>
+                      <td style={{ padding: '16px', color: '#475569', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>{log.user_name}</td>
+                      <td style={{ padding: '16px', color: '#475569', border: '1px solid #e2e8f0', textDecoration: (log.keterangan || '').includes('[DIBATALKAN]') ? 'line-through' : 'none' }}>
                         <div>{new Date(log.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                         <div style={{ fontSize: '11px', color: '#94a3b8' }}>{new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                        {!(log.keterangan || '').includes('[DIBATALKAN]') ? (
+                          <button 
+                            className="btn btn-outline" 
+                            style={{ color: '#dc2626', borderColor: '#fca5a5', padding: '6px 10px' }}
+                            onClick={() => handleUndo(log)}
+                            title="Batalkan Pengalihan Ini"
+                          >
+                            <RotateCcw size={16} />
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>DIBATALKAN</span>
+                        )}
                       </td>
                     </tr>
                   ))}

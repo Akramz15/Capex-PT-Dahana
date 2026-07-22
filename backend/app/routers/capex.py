@@ -119,6 +119,7 @@ def create_capex(
                     "user_id": _admin["id"],
                     "anggaran": payload.anggaran_perubahan,
                     "nd_persetujuan": nd_val,
+                    "source_capex_id": str(payload.source_capex_id),
                     "source_capex_name": source_capex["daftar_capex"],
                     "source_nilai_awal": source_anggaran_awal,
                     "source_nilai_akhir": source_anggaran_akhir,
@@ -211,6 +212,7 @@ def update_capex(
                             "user_id": _admin["id"],
                             "anggaran": delta,
                             "nd_persetujuan": payload.nd_persetujuan,
+                            "source_capex_id": str(source_id),
                             "source_capex_name": source_capex["daftar_capex"],
                             "source_nilai_awal": current_source,
                             "source_nilai_akhir": new_source_budget,
@@ -486,4 +488,56 @@ def upload_capex_excel(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-        pass
+
+
+@router.post("/pengalihan/undo/{log_id}")
+def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
+    client = get_supabase_admin()
+    
+    # 1. Fetch Log
+    log_res = client.table("capex_audit_logs").select("*").eq("id", str(log_id)).execute()
+    if not log_res.data:
+        raise HTTPException(status_code=404, detail="Log pengalihan tidak ditemukan.")
+    log = log_res.data[0]
+    
+    if "[DIBATALKAN]" in (log.get("keterangan") or ""):
+        raise HTTPException(status_code=400, detail="Pengalihan ini sudah dibatalkan sebelumnya.")
+        
+    if log["action_type"] not in ["CREATE_REALLOCATION", "UPDATE_REALLOCATION"]:
+        raise HTTPException(status_code=400, detail="Log ini bukan merupakan riwayat pengalihan.")
+        
+    anggaran = log.get("anggaran") or 0
+    source_id = log.get("source_capex_id")
+    target_id = log.get("capex_id")
+    
+    # Jika source_capex_id belum terekam di log lama, kita tidak bisa undo otomatis dengan aman
+    if not source_id:
+        raise HTTPException(status_code=400, detail="Log ini adalah data lama yang tidak memiliki referensi sumber anggaran. Tidak dapat dibatalkan secara otomatis.")
+        
+    # 2. Kembalikan saldo ke Source
+    source_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
+    if source_res.data:
+        source_capex = source_res.data[0]
+        cur_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
+        client.table(_TABLE).update({"anggaran_perubahan": cur_source + anggaran}).eq("id", str(source_id)).execute()
+        
+    # 3. Tangani Target
+    if log["action_type"] == "CREATE_REALLOCATION":
+        # Target adalah capex baru khusus untuk pengalihan ini, hapus sepenuhnya
+        client.table(_TABLE).delete().eq("id", str(target_id)).execute()
+    else:
+        # UPDATE_REALLOCATION -> kurangi saldo target
+        target_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(target_id)).execute()
+        if target_res.data:
+            target_capex = target_res.data[0]
+            cur_target = target_capex.get("anggaran_perubahan") or target_capex.get("anggaran_rkap") or 0
+            new_target = max(0, cur_target - anggaran)
+            client.table(_TABLE).update({"anggaran_perubahan": new_target}).eq("id", str(target_id)).execute()
+            
+    # 4. Tandai log sebagai dibatalkan
+    new_ket = f"[DIBATALKAN] {log.get('keterangan', '')}"
+    client.table("capex_audit_logs").update({"keterangan": new_ket}).eq("id", str(log_id)).execute()
+    
+    log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
+    return {"message": "Pengalihan anggaran berhasil dibatalkan."}
+
