@@ -22,7 +22,7 @@ const COLUMNS = [
   { key: 'daftar_capex',      label: 'Nama Capex',  sortable: true },
   { key: 'kategori',          label: 'Kategori',    sortable: true },
   { key: 'anggaran_aktif',    label: 'Anggaran Aktif',  sortable: true,
-    render: (_, row) => <span className="rupiah">{fmtRupiah(row.anggaran_perubahan > 0 ? row.anggaran_perubahan : row.anggaran_rkap)}</span> },
+    render: (_, row) => <span className="rupiah">{fmtRupiah(row.anggaran_perubahan ?? row.anggaran_rkap ?? 0)}</span> },
   { key: 'total_realisasi',   label: 'Realisasi',   sortable: true,
     render: (v) => <span className="rupiah">{fmtRupiah(v)}</span> },
   { key: 'persen_realisasi',  label: '% Realisasi', sortable: true,
@@ -245,7 +245,7 @@ export default function DashboardPage({ tahun }) {
           {chartMode === 'line' && <CumulativeTrendChart data={monthly} range={chartRange} />}
           {chartMode === 'achievement' && (
             <AchievementOverviewChart
-              totalAnggaran={(summary?.total_anggaran_perubahan > 0 ? summary.total_anggaran_perubahan : summary?.total_anggaran_rkap) || 0}
+              totalAnggaran={(summary?.total_anggaran_perubahan ?? summary?.total_anggaran_rkap) || 0}
               totalRealisasi={summary?.total_realisasi || 0}
               sisaAnggaran={summary?.sisa_anggaran || 0}
               persenRealisasi={summary?.persen_realisasi || 0}
@@ -255,7 +255,7 @@ export default function DashboardPage({ tahun }) {
           {chartMode === 'kategori' && (
             <CategoryDistributionChart 
               data={summary?.kategori_distribution ?? {}} 
-              totalBudget={summary?.total_anggaran_perubahan > 0 ? summary?.total_anggaran_perubahan : summary?.total_anggaran_rkap}
+              totalBudget={summary?.total_anggaran_perubahan ?? summary?.total_anggaran_rkap ?? 0}
             />
           )}
           {chartMode === 'top5' && <Top5CapexChart data={summary?.top5_capex ?? []} />}

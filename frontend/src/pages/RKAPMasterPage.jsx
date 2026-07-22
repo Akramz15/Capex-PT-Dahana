@@ -77,7 +77,7 @@ export default function RKAPMasterPage({ tahun }) {
     for (let i = 1; i <= 12; i++) {
       items[i] = { rkap: row[`b${i}_rkap`] || 0, real: row[`b${i}_real`] || 0 }
     }
-    const effective_anggaran = row.anggaran_perubahan > 0 ? row.anggaran_perubahan : (row.anggaran_rkap || 0);
+    const effective_anggaran = (row.anggaran_perubahan ?? row.anggaran_rkap ?? 0);
     setForm({ ...row, items, original_anggaran_perubahan: effective_anggaran })
     setModal('edit')
   }
@@ -250,7 +250,7 @@ export default function RKAPMasterPage({ tahun }) {
     })),
     { header: 'Total', children: [
       { header: 'RKAP Awal', render: (r) => <span className="rupiah fw-bold">{r.anggaran_rkap > 0 ? fmtRupiah(r.anggaran_rkap) : '—'}</span> },
-      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{r.anggaran_perubahan > 0 ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }
+      { header: 'RKAP Revisi', render: (r) => <span className="rupiah fw-bold">{r.anggaran_perubahan != null ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }
     ]}
   ]
 
@@ -439,8 +439,8 @@ export default function RKAPMasterPage({ tahun }) {
                   <label className="form-label" htmlFor="f-sumber" style={{ color: '#0284c7' }}>Sumber Dana (Geser Anggaran Dari) <span className="required">*</span></label>
                   <select id="f-sumber" className="form-select" value={modal === 'edit' ? (form.reallocation_source_id || '') : (form.source_capex_id || '')} onChange={(e) => setForm(f => ({ ...f, [modal === 'edit' ? 'reallocation_source_id' : 'source_capex_id']: e.target.value }))} style={{ borderColor: '#0ea5e9' }}>
                     <option value="">-- Pilih Capex Sumber --</option>
-                    {data.filter(d => (d.anggaran_perubahan > 0 ? d.anggaran_perubahan : (d.anggaran_rkap || 0)) > 0 && d.id !== form.id).map(d => {
-                      const eff = d.anggaran_perubahan > 0 ? d.anggaran_perubahan : (d.anggaran_rkap || 0);
+                    {data.filter(d => (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0) > 0 && d.id !== form.id).map(d => {
+                      const eff = (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0);
                       return <option key={d.id} value={d.id}>{d.kode ? `[${d.kode}]` : ''} {d.daftar_capex} (Sisa: {fmtShort(eff)})</option>
                     })}
                   </select>

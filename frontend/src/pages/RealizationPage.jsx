@@ -279,7 +279,7 @@ export default function RealizationPage({ tahun }) {
     { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true, stickyLeft: '59px', width: '250px' },
     { header: 'Anggaran', children: [
       { header: 'RKAP', render: (r) => <span className="rupiah">{r.anggaran_rkap > 0 ? fmtRupiah(r.anggaran_rkap) : '—'}</span> },
-      { header: 'Perubahan', render: (r) => <span className="rupiah">{r.anggaran_perubahan > 0 ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }
+      { header: 'Perubahan', render: (r) => <span className="rupiah">{r.anggaran_perubahan != null ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }
     ]},
     { header: 'Status', accessor: 'status' },
     { header: 'Keterangan', accessor: 'keterangan' },
