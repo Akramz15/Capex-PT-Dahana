@@ -592,17 +592,17 @@ def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
             pass
         
     # 3. Tangani Target
-    if log["action_type"] == "CREATE_REALLOCATION":
-        client.table("capex_realization").delete().eq("capex_id", str(target_id)).execute()
-        client.table(_TABLE).delete().eq("id", str(target_id)).execute()
-    else:
-        # UPDATE_REALLOCATION -> kurangi saldo target
-        target_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(target_id)).execute()
-        if target_res.data:
-            target_capex = target_res.data[0]
-            val_tgt = target_capex.get("anggaran_perubahan")
-            cur_target = val_tgt if val_tgt is not None else target_capex.get("anggaran_rkap", 0)
-            new_target = max(0, cur_target - anggaran)
+    target_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(target_id)).execute()
+    if target_res.data:
+        target_capex = target_res.data[0]
+        val_tgt = target_capex.get("anggaran_perubahan")
+        cur_target = val_tgt if val_tgt is not None else target_capex.get("anggaran_rkap", 0)
+        new_target = max(0, cur_target - anggaran)
+        
+        if log["action_type"] == "CREATE_REALLOCATION" and new_target == 0:
+            client.table("capex_realization").delete().eq("capex_id", str(target_id)).execute()
+            client.table(_TABLE).delete().eq("id", str(target_id)).execute()
+        else:
             client.table(_TABLE).update({"anggaran_perubahan": new_target}).eq("id", str(target_id)).execute()
             
             # Kurangi realisasi bulanan target (dari bulan 12 mundur)
