@@ -529,9 +529,19 @@ def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
         cur_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
         client.table(_TABLE).update({"anggaran_perubahan": cur_source + anggaran}).eq("id", str(source_id)).execute()
         
+        # Tambahkan ke realisasi bulanan sumber (di bulan dengan rkap terbesar)
+        try:
+            real_res = client.table("capex_realization").select("*").eq("capex_id", str(source_id)).execute()
+            if real_res.data:
+                target_month = max(real_res.data, key=lambda x: x.get("nilai_rkap") or 0)
+                old_rkap = target_month.get("nilai_rkap") or 0
+                client.table("capex_realization").update({"nilai_rkap": old_rkap + anggaran}).eq("id", target_month["id"]).execute()
+        except Exception:
+            pass
+        
     # 3. Tangani Target
     if log["action_type"] == "CREATE_REALLOCATION":
-        # Target adalah capex baru khusus untuk pengalihan ini, hapus sepenuhnya
+        client.table("capex_realization").delete().eq("capex_id", str(target_id)).execute()
         client.table(_TABLE).delete().eq("id", str(target_id)).execute()
     else:
         # UPDATE_REALLOCATION -> kurangi saldo target
@@ -541,6 +551,21 @@ def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
             cur_target = target_capex.get("anggaran_perubahan") or target_capex.get("anggaran_rkap") or 0
             new_target = max(0, cur_target - anggaran)
             client.table(_TABLE).update({"anggaran_perubahan": new_target}).eq("id", str(target_id)).execute()
+            
+            # Kurangi realisasi bulanan target (dari bulan 12 mundur)
+            try:
+                tgt_real_res = client.table("capex_realization").select("*").eq("capex_id", str(target_id)).order("bulan", desc=True).execute()
+                amount_to_deduct = anggaran
+                for r in tgt_real_res.data:
+                    if amount_to_deduct <= 0:
+                        break
+                    rkap_val = r.get("nilai_rkap") or 0
+                    if rkap_val > 0:
+                        deduction = min(rkap_val, amount_to_deduct)
+                        client.table("capex_realization").update({"nilai_rkap": rkap_val - deduction}).eq("id", r["id"]).execute()
+                        amount_to_deduct -= deduction
+            except Exception:
+                pass
             
     # 4. Tandai log sebagai dibatalkan
     new_ket = f"[DIBATALKAN] {log.get('keterangan', '')}"
