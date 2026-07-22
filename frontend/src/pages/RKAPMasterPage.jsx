@@ -15,7 +15,7 @@ import { Lock, Unlock, UploadCloud, Download, Hourglass } from 'lucide-react'
 import { uploadCapexExcel, exportRKAPExcel } from '../api/capex'
 import { downloadBlob } from '../utils'
 
-const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, source_capex_id: '', nd_persetujuan: '' }
+const EMPTY_FORM = { tahun: 2026, kode: '', daftar_capex: '', kategori: '', anggaran_rkap: 0, anggaran_perubahan: 0, pic: '', items: {}, sources: [], nd_persetujuan: '' }
 const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
 export default function RKAPMasterPage({ tahun }) {
@@ -158,17 +158,43 @@ export default function RKAPMasterPage({ tahun }) {
     try {
       let capexId = form.id
       if (modal === 'create') {
-        if (isLocked && !form.source_capex_id) {
-          dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana (Capex Lama) untuk pergeseran anggaran.', variant: 'warning' })
-          setSaving(false)
-          return
+        const reqAmt = Number(form.anggaran_perubahan || 0)
+        const totalSel = (form.sources || []).reduce((acc, sid) => {
+          const d = data.find(i => i.id === sid)
+          return acc + (d ? (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0) : 0)
+        }, 0)
+        
+        if (isLocked) {
+          if (!form.sources || form.sources.length === 0) {
+            dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana (Capex Lama) untuk pergeseran anggaran.', variant: 'warning' })
+            setSaving(false)
+            return
+          }
+          if (totalSel < reqAmt) {
+            dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Total dana dari Capex Sumber tidak mencukupi untuk pergeseran anggaran.', variant: 'warning' })
+            setSaving(false)
+            return
+          }
         }
-        const res = await createCapex(form)
+        
+        const payload = { ...form, source_capex_ids: form.sources || [] }
+        const res = await createCapex(payload)
         capexId = res.data.id
       } else {
-        if (isLocked && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0)) {
-          if (!form.reallocation_source_id) {
+        const reqAmt = Number(form.anggaran_perubahan || 0) - Number(form.original_anggaran_perubahan || 0)
+        if (isLocked && reqAmt > 0) {
+          const totalSel = (form.sources || []).reduce((acc, sid) => {
+            const d = data.find(i => i.id === sid)
+            return acc + (d ? (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0) : 0)
+          }, 0)
+          
+          if (!form.sources || form.sources.length === 0) {
             dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Anda WAJIB memilih Sumber Dana untuk penambahan anggaran.', variant: 'warning' })
+            setSaving(false)
+            return
+          }
+          if (totalSel < reqAmt) {
+            dialog.alert({ title: 'Peringatan', message: 'Tahun RKAP dikunci. Total dana dari Capex Sumber tidak mencukupi untuk penambahan anggaran.', variant: 'warning' })
             setSaving(false)
             return
           }
@@ -178,7 +204,9 @@ export default function RKAPMasterPage({ tahun }) {
             return
           }
         }
-        await updateCapex(form.id, form)
+        
+        const payload = { ...form, reallocation_source_ids: form.sources || [] }
+        await updateCapex(form.id, payload)
       }
       
       // Save 12-month RKAP Plan
@@ -434,35 +462,90 @@ export default function RKAPMasterPage({ tahun }) {
             </div>
             
             <div className="form-group">
-              {(isLocked && modal === 'create') || (isLocked && modal === 'edit' && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0)) ? (
-                <>
-                  <label className="form-label" htmlFor="f-sumber" style={{ color: '#0284c7' }}>Sumber Dana (Geser Anggaran Dari) <span className="required">*</span></label>
-                  <select id="f-sumber" className="form-select" value={modal === 'edit' ? (form.reallocation_source_id || '') : (form.source_capex_id || '')} onChange={(e) => setForm(f => ({ ...f, [modal === 'edit' ? 'reallocation_source_id' : 'source_capex_id']: e.target.value }))} style={{ borderColor: '#0ea5e9' }}>
-                    <option value="">-- Pilih Capex Sumber --</option>
-                    {data.filter(d => (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0) > 0 && d.id !== form.id).map(d => {
-                      const eff = (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0);
-                      return <option key={d.id} value={d.id}>{d.kode ? `[${d.kode}]` : ''} {d.daftar_capex} (Sisa: {fmtShort(eff)})</option>
-                    })}
-                  </select>
-                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Wajib dipilih karena RKAP tahun ini sudah dikunci.</div>
+              {(isLocked && modal === 'create') || (isLocked && modal === 'edit' && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0)) ? (() => {
+                const requiredAmount = modal === 'create' 
+                  ? Number(form.anggaran_perubahan || 0) 
+                  : (Number(form.anggaran_perubahan || 0) - Number(form.original_anggaran_perubahan || 0))
+                
+                const totalSelectedBalance = (form.sources || []).reduce((acc, sourceId) => {
+                  const d = data.find(item => item.id === sourceId)
+                  if (!d) return acc
+                  return acc + (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0)
+                }, 0)
+                
+                const needsMoreSources = requiredAmount > 0 && totalSelectedBalance < requiredAmount
 
-                  <label className="form-label" htmlFor="f-nd" style={{ color: '#0284c7', marginTop: '12px' }}>ND Persetujuan <span className="required">*</span></label>
-                  <input id="f-nd" type="text" className="form-input" value={form.nd_persetujuan || ''} onChange={set('nd_persetujuan')} placeholder="Contoh: ND-123/2026" style={{ borderColor: '#0ea5e9' }} />
-                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Kode/Nomor dokumen persetujuan wajib diisi.</div>
-                </>
-              ) : null}
+                return (
+                  <>
+                    <label className="form-label" htmlFor="f-sumber" style={{ color: '#0284c7' }}>Sumber Dana (Geser Anggaran Dari) <span className="required">*</span></label>
+                    
+                    {(form.sources || []).map((sourceId, index) => {
+                      const d = data.find(item => item.id === sourceId)
+                      const eff = d ? (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0) : 0
+                      return (
+                        <div key={index} style={{ marginBottom: '8px', display: 'flex', gap: '8px' }}>
+                          <select className="form-select" value={sourceId} onChange={(e) => {
+                            const newSources = [...(form.sources || [])]
+                            if (e.target.value) {
+                              newSources[index] = e.target.value
+                            } else {
+                              newSources.splice(index, 1)
+                            }
+                            setForm(f => ({ ...f, sources: newSources }))
+                          }} style={{ borderColor: '#0ea5e9', flex: 1 }}>
+                            <option value="">-- Hapus Pilihan Ini --</option>
+                            {data.filter(cd => (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0) > 0 && cd.id !== form.id && (cd.id === sourceId || !(form.sources || []).includes(cd.id))).map(cd => {
+                              const ceff = (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0)
+                              return <option key={cd.id} value={cd.id}>{cd.kode ? `[${cd.kode}]` : ''} {cd.daftar_capex} (Sisa: {fmtShort(ceff)})</option>
+                            })}
+                          </select>
+                        </div>
+                      )
+                    })}
+                    
+                    {needsMoreSources && (
+                      <div style={{ marginBottom: '8px' }}>
+                        <select className="form-select" value="" onChange={(e) => {
+                          if (e.target.value) {
+                            setForm(f => ({ ...f, sources: [...(f.sources || []), e.target.value] }))
+                          }
+                        }} style={{ borderColor: '#0ea5e9' }}>
+                          <option value="">-- Pilih Capex Sumber {form.sources?.length > 0 ? `ke-${form.sources.length + 1}` : ''} --</option>
+                          {data.filter(cd => (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0) > 0 && cd.id !== form.id && !(form.sources || []).includes(cd.id)).map(cd => {
+                            const ceff = (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0)
+                            return <option key={cd.id} value={cd.id}>{cd.kode ? `[${cd.kode}]` : ''} {cd.daftar_capex} (Sisa: {fmtShort(ceff)})</option>
+                          })}
+                        </select>
+                      </div>
+                    )}
+
+                    {requiredAmount > 0 && (
+                      <div style={{ fontSize: '12px', color: totalSelectedBalance < requiredAmount ? '#ef4444' : '#10b981', marginTop: '4px', marginBottom: '12px', fontWeight: 500 }}>
+                        Kebutuhan Dana: {fmtRupiah(requiredAmount)} | Terkumpul: {fmtRupiah(totalSelectedBalance)}
+                        {totalSelectedBalance < requiredAmount ? ' (Masih Kurang)' : ' (Cukup)'}
+                      </div>
+                    )}
+                    
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Wajib memilih sumber dana jika RKAP tahun ini sudah dikunci.</div>
+
+                    <label className="form-label" htmlFor="f-nd" style={{ color: '#0284c7', marginTop: '12px' }}>ND Persetujuan <span className="required">*</span></label>
+                    <input id="f-nd" type="text" className="form-input" value={form.nd_persetujuan || ''} onChange={set('nd_persetujuan')} placeholder="Contoh: ND-123/2026" style={{ borderColor: '#0ea5e9' }} />
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Kode/Nomor dokumen persetujuan wajib diisi.</div>
+                  </>
+                )
+              })() : null}
             </div>
           </div>
           
           <div className="form-group" style={{ marginTop: '16px' }}>
             <label className="form-label" htmlFor="f-perubahan">Anggaran Perubahan (Rp)</label>
             <CurrencyInput id="f-perubahan" className="form-input" value={form.anggaran_perubahan} onChange={set('anggaran_perubahan')} />
-            {isLocked && modal === 'create' && form.source_capex_id && form.anggaran_perubahan > 0 && (
+            {isLocked && modal === 'create' && (form.sources || []).length > 0 && form.anggaran_perubahan > 0 && (
               <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px', fontWeight: 500 }}>
                 ⚠️ Dana sebesar {fmtRupiah(form.anggaran_perubahan)} akan dipotong dari Capex Sumber.
               </div>
             )}
-            {isLocked && modal === 'edit' && form.reallocation_source_id && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0) && (
+            {isLocked && modal === 'edit' && (form.sources || []).length > 0 && Number(form.anggaran_perubahan || 0) > Number(form.original_anggaran_perubahan || 0) && (
               <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px', fontWeight: 500 }}>
                 ⚠️ Tambahan dana sebesar {fmtRupiah(Number(form.anggaran_perubahan) - Number(form.original_anggaran_perubahan))} akan dipotong dari Capex Sumber.
               </div>

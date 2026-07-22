@@ -13,6 +13,7 @@ class CapexMasterBase(BaseModel):
     anggaran_perubahan: int = Field(default=0, ge=0)
     pic: Optional[str] = Field(None, max_length=150)
     source_capex_id: Optional[UUID] = None
+    source_capex_ids: Optional[list[UUID]] = None
     nd_persetujuan: Optional[str] = Field(None, max_length=150)
     is_carryover: bool = Field(default=False)
 
@@ -29,6 +30,7 @@ class CapexMasterUpdate(BaseModel):
     pic: Optional[str] = Field(None, max_length=150)
     is_carryover: Optional[bool] = None
     reallocation_source_id: Optional[UUID] = None
+    reallocation_source_ids: Optional[list[UUID]] = None
     nd_persetujuan: Optional[str] = Field(None, max_length=150)
 
 

@@ -68,79 +68,86 @@ def create_capex(
             raise HTTPException(status_code=400, detail="RKAP sudah dikunci. ND Persetujuan wajib diisi sebagai bukti persetujuan.")
             
         try:
-            # 1. Cek & ambil data sumber
-            source_res = client.table(_TABLE).select("*").eq("id", str(payload.source_capex_id)).execute()
-            if not source_res.data:
-                raise HTTPException(status_code=400, detail="Capex sumber tidak ditemukan.")
+            source_ids = payload.source_capex_ids or ([payload.source_capex_id] if payload.source_capex_id else [])
+            if not source_ids:
+                raise HTTPException(status_code=400, detail="Sumber Dana wajib dipilih.")
             
-            source_capex = source_res.data[0]
-            val = source_capex.get("anggaran_perubahan")
-            source_anggaran_awal = val if val is not None else source_capex.get("anggaran_rkap", 0)
+            # 1. Cek & ambil data semua sumber
+            sources_data = []
+            total_available = 0
+            for sid in source_ids:
+                s_res = client.table(_TABLE).select("*").eq("id", str(sid)).execute()
+                if not s_res.data:
+                    raise HTTPException(status_code=400, detail=f"Capex sumber dengan ID {sid} tidak ditemukan.")
+                s_data = s_res.data[0]
+                s_val = s_data.get("anggaran_perubahan")
+                s_eff = s_val if s_val is not None else s_data.get("anggaran_rkap", 0)
+                total_available += s_eff
+                sources_data.append({"id": str(sid), "data": s_data, "eff": s_eff})
             
-            if source_anggaran_awal < payload.anggaran_perubahan:
-                raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi.")
+            if total_available < payload.anggaran_perubahan:
+                raise HTTPException(status_code=400, detail="Total sisa anggaran sumber tidak mencukupi.")
             
-            source_anggaran_akhir = source_anggaran_awal - payload.anggaran_perubahan
+            # 2. Insert capex baru (tujuan) terlebih dahulu
+            new_data = payload.model_dump(mode='json', exclude_unset=True)
+            new_data.pop("nd_persetujuan", None)
+            new_data.pop("source_capex_ids", None)
+            new_data["source_capex_id"] = str(source_ids[0])
             
-            # 2. Kurangi anggaran sumber di capex_master
-            client.table(_TABLE).update({"anggaran_perubahan": source_anggaran_akhir}).eq("id", str(payload.source_capex_id)).execute()
+            new_res = client.table(_TABLE).insert(new_data).execute()
+            new_capex = new_res.data[0]
             
-            # 2b. Kurangi anggaran sumber di realisasi bulanan (dari bulan 12 mundur)
-            try:
-                real_res = client.table("capex_realization").select("*").eq("capex_id", str(payload.source_capex_id)).order("bulan", desc=True).execute()
-                amount_to_deduct = payload.anggaran_perubahan
-                original_reals = real_res.data
+            # 3. Kurangi anggaran dari masing-masing sumber
+            amount_needed = payload.anggaran_perubahan
+            for s in sources_data:
+                if amount_needed <= 0:
+                    break
+                    
+                deduction = min(s["eff"], amount_needed)
+                new_source_budget = s["eff"] - deduction
+                client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", s["id"]).execute()
                 
-                for r in original_reals:
-                    if amount_to_deduct <= 0:
-                        break
-                    rkap_val = r.get("nilai_rkap") or 0
-                    if rkap_val > 0:
-                        deduction = min(rkap_val, amount_to_deduct)
-                        new_val = rkap_val - deduction
-                        client.table("capex_realization").update({"nilai_rkap": new_val}).eq("id", r["id"]).execute()
-                        amount_to_deduct -= deduction
-            except Exception as e:
-                # Gagal potong bulanan, biarkan lanjut tapi idealnya di-log
-                pass
-            
-            try:
-                # 3. Insert capex baru (tujuan)
-                new_data = payload.model_dump(mode='json', exclude_unset=True)
-                nd_val = new_data.pop("nd_persetujuan", None)
-                new_res = client.table(_TABLE).insert(new_data).execute()
-                new_capex = new_res.data[0]
+                # Kurangi bulanan sumber (dari bulan 12 mundur)
+                try:
+                    real_res = client.table("capex_realization").select("*").eq("capex_id", s["id"]).order("bulan", desc=True).execute()
+                    m_deduct = deduction
+                    for r in real_res.data:
+                        if m_deduct <= 0:
+                            break
+                        rkap_val = r.get("nilai_rkap") or 0
+                        if rkap_val > 0:
+                            m_ded = min(rkap_val, m_deduct)
+                            client.table("capex_realization").update({"nilai_rkap": rkap_val - m_ded}).eq("id", r["id"]).execute()
+                            m_deduct -= m_ded
+                except Exception:
+                    pass
                 
-                # 4. Insert Audit Log Lengkap
+                # 4. Insert Audit Log untuk setiap sumber
                 audit_data = {
                     "capex_id": new_capex["id"],
                     "tahun": payload.tahun,
                     "action_type": "CREATE_REALLOCATION",
-                    "keterangan": f"Pengalihan dana dari {source_capex['daftar_capex']} ke {payload.daftar_capex}",
+                    "keterangan": f"Pengalihan dana dari {s['data']['daftar_capex']} ke {payload.daftar_capex}",
                     "user_id": _admin["id"],
-                    "anggaran": payload.anggaran_perubahan,
-                    "nd_persetujuan": nd_val,
-                    "source_capex_id": str(payload.source_capex_id),
-                    "source_capex_name": source_capex["daftar_capex"],
-                    "source_nilai_awal": source_anggaran_awal,
-                    "source_nilai_akhir": source_anggaran_akhir,
+                    "anggaran": deduction,
+                    "nd_persetujuan": payload.nd_persetujuan,
+                    "source_capex_id": s["id"],
+                    "source_capex_name": s["data"]["daftar_capex"],
+                    "source_nilai_awal": s["eff"],
+                    "source_nilai_akhir": new_source_budget,
                     "target_capex_name": payload.daftar_capex,
                     "target_nilai_awal": 0,
                     "target_nilai_akhir": payload.anggaran_perubahan
                 }
                 client.table("capex_audit_logs").insert(audit_data).execute()
                 
-                log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
-                return new_capex
-            except Exception as inner_e:
-                # Rollback anggaran sumber jika insert gagal
-                client.table(_TABLE).update({"anggaran_perubahan": source_anggaran_awal}).eq("id", str(payload.source_capex_id)).execute()
-                # Rollback realisasi bulanan
-                if 'original_reals' in locals():
-                    for r in original_reals:
-                        client.table("capex_realization").update({"nilai_rkap": r.get("nilai_rkap")}).eq("id", r["id"]).execute()
-                raise inner_e
+                amount_needed -= deduction
                 
+            log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
+            return new_capex
+                
+        except HTTPException as he:
+            raise he
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Gagal melakukan pergeseran anggaran: {str(e)}")
             
@@ -191,33 +198,46 @@ def update_capex(
                 is_locked = lock_res.data and lock_res.data[0]["is_locked"]
                 
                 if is_locked:
-                    source_id = payload.reallocation_source_id or item_data.get("source_capex_id")
-                    if not source_id:
+                    source_ids = payload.reallocation_source_ids or ([payload.reallocation_source_id] if payload.reallocation_source_id else [])
+                    if not source_ids:
                         raise HTTPException(status_code=400, detail="Tahun RKAP dikunci. Anda harus memilih Sumber Dana untuk penambahan anggaran.")
                     
-                    source_res = client.table(_TABLE).select("daftar_capex, anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
-                    if source_res.data:
-                        source_capex = source_res.data[0]
-                        val = source_capex.get("anggaran_perubahan")
-                        current_source = val if val is not None else source_capex.get("anggaran_rkap", 0)
-                        if current_source < delta:
-                            raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi untuk penambahan pergeseran ini.")
+                    sources_data = []
+                    total_available = 0
+                    for sid in source_ids:
+                        s_res = client.table(_TABLE).select("daftar_capex, anggaran_perubahan, anggaran_rkap").eq("id", str(sid)).execute()
+                        if not s_res.data:
+                            raise HTTPException(status_code=400, detail=f"Capex sumber dengan ID {sid} tidak ditemukan.")
+                        s_data = s_res.data[0]
+                        s_val = s_data.get("anggaran_perubahan")
+                        s_eff = s_val if s_val is not None else s_data.get("anggaran_rkap", 0)
+                        total_available += s_eff
+                        sources_data.append({"id": str(sid), "data": s_data, "eff": s_eff})
                         
-                        new_source_budget = current_source - delta
-                        client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", str(source_id)).execute()
+                    if total_available < delta:
+                        raise HTTPException(status_code=400, detail="Sisa total anggaran sumber tidak mencukupi untuk penambahan pergeseran ini.")
+                    
+                    amount_needed = delta
+                    for s in sources_data:
+                        if amount_needed <= 0:
+                            break
+                            
+                        deduction = min(s["eff"], amount_needed)
+                        new_source_budget = s["eff"] - deduction
+                        client.table(_TABLE).update({"anggaran_perubahan": new_source_budget}).eq("id", s["id"]).execute()
                         
                         # Kurangi realisasi bulanan sumber (dari bulan 12 mundur)
                         try:
-                            src_real_res = client.table("capex_realization").select("*").eq("capex_id", str(source_id)).order("bulan", desc=True).execute()
-                            amount_to_deduct = delta
+                            src_real_res = client.table("capex_realization").select("*").eq("capex_id", s["id"]).order("bulan", desc=True).execute()
+                            m_deduct = deduction
                             for r in src_real_res.data:
-                                if amount_to_deduct <= 0:
+                                if m_deduct <= 0:
                                     break
                                 rkap_val = r.get("nilai_rkap") or 0
                                 if rkap_val > 0:
-                                    deduction = min(rkap_val, amount_to_deduct)
-                                    client.table("capex_realization").update({"nilai_rkap": rkap_val - deduction}).eq("id", r["id"]).execute()
-                                    amount_to_deduct -= deduction
+                                    m_ded = min(rkap_val, m_deduct)
+                                    client.table("capex_realization").update({"nilai_rkap": rkap_val - m_ded}).eq("id", r["id"]).execute()
+                                    m_deduct -= m_ded
                         except Exception:
                             pass
                         
@@ -225,19 +245,21 @@ def update_capex(
                             "capex_id": str(capex_id),
                             "tahun": tahun,
                             "action_type": "UPDATE_REALLOCATION",
-                            "keterangan": f"Penambahan anggaran dari {source_capex['daftar_capex']} ke {item_data['daftar_capex']}",
+                            "keterangan": f"Penambahan anggaran dari {s['data']['daftar_capex']} ke {item_data['daftar_capex']}",
                             "user_id": _admin["id"],
-                            "anggaran": delta,
+                            "anggaran": deduction,
                             "nd_persetujuan": payload.nd_persetujuan,
-                            "source_capex_id": str(source_id),
-                            "source_capex_name": source_capex["daftar_capex"],
-                            "source_nilai_awal": current_source,
+                            "source_capex_id": s["id"],
+                            "source_capex_name": s["data"]["daftar_capex"],
+                            "source_nilai_awal": s["eff"],
                             "source_nilai_akhir": new_source_budget,
                             "target_capex_name": item_data["daftar_capex"],
                             "target_nilai_awal": old_amount,
                             "target_nilai_akhir": new_amount
                         }
                         client.table("capex_audit_logs").insert(audit_data).execute()
+                        
+                        amount_needed -= deduction
             
             elif delta < 0:
                 # Penurunan Anggaran, kembalikan ke source_capex_id bawaan jika ada
@@ -262,6 +284,7 @@ def update_capex(
 
     update_data = payload.model_dump(exclude_none=True)
     update_data.pop("reallocation_source_id", None)
+    update_data.pop("reallocation_source_ids", None)
     update_data.pop("nd_persetujuan", None)
     
     if not update_data:
