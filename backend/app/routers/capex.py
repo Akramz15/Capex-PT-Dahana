@@ -74,7 +74,8 @@ def create_capex(
                 raise HTTPException(status_code=400, detail="Capex sumber tidak ditemukan.")
             
             source_capex = source_res.data[0]
-            source_anggaran_awal = source_capex.get("anggaran_perubahan", 0)
+            val = source_capex.get("anggaran_perubahan")
+            source_anggaran_awal = val if val is not None else source_capex.get("anggaran_rkap", 0)
             
             if source_anggaran_awal < payload.anggaran_perubahan:
                 raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi.")
@@ -197,7 +198,8 @@ def update_capex(
                     source_res = client.table(_TABLE).select("daftar_capex, anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
                     if source_res.data:
                         source_capex = source_res.data[0]
-                        current_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
+                        val = source_capex.get("anggaran_perubahan")
+                        current_source = val if val is not None else source_capex.get("anggaran_rkap", 0)
                         if current_source < delta:
                             raise HTTPException(status_code=400, detail="Sisa anggaran sumber tidak mencukupi untuk penambahan pergeseran ini.")
                         
@@ -229,7 +231,8 @@ def update_capex(
                     source_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
                     if source_res.data:
                         source_capex = source_res.data[0]
-                        current_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
+                        val = source_capex.get("anggaran_perubahan")
+                        current_source = val if val is not None else source_capex.get("anggaran_rkap", 0)
                         client.table(_TABLE).update({"anggaran_perubahan": current_source - delta}).eq("id", str(source_id)).execute()
 
     update_data = payload.model_dump(exclude_none=True)
@@ -526,7 +529,8 @@ def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
     source_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(source_id)).execute()
     if source_res.data:
         source_capex = source_res.data[0]
-        cur_source = source_capex.get("anggaran_perubahan") or source_capex.get("anggaran_rkap") or 0
+        val = source_capex.get("anggaran_perubahan")
+        cur_source = val if val is not None else source_capex.get("anggaran_rkap", 0)
         client.table(_TABLE).update({"anggaran_perubahan": cur_source + anggaran}).eq("id", str(source_id)).execute()
         
         # Tambahkan ke realisasi bulanan sumber (di bulan dengan rkap terbesar)
@@ -548,7 +552,8 @@ def undo_reallocation(log_id: UUID, _admin: dict = Depends(require_admin)):
         target_res = client.table(_TABLE).select("anggaran_perubahan, anggaran_rkap").eq("id", str(target_id)).execute()
         if target_res.data:
             target_capex = target_res.data[0]
-            cur_target = target_capex.get("anggaran_perubahan") or target_capex.get("anggaran_rkap") or 0
+            val_tgt = target_capex.get("anggaran_perubahan")
+            cur_target = val_tgt if val_tgt is not None else target_capex.get("anggaran_rkap", 0)
             new_target = max(0, cur_target - anggaran)
             client.table(_TABLE).update({"anggaran_perubahan": new_target}).eq("id", str(target_id)).execute()
             
