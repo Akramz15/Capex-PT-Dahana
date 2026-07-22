@@ -84,7 +84,10 @@ export default function RealizationPage({ tahun }) {
         
         // Take the latest status based on month
         if (r.status && r.bulan > c.status_month) {
-          c.status = r.status
+          let s = r.status
+          if (s === 'BAADK' || s === 'BA/ADK') s = 'BAST'
+          if (s === 'Draft') s = 'Rencana'
+          c.status = s
           c.status_month = r.bulan
         }
         
@@ -396,10 +399,11 @@ export default function RealizationPage({ tahun }) {
               }
               const sumRKAP = totalPerubahan > 0 ? totalPerubahan : totalRKAP
               
-              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAST: 0, Lainnya: 0 }
+              const statSums = { PO: 0, Kajian: 0, Tender: 0, BAST: 0, Lainnya: 0, Rencana: 0 }
               data.forEach(r => {
                 let st = r.status || ''
                 if (st === 'BA/ADK' || st === 'BAADK') st = 'BAST'
+                if (st === 'Draft') st = 'Rencana'
                 if (statSums[st] !== undefined) {
                   statSums[st] += (r.total_real || 0)
                 } else {
