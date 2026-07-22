@@ -5,6 +5,7 @@ import ComplexDataTable from '../components/ui/ComplexDataTable'
 import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import CurrencyInput from '../components/ui/CurrencyInput'
+import SearchableSelect from '../components/ui/SearchableSelect'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { useDialog } from '../contexts/DialogContext'
@@ -482,40 +483,60 @@ export default function RKAPMasterPage({ tahun }) {
                     {(form.sources || []).map((sourceId, index) => {
                       const d = data.find(item => item.id === sourceId)
                       const eff = d ? (d.anggaran_perubahan ?? d.anggaran_rkap ?? 0) : 0
+                      
+                      const dropdownOptions = [
+                        { value: "", label: "-- Hapus Pilihan Ini --" },
+                        ...data.filter(cd => (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0) > 0 && cd.id !== form.id && (cd.id === sourceId || !(form.sources || []).includes(cd.id))).map(cd => ({
+                          value: cd.id,
+                          label: `${cd.kode ? `[${cd.kode}] ` : ''}${cd.daftar_capex} (Sisa: ${fmtShort(cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0)})`
+                        }))
+                      ];
+
                       return (
                         <div key={index} style={{ marginBottom: '8px', display: 'flex', gap: '8px' }}>
-                          <select className="form-select" value={sourceId} onChange={(e) => {
-                            const newSources = [...(form.sources || [])]
-                            if (e.target.value) {
-                              newSources[index] = e.target.value
-                            } else {
-                              newSources.splice(index, 1)
-                            }
-                            setForm(f => ({ ...f, sources: newSources }))
-                          }} style={{ borderColor: '#0ea5e9', flex: 1 }}>
-                            <option value="">-- Hapus Pilihan Ini --</option>
-                            {data.filter(cd => (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0) > 0 && cd.id !== form.id && (cd.id === sourceId || !(form.sources || []).includes(cd.id))).map(cd => {
-                              const ceff = (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0)
-                              return <option key={cd.id} value={cd.id}>{cd.kode ? `[${cd.kode}]` : ''} {cd.daftar_capex} (Sisa: {fmtShort(ceff)})</option>
-                            })}
-                          </select>
+                          <SearchableSelect 
+                            value={sourceId}
+                            onChange={(val) => {
+                              const newSources = [...(form.sources || [])]
+                              if (val) {
+                                newSources[index] = val
+                              } else {
+                                newSources.splice(index, 1)
+                              }
+                              setForm(f => ({ ...f, sources: newSources }))
+                            }}
+                            options={dropdownOptions}
+                            style={{ borderColor: '#0ea5e9', flex: 1 }}
+                            className="form-select"
+                            placeholder="Pilih Capex Sumber"
+                          />
                         </div>
                       )
                     })}
                     
                     {needsMoreSources && (
                       <div style={{ marginBottom: '8px' }}>
-                        <select className="form-select" value="" onChange={(e) => {
-                          if (e.target.value) {
-                            setForm(f => ({ ...f, sources: [...(f.sources || []), e.target.value] }))
-                          }
-                        }} style={{ borderColor: '#0ea5e9' }}>
-                          <option value="">-- Pilih Capex Sumber {form.sources?.length > 0 ? `ke-${form.sources.length + 1}` : ''} --</option>
-                          {data.filter(cd => (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0) > 0 && cd.id !== form.id && !(form.sources || []).includes(cd.id)).map(cd => {
-                            const ceff = (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0)
-                            return <option key={cd.id} value={cd.id}>{cd.kode ? `[${cd.kode}]` : ''} {cd.daftar_capex} (Sisa: {fmtShort(ceff)})</option>
-                          })}
-                        </select>
+                        {(() => {
+                           const addOptions = data.filter(cd => (cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0) > 0 && cd.id !== form.id && !(form.sources || []).includes(cd.id)).map(cd => ({
+                             value: cd.id,
+                             label: `${cd.kode ? `[${cd.kode}] ` : ''}${cd.daftar_capex} (Sisa: ${fmtShort(cd.anggaran_perubahan ?? cd.anggaran_rkap ?? 0)})`
+                           }));
+                           
+                           return (
+                             <SearchableSelect 
+                               value=""
+                               onChange={(val) => {
+                                 if (val) {
+                                   setForm(f => ({ ...f, sources: [...(f.sources || []), val] }))
+                                 }
+                               }}
+                               options={addOptions}
+                               style={{ borderColor: '#0ea5e9' }}
+                               className="form-select"
+                               placeholder={`-- Pilih Capex Sumber ${form.sources?.length > 0 ? `ke-${form.sources.length + 1}` : ''} --`}
+                             />
+                           )
+                        })()}
                       </div>
                     )}
 
