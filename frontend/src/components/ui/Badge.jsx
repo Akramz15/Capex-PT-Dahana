@@ -9,5 +9,6 @@ const STATUS_CLASS = {
 
 export default function Badge({ status }) {
   const cls = STATUS_CLASS[status] ?? 'badge-rencana'
-  return <span className={`badge ${cls}`}>{status ?? '—'}</span>
+  const displayStatus = status === 'BAADK' ? 'BAST' : (status ?? '—')
+  return <span className={`badge ${cls}`}>{displayStatus}</span>
 }

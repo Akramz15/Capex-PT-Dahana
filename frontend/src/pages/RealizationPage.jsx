@@ -185,9 +185,11 @@ export default function RealizationPage({ tahun }) {
         items: []
       }
       
+      let hasItem = false;
       for (let i = 1; i <= 12; i++) {
         const item = form.items[i]
         if (item) {
+          hasItem = true;
           payload.items.push({
             bulan: i,
             nilai_rkap: Number(item.rkap || 0),
@@ -195,6 +197,16 @@ export default function RealizationPage({ tahun }) {
             nilai_bast: Number(item.bast || 0)
           })
         }
+      }
+      
+      // FIX BUG: Jika tidak ada data bulanan sama sekali, buat 1 data dummy agar status bisa tersimpan di tabel capex_realization
+      if (!hasItem) {
+        payload.items.push({
+          bulan: 1,
+          nilai_rkap: 0,
+          nilai_realisasi: 0,
+          nilai_bast: 0
+        })
       }
       
       await createRealizationBulk(payload)

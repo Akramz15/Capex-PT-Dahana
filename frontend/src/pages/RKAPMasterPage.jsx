@@ -214,7 +214,7 @@ export default function RKAPMasterPage({ tahun }) {
       const payloadBulk = {
         capex_id: capexId,
         tahun: form.tahun,
-        status: form.status || 'Draft',
+        status: form.status || 'Rencana',
         keterangan: form.keterangan || '',
         pic: form.pic || '',
         items: []

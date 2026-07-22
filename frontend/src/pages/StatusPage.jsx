@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import { fmtRupiah } from '../utils'
 
-const STATUS_TABS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya']
+const STATUS_TABS = ['PO', 'Tender', 'Kajian', 'BAADK', 'Lainnya'] // BAADK will be displayed as BAST
 const EMPTY_FORM = { capex_id: '', tahun: 2026, status_type: 'PO', anggaran_rkap: 0, anggaran_perubahan: 0, total_realisasi: 0, keterangan: '', keterangan_rekap: '', rekap_nilai: 0 }
 
 export default function StatusPage({ tahun }) {
@@ -110,7 +110,7 @@ export default function StatusPage({ tahun }) {
       { header: 'RKAP', render: (r) => <span className="rupiah">{fmtRupiah(r.anggaran_rkap)}</span> },
       { header: 'Perubahan', render: (r) => <span className="rupiah">{fmtRupiah(r.anggaran_perubahan)}</span> }
     ]},
-    { header: `Realisasi ${activeTab}`, render: (r) => <span className="rupiah">{fmtRupiah(r.total_realisasi)}</span> },
+    { header: `Realisasi ${activeTab === 'BAADK' ? 'BAST' : activeTab}`, render: (r) => <span className="rupiah">{fmtRupiah(r.total_realisasi)}</span> },
     { header: 'Keterangan', accessor: 'keterangan_parsed' },
     { header: 'Rekap Nilai', children: [
       { header: 'Keterangan', accessor: 'keterangan_rekap_parsed' },
@@ -127,7 +127,7 @@ export default function StatusPage({ tahun }) {
         </div>
         {isAdmin && (
           <button className="btn btn-primary" onClick={openCreate}>
-            Tambah {activeTab}
+            Tambah {activeTab === 'BAADK' ? 'BAST' : activeTab}
           </button>
         )}
       </div>
@@ -150,7 +150,7 @@ export default function StatusPage({ tahun }) {
                 whiteSpace: 'nowrap'
               }}
             >
-              {tab}
+              {tab === 'BAADK' ? 'BAST' : tab}
             </button>
           ))}
         </div>
