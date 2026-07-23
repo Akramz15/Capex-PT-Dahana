@@ -340,7 +340,9 @@ export default function RealizationPage({ tahun }) {
       </tr>
     )
   }
-  const isInvalidBast = Object.values(form.items || {}).some(item => Number(item.bast || 0) > Number(item.real || 0));
+  const totalPO = Object.values(form.items || {}).reduce((acc, item) => acc + Number(item.real || 0), 0);
+  const totalBAST = Object.values(form.items || {}).reduce((acc, item) => acc + Number(item.bast || 0), 0);
+  const isInvalidBast = totalBAST > totalPO;
 
   return (
     <>
@@ -490,8 +492,8 @@ export default function RealizationPage({ tahun }) {
               {BULAN_NAMES.map((bulan, idx) => {
                 const b = idx + 1
                 return (
-                  <div key={b} style={{ border: `1px solid ${Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#ef4444' : 'var(--clr-border)'}`, padding: '10px', borderRadius: '4px', backgroundColor: Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#fef2f2' : 'transparent' }}>
-                    <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '13px', textAlign: 'center', color: Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#ef4444' : 'inherit' }}>{bulan}</div>
+                  <div key={b} style={{ border: '1px solid var(--clr-border)', padding: '10px', borderRadius: '4px', backgroundColor: 'transparent' }}>
+                    <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '13px', textAlign: 'center', color: 'inherit' }}>{bulan}</div>
                     
                     <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>Realisasi PO</div>
                     <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
@@ -499,21 +501,28 @@ export default function RealizationPage({ tahun }) {
                       onChange={(e) => setBulan(b, 'real', e.target.value)} 
                       placeholder="Rp 0" />
                       
-                    <div style={{ fontSize: '11px', color: '#666', marginTop: '8px', marginBottom: '4px' }}>Realisasi BAST</div>
-                    <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right', borderColor: Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) ? '#ef4444' : '' }} 
+                    <div style={{ fontSize: '11px', color: '#666', marginTop: '12px', marginBottom: '4px' }}>Realisasi BAST</div>
+                    <CurrencyInput className="form-input" style={{ padding: '6px', fontSize: '13px', textAlign: 'right' }} 
                       value={form.items[b]?.bast ?? ''} 
                       onChange={(e) => setBulan(b, 'bast', e.target.value)} 
                       placeholder="Rp 0" />
-                      
-                    {Number(form.items[b]?.bast || 0) > Number(form.items[b]?.real || 0) && (
-                      <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '4px', textAlign: 'center' }}>
-                        BAST melebihi PO
-                      </div>
-                    )}
                   </div>
                 )
               })}
             </div>
+          </div>
+
+          {isInvalidBast && (
+            <div style={{ padding: '12px', backgroundColor: '#fef2f2', border: '1px solid #ef4444', borderRadius: '6px', color: '#dc2626', fontSize: '13px', marginTop: '16px', fontWeight: 500 }}>
+              ⚠️ Akumulasi Total Realisasi BAST (Rp {fmtRupiah(totalBAST)}) tidak boleh melebihi Akumulasi Total Realisasi PO (Rp {fmtRupiah(totalPO)}).
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
+            <button className="btn btn-outline" onClick={closeModal} disabled={saving}>Batal</button>
+            <button className="btn btn-primary" onClick={handleSave} disabled={saving || isInvalidBast}>
+              {saving ? 'Menyimpan...' : 'Simpan'}
+            </button>
           </div>
         </Modal>
       )}

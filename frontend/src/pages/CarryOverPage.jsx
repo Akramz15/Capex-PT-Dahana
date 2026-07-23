@@ -239,7 +239,9 @@ export default function CarryOverPage({ tahun }) {
     }
   }
 
-  const isInvalidBast = Object.values(form.items || {}).some(item => Number(item.bast || 0) > Number(item.real || 0))
+  const totalPO = Object.values(form.items || {}).reduce((acc, item) => acc + Number(item.real || 0), 0)
+  const totalBAST = Object.values(form.items || {}).reduce((acc, item) => acc + Number(item.bast || 0), 0)
+  const isInvalidBast = totalBAST > totalPO
 
   return (
     <>
@@ -617,7 +619,7 @@ export default function CarryOverPage({ tahun }) {
                 <div style={{ marginTop: '2px' }}>⚠️</div>
                 <div style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
                   <strong style={{ display: 'block', marginBottom: '4px' }}>Peringatan BAST &gt; PO!</strong>
-                  Nilai BAST tidak boleh lebih besar dari nilai PO pada bulan yang sama. Mohon periksa kembali baris yang berwarna merah.
+                  Akumulasi Total Realisasi BAST (Rp {fmtRupiah(totalBAST)}) tidak boleh melebihi Akumulasi Total Realisasi PO (Rp {fmtRupiah(totalPO)}).
                 </div>
               </div>
             )}
@@ -636,12 +638,8 @@ export default function CarryOverPage({ tahun }) {
                     const m = i + 1
                     const it = form.items[m] || {}
                     
-                    const r = Number(it.real || 0)
-                    const b = Number(it.bast || 0)
-                    const errBast = b > r
-
                     return (
-                      <tr key={m} style={{ backgroundColor: errBast ? '#fff5f5' : 'transparent' }}>
+                      <tr key={m} style={{ backgroundColor: 'transparent' }}>
                         <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--clr-border)', fontWeight: 500 }}>{bln}</td>
                         <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--clr-border)' }}>
                           <CurrencyInput 
@@ -649,7 +647,6 @@ export default function CarryOverPage({ tahun }) {
                             value={it.bast || ''} 
                             onChange={(e) => setBulan(m, 'bast', e.target.value)}
                             placeholder="0"
-                            style={{ borderColor: errBast ? '#ef4444' : undefined, backgroundColor: errBast ? '#fef2f2' : undefined }}
                           />
                         </td>
                         <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--clr-border)' }}>
