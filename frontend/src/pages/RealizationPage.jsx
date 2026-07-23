@@ -517,13 +517,6 @@ export default function RealizationPage({ tahun }) {
               ⚠️ Akumulasi Total Realisasi BAST (Rp {fmtRupiah(totalBAST)}) tidak boleh melebihi Akumulasi Total Realisasi PO (Rp {fmtRupiah(totalPO)}).
             </div>
           )}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
-            <button className="btn btn-outline" onClick={closeModal} disabled={saving}>Batal</button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || isInvalidBast}>
-              {saving ? 'Menyimpan...' : 'Simpan'}
-            </button>
-          </div>
         </Modal>
       )}
     </>
