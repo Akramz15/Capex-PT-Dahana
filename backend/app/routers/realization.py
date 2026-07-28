@@ -10,6 +10,7 @@ from ..models.realization import (
     RealizationCreate, RealizationUpdate, RealizationResponse,
 )
 from ..services.audit import log_module_update
+from ..services.dashboard import clear_dashboard_cache
 
 router = APIRouter(prefix="/realization", tags=["Realisasi"])
 
@@ -75,6 +76,7 @@ def create_realization(
     data["capex_id"] = str(data["capex_id"])
     result = client.table(_TABLE).insert(data).execute()
     log_module_update(client, "Realisasi", _admin.get("full_name", "Admin"))
+    clear_dashboard_cache()
     return result.data[0]
 
 
@@ -107,6 +109,7 @@ def upsert_realization_bulk(
         
     result = client.table(_TABLE).upsert(data_list, on_conflict="capex_id,tahun,bulan").execute()
     log_module_update(client, "Realisasi", _admin.get("full_name", "Admin"))
+    clear_dashboard_cache()
     return result.data
 
 
@@ -125,6 +128,7 @@ def update_realization(
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data realisasi tidak ditemukan.")
     log_module_update(client, "Realisasi", _admin.get("full_name", "Admin"))
+    clear_dashboard_cache()
     return result.data[0]
 
 
@@ -138,6 +142,7 @@ def delete_realization(
     if not result.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data realisasi tidak ditemukan.")
     log_module_update(client, "Realisasi", _admin.get("full_name", "Admin"))
+    clear_dashboard_cache()
 
 @router.post("/upload", status_code=status.HTTP_200_OK)
 def upload_realization(
@@ -215,6 +220,7 @@ def upload_realization(
             client.table("capex_realization").upsert(data_to_upsert, on_conflict="capex_id,tahun,bulan").execute()
             
         log_module_update(client, "Realisasi", _admin.get("full_name", "Admin"))
+        clear_dashboard_cache()
         return {"message": f"Berhasil memproses upload untuk {len(data_to_upsert)//12} item capex."}
         
     except Exception as e:

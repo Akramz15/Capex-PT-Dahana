@@ -7,6 +7,7 @@ from ..core.database import get_supabase_admin
 from ..core.security import get_current_user, require_admin
 from ..models.capex import CapexMasterCreate, CapexMasterUpdate, CapexMasterResponse
 from ..services.audit import log_module_update
+from ..services.dashboard import clear_dashboard_cache
 
 router = APIRouter(prefix="/capex", tags=["RKAP Master"])
 
@@ -144,6 +145,7 @@ def create_capex(
                 amount_needed -= deduction
                 
             log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
+            clear_dashboard_cache()
             return new_capex
                 
         except HTTPException as he:
@@ -157,6 +159,7 @@ def create_capex(
         new_data.pop("nd_persetujuan", None) # Buang jika dikirim
         result = client.table(_TABLE).insert(new_data).execute()
         log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
+        clear_dashboard_cache()
         return result.data[0]
 
 @router.put("/{capex_id}", response_model=CapexMasterResponse)
@@ -295,6 +298,7 @@ def update_capex(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data Capex tidak ditemukan.")
         
     log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
+    clear_dashboard_cache()
     return result.data[0]
 
 
@@ -336,6 +340,7 @@ def delete_capex(
     # 3. Hapus data capex
     client.table(_TABLE).delete().eq("id", str(capex_id)).execute()
     log_module_update(client, "RKAP Master", _admin.get("full_name", "Admin"))
+    clear_dashboard_cache()
 
 
 @router.get("/audit-logs/all")

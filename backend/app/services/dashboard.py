@@ -1,11 +1,25 @@
 from ..core.database import get_supabase_admin
+import time
+import concurrent.futures
 
 BULAN_NAMES = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
-def fetch_all_dashboard_data(tahun: int):
+_DASHBOARD_CACHE = {}
+
+def clear_dashboard_cache(tahun: int = None):
+    global _DASHBOARD_CACHE
+    if tahun is not None:
+        if tahun in _DASHBOARD_CACHE:
+            del _DASHBOARD_CACHE[tahun]
+    else:
+        _DASHBOARD_CACHE.clear()
+
+def _fetch_master(tahun: int):
     client = get_supabase_admin()
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic, is_carryover").eq("tahun", tahun).execute()
-    
+    return client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic, is_carryover").eq("tahun", tahun).execute().data
+
+def _fetch_realization(tahun: int):
+    client = get_supabase_admin()
     real_data = []
     offset = 0
     limit = 1000
@@ -15,8 +29,33 @@ def fetch_all_dashboard_data(tahun: int):
         if len(res.data) < limit:
             break
         offset += limit
+    return real_data
+
+def fetch_all_dashboard_data(tahun: int):
+    global _DASHBOARD_CACHE
+    
+    # Check cache (60 seconds TTL)
+    if tahun in _DASHBOARD_CACHE:
+        cache_entry = _DASHBOARD_CACHE[tahun]
+        if time.time() - cache_entry["timestamp"] < 60:
+            return cache_entry["master"], cache_entry["realization"]
+            
+    # Parallel Fetching
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        future_master = executor.submit(_fetch_master, tahun)
+        future_realization = executor.submit(_fetch_realization, tahun)
         
-    return master.data, real_data
+        master_data = future_master.result()
+        real_data = future_realization.result()
+        
+    # Save to cache
+    _DASHBOARD_CACHE[tahun] = {
+        "timestamp": time.time(),
+        "master": master_data,
+        "realization": real_data
+    }
+    
+    return master_data, real_data
 
 def get_dashboard_summary(tahun: int, is_carryover: bool = False, preloaded_master=None, preloaded_realization=None) -> dict:
     if preloaded_master is not None:
