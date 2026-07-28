@@ -123,3 +123,6 @@ export const uploadTimelineExcel = (tahun, file) => {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 }
+
+export const getDashboardAll = (tahun, ytd_bulan, ytd_carryover_bulan) =>
+  client.get('/dashboard/all', { params: { tahun, ytd_bulan, ytd_carryover_bulan } })

@@ -2,24 +2,48 @@ from ..core.database import get_supabase_admin
 
 BULAN_NAMES = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
-
-def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
+def fetch_all_dashboard_data(tahun: int):
     client = get_supabase_admin()
-
-    master_result = client.table("capex_master").select("id, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
-    total_rkap = sum(r["anggaran_rkap"] for r in master_result.data)
-    total_perubahan = sum(r["anggaran_perubahan"] for r in master_result.data)
-    total_capex_items = len(master_result.data)
-
-    realization_data = []
+    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic, is_carryover").eq("tahun", tahun).execute()
+    
+    real_data = []
     offset = 0
     limit = 1000
     while True:
-        res = client.table("capex_realization").select("capex_id, nilai_realisasi, status, bulan").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
-        realization_data.extend(res.data)
+        res = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, nilai_bast, status, bulan").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
+        real_data.extend(res.data)
         if len(res.data) < limit:
             break
         offset += limit
+        
+    return master.data, real_data
+
+def get_dashboard_summary(tahun: int, is_carryover: bool = False, preloaded_master=None, preloaded_realization=None) -> dict:
+    if preloaded_master is not None:
+        master_data = [m for m in preloaded_master if bool(m.get("is_carryover")) == is_carryover]
+    else:
+        client = get_supabase_admin()
+        master_result = client.table("capex_master").select("id, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
+        master_data = master_result.data
+        
+    total_rkap = sum((r.get("anggaran_rkap") or 0) for r in master_data)
+    total_perubahan = sum((r.get("anggaran_perubahan") or 0) for r in master_data)
+    total_capex_items = len(master_data)
+
+    if preloaded_realization is not None:
+        # Original logic didn't filter realization by is_carryover for total_realisasi
+        realization_data = preloaded_realization
+    else:
+        client = get_supabase_admin()
+        realization_data = []
+        offset = 0
+        limit = 1000
+        while True:
+            res = client.table("capex_realization").select("capex_id, nilai_realisasi, status, bulan").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
+            realization_data.extend(res.data)
+            if len(res.data) < limit:
+                break
+            offset += limit
     
     total_realisasi = sum((r.get("nilai_realisasi") or 0) for r in realization_data)
     
@@ -38,7 +62,7 @@ def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
                 latest_status_map[cid] = {"status": st, "bulan": mth}
                 
     budget_map = {}
-    for r in master_result.data:
+    for r in master_data:
         b = r.get("anggaran_perubahan")
         budget_map[str(r["id"])] = b if b is not None else (r.get("anggaran_rkap") or 0)
         
@@ -60,7 +84,7 @@ def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
     category_amounts = {}
     top_capex_list = []
     
-    for r in master_result.data:
+    for r in master_data:
         kat = r.get("kategori") or "Lainnya"
         budget_val = r.get("anggaran_perubahan")
         budget = budget_val if budget_val is not None else (r.get("anggaran_rkap") or 0)
@@ -86,53 +110,68 @@ def get_dashboard_summary(tahun: int, is_carryover: bool = False) -> dict:
     }
 
 
-def get_monthly_chart_data(tahun: int, is_carryover: bool = False) -> list[dict]:
-    client = get_supabase_admin()
+def get_monthly_chart_data(tahun: int, is_carryover: bool = False, preloaded_master=None, preloaded_realization=None) -> list[dict]:
+    if preloaded_master is not None:
+        master_ids = {str(m["id"]) for m in preloaded_master if bool(m.get("is_carryover")) == is_carryover}
+    else:
+        client = get_supabase_admin()
+        # 1. Get all RKAP items (is_carryover filtered)
+        master_result = client.table("capex_master").select("id").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
+        master_ids = {str(m["id"]) for m in master_result.data}
     
-    # 1. Get all RKAP items (is_carryover filtered)
-    master_result = client.table("capex_master").select("id").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
-    master_ids = {str(m["id"]) for m in master_result.data}
-    
-    result = client.table("capex_realization").select("capex_id, bulan, nilai_rkap, nilai_realisasi").eq("tahun", tahun).execute()
+    if preloaded_realization is not None:
+        real_data = preloaded_realization
+    else:
+        client = get_supabase_admin()
+        result = client.table("capex_realization").select("capex_id, bulan, nilai_rkap, nilai_realisasi").eq("tahun", tahun).execute()
+        real_data = result.data
 
     monthly: dict[int, dict] = {
         m: {"bulan": BULAN_NAMES[m - 1], "rkap": 0, "realisasi": 0}
         for m in range(1, 13)
     }
-    for r in result.data:
+    for r in real_data:
         if str(r["capex_id"]) in master_ids:
             b = r["bulan"]
-            monthly[b]["rkap"] += r["nilai_rkap"]
-            monthly[b]["realisasi"] += r["nilai_realisasi"]
+            monthly[b]["rkap"] += (r.get("nilai_rkap") or 0)
+            monthly[b]["realisasi"] += (r.get("nilai_realisasi") or 0)
 
     return list(monthly.values())
 
 
-def get_capex_progress_table(tahun: int, is_carryover: bool = False) -> list[dict]:
-    client = get_supabase_admin()
-
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
-    real_data = []
-    offset = 0
-    limit = 1000
-    while True:
-        res = client.table("capex_realization").select("capex_id, nilai_realisasi, status").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
-        real_data.extend(res.data)
-        if len(res.data) < limit:
-            break
-        offset += limit
+def get_capex_progress_table(tahun: int, is_carryover: bool = False, preloaded_master=None, preloaded_realization=None) -> list[dict]:
+    if preloaded_master is not None:
+        master_data = [m for m in preloaded_master if bool(m.get("is_carryover")) == is_carryover]
+    else:
+        client = get_supabase_admin()
+        master_result = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan, pic").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
+        master_data = master_result.data
+        
+    if preloaded_realization is not None:
+        real_data = preloaded_realization
+    else:
+        client = get_supabase_admin()
+        real_data = []
+        offset = 0
+        limit = 1000
+        while True:
+            res = client.table("capex_realization").select("capex_id, nilai_realisasi, status").eq("tahun", tahun).range(offset, offset + limit - 1).execute()
+            real_data.extend(res.data)
+            if len(res.data) < limit:
+                break
+            offset += limit
 
     real_by_capex: dict[str, dict] = {}
     for r in real_data:
         cid = r["capex_id"]
         if cid not in real_by_capex:
             real_by_capex[cid] = {"total_realisasi": 0, "statuses": set()}
-        real_by_capex[cid]["total_realisasi"] += r["nilai_realisasi"]
+        real_by_capex[cid]["total_realisasi"] += (r.get("nilai_realisasi") or 0)
         if r.get("status"):
             real_by_capex[cid]["statuses"].add(r["status"])
 
     rows = []
-    for m in master.data:
+    for m in master_data:
         cid = str(m["id"])
         realisasi = real_by_capex.get(cid, {}).get("total_realisasi", 0)
         statuses = list(real_by_capex.get(cid, {}).get("statuses", set()))
@@ -148,20 +187,26 @@ def get_capex_progress_table(tahun: int, is_carryover: bool = False) -> list[dic
 
     return rows
 
-def get_summary_table_ytd(tahun: int, bulan: int, is_carryover: bool = False) -> list[dict]:
-    client = get_supabase_admin()
+def get_summary_table_ytd(tahun: int, bulan: int, is_carryover: bool = False, preloaded_master=None, preloaded_realization=None) -> list[dict]:
+    if preloaded_master is not None:
+        master_data = [m for m in preloaded_master if bool(m.get("is_carryover")) == is_carryover]
+    else:
+        client = get_supabase_admin()
+        master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
+        master_data = master.data
+        
+    master_ids = [str(r["id"]) for r in master_data]
     
-    # 1. Ambil data master
-    master = client.table("capex_master").select("id, kode, daftar_capex, kategori, anggaran_rkap, anggaran_perubahan").eq("tahun", tahun).eq("is_carryover", is_carryover).execute()
-    master_ids = [str(r["id"]) for r in master.data]
-    
-    # 2. Ambil data realisasi HANYA untuk bulan <= bulan yang dipilih
-    real = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, nilai_bast, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
-
+    if preloaded_realization is not None:
+        real_data = [r for r in preloaded_realization if (r.get("bulan") or 0) <= bulan]
+    else:
+        client = get_supabase_admin()
+        real_res = client.table("capex_realization").select("capex_id, nilai_rkap, nilai_realisasi, nilai_bast, status, bulan").eq("tahun", tahun).lte("bulan", bulan).execute()
+        real_data = real_res.data
     
     # Agregasi data YTD per capex_id
     ytd_data = {}
-    for r in real.data:
+    for r in real_data:
         cid = r["capex_id"]
         if cid not in ytd_data:
             ytd_data[cid] = {
@@ -186,7 +231,7 @@ def get_summary_table_ytd(tahun: int, bulan: int, is_carryover: bool = False) ->
             
     # Susun per Kategori
     kategori_map = {}
-    for m in master.data:
+    for m in master_data:
         kat = m.get("kategori") or "Lainnya"
         main_kat = m.get("kode") or "INVESTASI RUTIN"
         cid = str(m["id"])

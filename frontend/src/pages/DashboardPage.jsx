@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getDashboardSummary, getMonthlyChart, getProgressTable, getDashboardSummaryYtd, getDashboardSummaryCarryoverYtd, exportDashboardSummaryYtd, exportDashboardSummaryCarryoverYtd, exportRKAPVsRealisasiExcel } from '../api/capex'
+import { getDashboardAll, getDashboardSummaryYtd, getDashboardSummaryCarryoverYtd, exportDashboardSummaryYtd, exportDashboardSummaryCarryoverYtd, exportRKAPVsRealisasiExcel } from '../api/capex'
 import { useAuthStore } from '../store/authStore'
 import SummaryCard from '../components/ui/SummaryCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
@@ -69,18 +69,13 @@ export default function DashboardPage({ tahun }) {
   const fetchDashboard = useCallback(async () => {
     setLoading(true)
     try {
-      const [sumRes, monRes, progRes, ytdRes, carryoverYtdRes] = await Promise.all([
-        getDashboardSummary(tahun),
-        getMonthlyChart(tahun),
-        getProgressTable(tahun),
-        getDashboardSummaryYtd(tahun, ytdBulan),
-        getDashboardSummaryCarryoverYtd(tahun, ytdCarryoverBulan)
-      ])
-      setSummary(sumRes.data)
-      setMonthly(monRes.data)
-      setProgress(progRes.data)
-      setYtdData(ytdRes.data)
-      setYtdCarryoverData(carryoverYtdRes.data)
+      const res = await getDashboardAll(tahun, ytdBulan, ytdCarryoverBulan)
+      const data = res.data
+      setSummary(data.summary)
+      setMonthly(data.monthly)
+      setProgress(data.progress)
+      setYtdData(data.ytd)
+      setYtdCarryoverData(data.carryoverYtd)
     } catch (e) {
       console.error(e)
     } finally {

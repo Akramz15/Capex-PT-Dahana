@@ -6,9 +6,28 @@ from ..services.dashboard import (
     get_monthly_chart_data,
     get_capex_progress_table,
     get_summary_table_ytd,
+    fetch_all_dashboard_data,
 )
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+
+
+@router.get("/all")
+def dashboard_all(
+    tahun: int = Query(2026, ge=2020, le=2099),
+    ytd_bulan: int = Query(12, ge=1, le=12),
+    ytd_carryover_bulan: int = Query(12, ge=1, le=12),
+    _user: dict = Depends(get_current_user),
+):
+    master_data, real_data = fetch_all_dashboard_data(tahun)
+    
+    return {
+        "summary": get_dashboard_summary(tahun, is_carryover=False, preloaded_master=master_data, preloaded_realization=real_data),
+        "monthly": get_monthly_chart_data(tahun, is_carryover=False, preloaded_master=master_data, preloaded_realization=real_data),
+        "progress": get_capex_progress_table(tahun, is_carryover=False, preloaded_master=master_data, preloaded_realization=real_data),
+        "ytd": get_summary_table_ytd(tahun, ytd_bulan, is_carryover=False, preloaded_master=master_data, preloaded_realization=real_data),
+        "carryoverYtd": get_summary_table_ytd(tahun, ytd_carryover_bulan, is_carryover=True, preloaded_master=master_data, preloaded_realization=real_data),
+    }
 
 
 @router.get("/summary")
