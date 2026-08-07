@@ -77,7 +77,8 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
     const opts = {};
     filterOptions.forEach(fo => {
       const uniqueVals = new Set();
-      data.forEach(row => {
+      const safeData = Array.isArray(data) ? data : [];
+      safeData.forEach(row => {
         const val = row[fo.key];
         if (val) uniqueVals.add(String(val));
       });
@@ -87,7 +88,8 @@ function ComplexDataTable({ columns, data, onEdit, onDelete, onCustomAction, emp
   }, [data, filterOptions]);
 
   // Search and smart filtering
-  const filteredData = data.filter((row) => {
+  const safeData = Array.isArray(data) ? data : [];
+  const filteredData = safeData.filter((row) => {
     let matchesSearch = true;
     if (searchTerm && searchKeys.length > 0) {
       const term = searchTerm.toLowerCase();

@@ -14,6 +14,10 @@ import LKUPage         from './pages/LKUPage'
 import UsersPage       from './pages/UsersPage'
 import RiwayatPengalihanPage from './pages/RiwayatPengalihanPage'
 import CarryOverPage from './pages/CarryOverPage'
+import AssetReportPage from './pages/AssetReportPage'
+import AssetDataPage from './pages/AssetDataPage'
+import AssetDashboardPage from './pages/AssetDashboardPage'
+import AssetNumberPage from './pages/AssetNumberPage'
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -47,6 +51,10 @@ function AppRoutes() {
                   <Route path="/aset"       element={<AssetsPage />} />
                   <Route path="/carry-over" element={<CarryOverPage tahun={tahun} />} />
                   <Route path="/users"      element={<AdminRoute><UsersPage /></AdminRoute>} />
+                  <Route path="/master-aset/dashboard" element={<AssetDashboardPage tahun={tahun} />} />
+                  <Route path="/master-aset/nomor" element={<AssetNumberPage />} />
+                  <Route path="/master-aset/laporan" element={<AssetReportPage />} />
+                  <Route path="/master-aset/data" element={<AssetDataPage />} />
                   <Route path="*"           element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               )}

@@ -19,7 +19,16 @@ const NAV_ITEMS = [
   { to: '/realisasi',   icon: <TrendingUp size={18} />, label: 'Realisasi' },
   { to: '/carry-over',  icon: <Archive size={18} />, label: 'Carry Over' },
   { to: '/timeline',    icon: <Calendar size={18} />, label: 'Timeline' },
-  { to: '/aset',        icon: <Factory size={18} />, label: 'Data Aset' },
+  { 
+    to: '/master-aset/dashboard',        
+    icon: <Factory size={18} />, 
+    label: 'Asset (Dashboard)',
+    subItems: [
+      { to: '/master-aset/nomor', label: 'Nomor Aset', icon: <ClipboardList size={16} /> },
+      { to: '/master-aset/laporan', label: 'Laporan Aktiva Tetap', icon: <BarChart2 size={16} /> },
+      { to: '/aset', label: 'Data Aset', icon: <Archive size={16} /> }
+    ]
+  },
   { to: '/users',       icon: <Users size={18} />, label: 'Manajemen User', adminOnly: true },
 ]
 
@@ -56,7 +65,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
       <nav className="sidebar-nav">
         <div className="sidebar-section-label">Menu Utama</div>
         {filteredNavItems.map(({ to, icon, label, subItems }) => {
-          const isParentActive = location.pathname.startsWith(to)
+          const isParentActive = location.pathname.startsWith(to) || subItems?.some(sub => location.pathname.startsWith(sub.to))
           return (
             <div key={to} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2px' }}>
               <NavLink
