@@ -1,9 +1,15 @@
 const PAGE_META = {
   '/dashboard':  { title: 'Dashboard',      breadcrumb: 'Ringkasan & Grafik' },
   '/rkap':       { title: 'RKAP Master',    breadcrumb: 'Daftar Investasi Capex' },
+  '/rkap/riwayat': { title: 'Riwayat Pengalihan', breadcrumb: 'RKAP Master' },
   '/realisasi':  { title: 'Realisasi',      breadcrumb: 'Progress Realisasi Bulanan' },
+  '/carry-over': { title: 'Carry Over',     breadcrumb: 'Carry Over Investasi' },
   '/timeline':   { title: 'Timeline',       breadcrumb: 'Jadwal Kajian Investasi' },
-  '/aset':       { title: 'Data Aset',      breadcrumb: 'Laporan Aktiva Tetap' },
+  '/master-aset/dashboard': { title: 'Asset (Dashboard)', breadcrumb: 'Dashboard Aset' },
+  '/master-aset/nomor': { title: 'Nomor Aset', breadcrumb: 'Permintaan Nomor Aset' },
+  '/master-aset/laporan': { title: 'Laporan Aktiva Tetap', breadcrumb: 'Aktiva Tetap PT Dahana' },
+  '/aset':       { title: 'Data Aset',      breadcrumb: 'Tabel Keseluruhan Aset' },
+  '/users':      { title: 'Manajemen User', breadcrumb: 'Pengaturan Hak Akses' },
 }
 
 export default function Header({ currentPath, tahun, onTahunChange }) {
