@@ -161,20 +161,8 @@ export default function AssetReportPage() {
     }
   }
 
-  const actionCol = {
-    header: 'Aksi',
-    stickyRight: '0px',
-    width: '100px',
-    render: (row) => (
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-        <button onClick={() => handleEdit(row)} className="btn-icon text-blue" title="Edit"><Pencil size={16}/></button>
-        <button onClick={() => handleDelete(row)} className="btn-icon text-red" title="Hapus"><Trash2 size={16}/></button>
-      </div>
-    )
-  }
-
   const isAdmin = user?.role === 'admin'
-  const finalCols = isAdmin ? [...COLUMNS, actionCol] : COLUMNS
+
 
   const tableData = useMemo(() => {
     return data.filter(d => {
@@ -224,8 +212,10 @@ export default function AssetReportPage() {
 
       <div className="card">
         <ComplexDataTable 
-          columns={finalCols} 
+          columns={COLUMNS} 
           data={tableData} 
+          onEdit={isAdmin ? handleEdit : undefined}
+          onDelete={isAdmin ? handleDelete : undefined}
           searchPlaceholder="Cari deskripsi atau nomor aset..." 
           searchKeys={['asset_number', 'asset_description', 'lokasi']}
           filterOptions={[
