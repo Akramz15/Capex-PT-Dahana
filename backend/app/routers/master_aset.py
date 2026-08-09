@@ -24,8 +24,17 @@ router = APIRouter(prefix="/master-aset", tags=["Master Aset"])
 @router.get("/nomor", response_model=list[AsetNomorResponse])
 def get_aset_nomor(_user: dict = Depends(get_current_user)):
     client = get_supabase_admin()
-    result = client.table("aset_nomor").select("*").order("created_at", desc=False).execute()
-    return result.data
+    all_data = []
+    chunk_size = 1000
+    start = 0
+    while True:
+        result = client.table("aset_nomor").select("*").order("created_at", desc=False).range(start, start + chunk_size - 1).execute()
+        data = result.data
+        if not data: break
+        all_data.extend(data)
+        if len(data) < chunk_size: break
+        start += chunk_size
+    return all_data
 
 @router.post("/nomor", response_model=AsetNomorResponse)
 def create_aset_nomor(payload: AsetNomorCreate, _admin: dict = Depends(require_admin)):
@@ -58,8 +67,17 @@ def delete_aset_nomor(id: UUID, _admin: dict = Depends(require_admin)):
 @router.get("/laporan", response_model=list[AsetLaporanResponse])
 def get_aset_laporan(_user: dict = Depends(get_current_user)):
     client = get_supabase_admin()
-    result = client.table("aset_laporan_aktiva").select("*").order("created_at", desc=False).execute()
-    return result.data
+    all_data = []
+    chunk_size = 1000
+    start = 0
+    while True:
+        result = client.table("aset_laporan_aktiva").select("*").order("created_at", desc=False).range(start, start + chunk_size - 1).execute()
+        data = result.data
+        if not data: break
+        all_data.extend(data)
+        if len(data) < chunk_size: break
+        start += chunk_size
+    return all_data
 
 @router.post("/laporan", response_model=AsetLaporanResponse)
 def create_aset_laporan(payload: AsetLaporanCreate, _admin: dict = Depends(require_admin)):
@@ -94,8 +112,17 @@ def delete_aset_laporan(id: UUID, _admin: dict = Depends(require_admin)):
 @router.get("/data", response_model=list[AsetDataResponse])
 def get_aset_data(_user: dict = Depends(get_current_user)):
     client = get_supabase_admin()
-    result = client.table("aset_data").select("*").order("created_at", desc=False).execute()
-    return result.data
+    all_data = []
+    chunk_size = 1000
+    start = 0
+    while True:
+        result = client.table("aset_data").select("*").order("created_at", desc=False).range(start, start + chunk_size - 1).execute()
+        data = result.data
+        if not data: break
+        all_data.extend(data)
+        if len(data) < chunk_size: break
+        start += chunk_size
+    return all_data
 
 @router.post("/data", response_model=AsetDataResponse)
 def create_aset_data(payload: AsetDataCreate, _admin: dict = Depends(require_admin)):

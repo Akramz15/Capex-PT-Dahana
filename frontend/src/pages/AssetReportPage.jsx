@@ -22,7 +22,7 @@ const COLUMNS = [
   { header: 'Deskripsi', accessor: 'deskripsi', sticky: true, stickyLeft: '59px', width: '200px' },
   { header: 'Asset Number', accessor: 'asset_number' },
   { header: 'Sub Number', accessor: 'sub_number' },
-  { header: 'Capitalized On', render: (r) => fmtShort(r.capitalized_on) },
+  { header: 'Capitalized On', render: (r) => r.capitalized_on ? r.capitalized_on.split('T')[0] : '—' },
   { header: 'Asset Description', accessor: 'asset_description' },
   { header: 'Acquis.val.', render: (r) => <span className="rupiah">{fmtRupiah(r.acquis_val)}</span> },
   { header: 'Accum.dep.', render: (r) => <span className="rupiah">{fmtRupiah(r.accum_dep)}</span> },
