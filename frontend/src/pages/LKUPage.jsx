@@ -130,6 +130,10 @@ export default function LKUPage({ tahun }) {
             onEdit={isAdmin ? openEdit : undefined}
             onDelete={isAdmin ? handleDelete : undefined}
             searchKeys={['departemen', 'kategori_investasi']}
+            filterOptions={[
+              { key: 'departemen', label: 'Departemen' },
+              { key: 'kategori_investasi', label: 'Kategori Investasi' }
+            ]}
           />
         )}
       </div>

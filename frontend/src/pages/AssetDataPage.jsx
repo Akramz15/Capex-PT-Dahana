@@ -136,7 +136,15 @@ export default function AssetDataPage() {
       </div>
 
       <div className="card">
-        <ComplexDataTable columns={finalCols} data={data} searchPlaceholder="Cari deskripsi atau nomor aset..." />
+        <ComplexDataTable 
+          columns={finalCols} 
+          data={data} 
+          searchPlaceholder="Cari deskripsi atau nomor aset..." 
+          filterOptions={[
+            { key: 'location_code', label: 'Kode Lokasi' },
+            { key: 'room', label: 'Room' }
+          ]}
+        />
       </div>
 
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? 'Edit Data Aset' : 'Tambah Data Aset'}>

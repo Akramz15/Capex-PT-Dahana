@@ -204,7 +204,16 @@ export default function AssetNumberPage() {
       </div>
 
       <div className="card">
-        <ComplexDataTable columns={finalCols} data={data} searchPlaceholder="Cari nama atau nomor aset..." />
+        <ComplexDataTable 
+          columns={finalCols} 
+          data={data} 
+          searchPlaceholder="Cari nama atau nomor aset..." 
+          filterOptions={[
+            { key: 'kategori', label: 'Kategori' },
+            { key: 'lokasi', label: 'Lokasi' },
+            { key: 'room', label: 'Room' }
+          ]}
+        />
       </div>
 
       {modalOpen && (

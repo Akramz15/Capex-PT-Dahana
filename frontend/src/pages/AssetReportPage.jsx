@@ -210,7 +210,15 @@ export default function AssetReportPage() {
       </div>
 
       <div className="card">
-        <ComplexDataTable columns={finalCols} data={data} searchPlaceholder="Cari deskripsi atau nomor aset..." />
+        <ComplexDataTable 
+          columns={finalCols} 
+          data={data} 
+          searchPlaceholder="Cari deskripsi atau nomor aset..." 
+          filterOptions={[
+            { key: 'lokasi', label: 'Lokasi' },
+            { key: 'room', label: 'Room' }
+          ]}
+        />
       </div>
 
       {modalOpen && (

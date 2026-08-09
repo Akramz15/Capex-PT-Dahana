@@ -406,6 +406,7 @@ export default function RKAPMasterPage({ tahun }) {
             onDelete={isAdmin ? handleDelete : undefined}
             searchKeys={['kode', 'daftar_capex', 'pic', 'kategori', 'status']}
             filterOptions={[
+              { key: 'tahun', label: 'Tahun' },
               { key: 'kategori', label: 'Kategori' },
               { key: 'status', label: 'Status' },
               { key: 'pic', label: 'PIC' }
