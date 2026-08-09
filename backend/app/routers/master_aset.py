@@ -394,13 +394,83 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
 @router.get("/laporan/export")
 def export_aset_laporan(_user: dict = Depends(get_current_user)):
     client = get_supabase_admin()
-    res = client.table("aset_laporan_aktiva").select("*").execute()
-    df = pd.DataFrame(res.data)
-    if "id" in df.columns: df.drop(columns=["id", "created_at", "updated_at"], inplace=True)
+    
+    all_data = []
+    chunk_size = 1000
+    start = 0
+    while True:
+        result = client.table("aset_laporan_aktiva").select("*").order("created_at", desc=False).range(start, start + chunk_size - 1).execute()
+        data = result.data
+        if not data: break
+        all_data.extend(data)
+        if len(data) < chunk_size: break
+        start += chunk_size
+        
+    df = pd.DataFrame(all_data)
+    
+    if not df.empty:
+        columns_mapping = {
+            'deskripsi': 'Deskripsi',
+            'asset_number': 'Asset',
+            'sub_number': 'Sub number',
+            'capitalized_on': 'Capitalized on',
+            'asset_description': 'Asset description',
+            'acquis_val': 'Acquis.val.',
+            'accum_dep': 'Accum.dep.',
+            'book_val': 'Book val.',
+            'currency': 'Currency',
+            'useful_life': 'Useful',
+            'location_code': 'Location',
+            'lokasi': 'Lokasi',
+            'room': 'Room'
+        }
+        
+        available_cols = [c for c in columns_mapping.keys() if c in df.columns]
+        df = df[available_cols].rename(columns=columns_mapping)
+        df.insert(0, 'No', range(1, len(df) + 1))
+        
+        if 'Capitalized on' in df.columns:
+            df['Capitalized on'] = pd.to_datetime(df['Capitalized on'], errors='coerce').dt.strftime('%d/%m/%y').fillna('')
     
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Laporan Aktiva Tetap')
+        worksheet = writer.sheets['Laporan Aktiva Tetap']
+        
+        if not df.empty:
+            worksheet.auto_filter.ref = worksheet.dimensions
+            
+        from openpyxl.styles import PatternFill, Border, Side, Alignment
+        
+        header_fill = PatternFill(start_color="A6A6A6", end_color="A6A6A6", fill_type="solid")
+        center_align = Alignment(horizontal="center", vertical="center")
+        left_align = Alignment(horizontal="left", vertical="center")
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+        
+        col_widths = {
+            'A': 5,  'B': 15, 'C': 15, 'D': 12, 'E': 15, 
+            'F': 45, 'G': 18, 'H': 18, 'I': 18, 'J': 10, 
+            'K': 10, 'L': 12, 'M': 20, 'N': 15
+        }
+        for col_letter, width in col_widths.items():
+            worksheet.column_dimensions[col_letter].width = width
+            
+        for cell in worksheet[1]:
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+            
+        for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column), start=2):
+            for col_idx, cell in enumerate(row):
+                cell.border = thin_border
+                
+                if col_idx in [0, 3, 4, 9, 10, 11]: 
+                    cell.alignment = center_align
+                elif col_idx in [6, 7, 8]: 
+                    cell.number_format = '#,##0'
+                else:
+                    cell.alignment = left_align
+
     output.seek(0)
     
     headers = {
