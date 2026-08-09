@@ -46,6 +46,8 @@ export default function AssetReportPage() {
   const [submitting, setSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [startYear, setStartYear] = useState('')
+  const [endYear, setEndYear] = useState('')
   const fileInputRef = useRef(null)
 
   const fetchData = useCallback(async () => {
@@ -176,6 +178,16 @@ export default function AssetReportPage() {
 
   if (loading) return <LoadingSpinner fullscreen />
 
+  const tableData = useMemo(() => {
+    return data.filter(d => {
+      let valid = true
+      const year = d.capitalized_on ? d.capitalized_on.substring(0, 4) : ''
+      if (startYear && year && year < startYear) valid = false
+      if (endYear && year && year > endYear) valid = false
+      return valid
+    })
+  }, [data, startYear, endYear])
+
   return (
     <div className="page-container fade-in">
       <div className="page-header">
@@ -213,12 +225,37 @@ export default function AssetReportPage() {
       <div className="card">
         <ComplexDataTable 
           columns={finalCols} 
-          data={data} 
+          data={tableData} 
           searchPlaceholder="Cari deskripsi atau nomor aset..." 
+          searchKeys={['asset_number', 'asset_description', 'lokasi']}
           filterOptions={[
             { key: 'lokasi', label: 'Lokasi' },
             { key: 'room', label: 'Room' }
           ]}
+          customToolbarContent={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--clr-text-muted)', fontWeight: 500, fontSize: '13.5px', whiteSpace: 'nowrap' }}>
+                <Filter size={16} /> Lintas Tahun:
+              </div>
+              <input 
+                type="number" 
+                className="form-input" 
+                style={{ width: '100px', padding: '6px 12px' }}
+                placeholder="Mulai" 
+                value={startYear} 
+                onChange={(e) => setStartYear(e.target.value)}
+              />
+              <span style={{ color: 'var(--clr-text-muted)' }}>-</span>
+              <input 
+                type="number" 
+                className="form-input" 
+                style={{ width: '100px', padding: '6px 12px' }}
+                placeholder="Akhir" 
+                value={endYear} 
+                onChange={(e) => setEndYear(e.target.value)}
+              />
+            </div>
+          }
         />
       </div>
 

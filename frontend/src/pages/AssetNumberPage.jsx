@@ -46,6 +46,8 @@ export default function AssetNumberPage() {
   const [submitting, setSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [startYear, setStartYear] = useState('')
+  const [endYear, setEndYear] = useState('')
   const fileInputRef = useRef(null)
 
   const fetchData = useCallback(async () => {
@@ -170,11 +172,21 @@ export default function AssetNumberPage() {
 
   if (loading) return <LoadingSpinner fullscreen />
 
+  const tableData = useMemo(() => {
+    return data.filter(d => {
+      let valid = true
+      if (startYear && d.tahun && d.tahun < startYear) valid = false
+      if (endYear && d.tahun && d.tahun > endYear) valid = false
+      return valid
+    })
+  }, [data, startYear, endYear])
+
   return (
     <div className="page-container fade-in">
       <div className="page-header">
-        <div className="header-content">
-          <h1 className="page-title">Daftar Permintaan Nomor Aset</h1>
+        <div className="page-header-text">
+          <h2 className="page-title">Daftar Permintaan Nomor Aset</h2>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Daftar lengkap permintaan nomor aset PT Dahana.</p>
           <LastUpdatedInfo moduleName="Permintaan Nomor Aset" />
         </div>
         <div className="header-actions">
@@ -206,13 +218,38 @@ export default function AssetNumberPage() {
       <div className="card">
         <ComplexDataTable 
           columns={finalCols} 
-          data={data} 
+          data={tableData} 
           searchPlaceholder="Cari nama atau nomor aset..." 
+          searchKeys={['nomor_aset', 'nama_aset', 'kategori', 'vendor']}
           filterOptions={[
             { key: 'kategori', label: 'Kategori' },
             { key: 'lokasi', label: 'Lokasi' },
             { key: 'room', label: 'Room' }
           ]}
+          customToolbarContent={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--clr-text-muted)', fontWeight: 500, fontSize: '13.5px', whiteSpace: 'nowrap' }}>
+                <Filter size={16} /> Lintas Tahun:
+              </div>
+              <input 
+                type="number" 
+                className="form-input" 
+                style={{ width: '100px', padding: '6px 12px' }}
+                placeholder="Mulai" 
+                value={startYear} 
+                onChange={(e) => setStartYear(e.target.value)}
+              />
+              <span style={{ color: 'var(--clr-text-muted)' }}>-</span>
+              <input 
+                type="number" 
+                className="form-input" 
+                style={{ width: '100px', padding: '6px 12px' }}
+                placeholder="Akhir" 
+                value={endYear} 
+                onChange={(e) => setEndYear(e.target.value)}
+              />
+            </div>
+          }
         />
       </div>
 
