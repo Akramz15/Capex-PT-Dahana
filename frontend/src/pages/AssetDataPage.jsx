@@ -120,8 +120,6 @@ export default function AssetDataPage() {
   const isAdmin = user?.role === 'admin'
   const finalCols = isAdmin ? [...COLUMNS, actionCol] : COLUMNS
 
-  if (loading) return <LoadingSpinner fullscreen />
-
   const tableData = useMemo(() => {
     return data.filter(d => {
       let valid = true
@@ -131,6 +129,8 @@ export default function AssetDataPage() {
       return valid
     })
   }, [data, startYear, endYear])
+
+  if (loading) return <LoadingSpinner fullscreen />
 
   return (
     <div className="page-container fade-in">
