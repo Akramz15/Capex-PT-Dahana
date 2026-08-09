@@ -1,15 +1,15 @@
 const PAGE_META = {
-  '/dashboard':  { title: 'Dashboard',      breadcrumb: 'Ringkasan & Grafik' },
-  '/rkap':       { title: 'RKAP Master',    breadcrumb: 'Daftar Investasi Capex' },
-  '/rkap/riwayat': { title: 'Riwayat Pengalihan', breadcrumb: 'RKAP Master' },
-  '/realisasi':  { title: 'Realisasi',      breadcrumb: 'Progress Realisasi Bulanan' },
-  '/carry-over': { title: 'Carry Over',     breadcrumb: 'Carry Over Investasi' },
-  '/timeline':   { title: 'Timeline',       breadcrumb: 'Jadwal Kajian Investasi' },
-  '/master-aset/dashboard': { title: 'Asset (Dashboard)', breadcrumb: 'Dashboard Aset' },
-  '/master-aset/nomor': { title: 'Nomor Aset', breadcrumb: 'Permintaan Nomor Aset' },
-  '/master-aset/laporan': { title: 'Laporan Aktiva Tetap', breadcrumb: 'Aktiva Tetap PT Dahana' },
-  '/aset':       { title: 'Data Aset',      breadcrumb: 'Tabel Keseluruhan Aset' },
-  '/users':      { title: 'Manajemen User', breadcrumb: 'Pengaturan Hak Akses' },
+  '/dashboard':  { title: 'Dashboard',      breadcrumb: 'Dashboard' },
+  '/rkap':       { title: 'RKAP Master',    breadcrumb: 'RKAP Master' },
+  '/rkap/riwayat': { title: 'Riwayat Pengalihan', breadcrumb: 'RKAP Master › Riwayat Pengalihan' },
+  '/realisasi':  { title: 'Realisasi',      breadcrumb: 'Realisasi' },
+  '/carry-over': { title: 'Carry Over',     breadcrumb: 'Carry Over' },
+  '/timeline':   { title: 'Timeline',       breadcrumb: 'Timeline' },
+  '/master-aset/dashboard': { title: 'Asset (Dashboard)', breadcrumb: 'Asset (Dashboard)' },
+  '/master-aset/nomor': { title: 'Nomor Aset', breadcrumb: 'Asset (Dashboard) › Nomor Aset' },
+  '/master-aset/laporan': { title: 'Laporan Aktiva Tetap', breadcrumb: 'Asset (Dashboard) › Laporan Aktiva Tetap' },
+  '/aset':       { title: 'Data Aset',      breadcrumb: 'Asset (Dashboard) › Data Aset' },
+  '/users':      { title: 'Manajemen User', breadcrumb: 'Manajemen User' },
 }
 
 export default function Header({ currentPath, tahun, onTahunChange }) {
