@@ -19,8 +19,8 @@ const EMPTY_FORM = {
 }
 
 const COLUMNS = [
-  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '50px' },
-  { header: 'Nomor Aset', accessor: 'nomor_aset', sticky: true, stickyLeft: '49px', width: '120px' },
+  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '65px' },
+  { header: 'Nomor Aset', accessor: 'nomor_aset', sticky: true, stickyLeft: '64px', width: '160px' },
   { header: 'Sub#', accessor: 'sub_nomor' },
   { header: 'Kategori', accessor: 'kategori' },
   { header: 'Nama Aset', accessor: 'nama_aset' },
