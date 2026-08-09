@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { fmtRupiah, fmtShort } from '../utils'
-import { Pencil, Trash2, Plus, Upload, Download } from 'lucide-react'
+import { Pencil, Trash2, Plus, Upload, Download, Filter } from 'lucide-react'
 import { useRef } from 'react'
 
 const EMPTY_FORM = {

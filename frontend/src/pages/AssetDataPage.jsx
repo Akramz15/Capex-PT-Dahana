@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import CurrencyInput from '../components/ui/CurrencyInput'
 import LastUpdatedInfo from '../components/ui/LastUpdatedInfo'
 import { fmtRupiah, fmtShort } from '../utils'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, Filter } from 'lucide-react'
 
 const EMPTY_FORM = {
   asset_number: '', sub_number: '', capitalized_on: '',
