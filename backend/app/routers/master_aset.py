@@ -140,7 +140,7 @@ def upload_aset_nomor(file: UploadFile = File(...), _admin: dict = Depends(requi
         df_temp = pd.read_excel(excel_file, sheet_name=sheet_name, header=None, nrows=20)
         header_row = 0
         for i, row in df_temp.iterrows():
-            if any('nomor aset' in str(x).lower() or 'nama aset' in str(x).lower() for x in row.values):
+            if any(str(x).strip().lower() == 'nomor aset' or str(x).strip().lower() == 'nama aset' for x in row.values):
                 header_row = i
                 break
                 
@@ -158,14 +158,29 @@ def upload_aset_nomor(file: UploadFile = File(...), _admin: dict = Depends(requi
                         return val if pd.notna(val) else None
                 return None
 
+            nama = get_val(["Nama Aset", "nama_aset", "Deskripsi"])
+            nomor = get_val(["Nomor Aset", "nomor_aset"])
+            kat = get_val(["Kategori", "kategori"])
+            
+            # Abaikan baris yang pada dasarnya kosong
+            if not nama and not nomor and not kat:
+                continue
+                
+            def clean_str(val):
+                if pd.isna(val) or val is None: return None
+                s = str(val).strip()
+                if s.endswith('.0'):
+                    s = s[:-2]
+                return s if s != "nan" else None
+
             item = {
-                "nomor_aset": str(get_val(["Nomor Aset", "nomor_aset"])) if get_val(["Nomor Aset", "nomor_aset"]) else None,
-                "sub_nomor": str(get_val(["Sub Nomor", "sub_nomor", "Sub#"])) if get_val(["Sub Nomor", "sub_nomor", "Sub#"]) else None,
-                "nama_aset": str(get_val(["Nama Aset", "nama_aset", "Deskripsi"])) if get_val(["Nama Aset", "nama_aset", "Deskripsi"]) else "Aset Baru",
-                "kategori": str(get_val(["Kategori", "kategori"])) if get_val(["Kategori", "kategori"]) else None,
-                "satuan": str(get_val(["Satuan", "satuan", "Sat"])) if get_val(["Satuan", "satuan", "Sat"]) else None,
-                "lokasi": str(get_val(["Lokasi", "lokasi"])) if get_val(["Lokasi", "lokasi"]) else None,
-                "room": str(get_val(["Room", "room"])) if get_val(["Room", "room"]) else None,
+                "nomor_aset": clean_str(nomor),
+                "sub_nomor": clean_str(get_val(["Sub Nomor", "sub_nomor", "Sub#"])),
+                "nama_aset": clean_str(nama) if clean_str(nama) else "Aset Baru",
+                "kategori": clean_str(kat),
+                "satuan": clean_str(get_val(["Satuan", "satuan", "Sat"])),
+                "lokasi": clean_str(get_val(["Lokasi", "lokasi"])),
+                "room": clean_str(get_val(["Room", "room"])),
                 "tahun": int(get_val(["Tahun", "tahun"])) if get_val(["Tahun", "tahun"]) else 2026,
                 "bulan": int(get_val(["Bulan", "bulan"])) if get_val(["Bulan", "bulan"]) else 1,
                 "user_name": str(get_val(["User Name", "user_name", "User"])) if get_val(["User Name", "user_name", "User"]) else None,
@@ -173,9 +188,7 @@ def upload_aset_nomor(file: UploadFile = File(...), _admin: dict = Depends(requi
                 "nilai": float(get_val(["Nilai", "nilai"])) if get_val(["Nilai", "nilai"]) else 0.0,
                 "keterangan": str(get_val(["Keterangan", "keterangan"])) if get_val(["Keterangan", "keterangan"]) else None,
             }
-            # Only add if nama_aset is present or some important column
-            if item["nama_aset"] and str(item["nama_aset"]).strip().lower() != "nan":
-                insert_data.append(item)
+            insert_data.append(item)
 
         if not insert_data:
             raise HTTPException(status_code=400, detail="Tidak ada data ditemukan")
@@ -222,7 +235,7 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
         df_temp = pd.read_excel(excel_file, sheet_name=sheet_name, header=None, nrows=20)
         header_row = 0
         for i, row in df_temp.iterrows():
-            if any('asset number' in str(x).lower() or 'asset description' in str(x).lower() for x in row.values):
+            if any(str(x).strip().lower() == 'asset number' or str(x).strip().lower() == 'asset description' for x in row.values):
                 header_row = i
                 break
                 
