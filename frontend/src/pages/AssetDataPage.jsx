@@ -122,8 +122,9 @@ export default function AssetDataPage() {
   return (
     <div className="page-container fade-in">
       <div className="page-header">
-        <div className="header-content">
-          <h1 className="page-title">Data Aset</h1>
+        <div className="page-header-text">
+          <h2 className="page-title">Data Aset</h2>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Daftar lengkap Master Data Aset PT Dahana.</p>
           <LastUpdatedInfo moduleName="Data Aset" />
         </div>
         <div className="header-actions">

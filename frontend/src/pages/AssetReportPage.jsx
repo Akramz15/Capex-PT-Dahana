@@ -179,8 +179,9 @@ export default function AssetReportPage() {
   return (
     <div className="page-container fade-in">
       <div className="page-header">
-        <div className="header-content">
-          <h1 className="page-title">Laporan Aktiva Tetap</h1>
+        <div className="page-header-text">
+          <h2 className="page-title">Laporan Aktiva Tetap</h2>
+          <p className="page-desc" style={{ marginBottom: '8px' }}>Laporan Aktiva Tetap PT Dahana dari hasil kapitalisasi investasi.</p>
           <LastUpdatedInfo moduleName="Laporan Aktiva Tetap" />
         </div>
         <div className="header-actions">
