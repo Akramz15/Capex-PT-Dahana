@@ -333,11 +333,11 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
         excel_file = pd.ExcelFile(BytesIO(content))
         sheet_name = 'Sheet1' if 'Sheet1' in excel_file.sheet_names else excel_file.sheet_names[0]
         
-        # Dynamically find the header row by searching for 'Asset Number' or 'Asset Description'
+        # Dynamically find the header row by searching for 'Asset', 'Asset Number' or 'Asset Description'
         df_temp = pd.read_excel(excel_file, sheet_name=sheet_name, header=None, nrows=20)
         header_row = 0
         for i, row in df_temp.iterrows():
-            if any(str(x).strip().lower() == 'asset number' or str(x).strip().lower() == 'asset description' for x in row.values):
+            if any(str(x).strip().lower() in ['asset', 'asset number', 'asset description'] for x in row.values):
                 header_row = i
                 break
                 
@@ -354,22 +354,31 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
                 return None
 
             def get_date(val):
-                if pd.isna(val): return None
+                if pd.isna(val) or val == "": return None
                 if hasattr(val, "date"): return str(val.date())
-                return str(val).split()[0]
+                
+                s = str(val).split()[0]
+                if s == '' or s == '—': return None
+                try:
+                    dt = pd.to_datetime(s, dayfirst=True)
+                    if pd.notna(dt):
+                        return dt.strftime('%Y-%m-%d')
+                except:
+                    pass
+                return s
 
             item = {
                 "deskripsi": str(get_val(["Deskripsi", "deskripsi"])) if get_val(["Deskripsi", "deskripsi"]) else None,
-                "asset_number": str(get_val(["Asset Number", "asset_number"])) if get_val(["Asset Number", "asset_number"]) else None,
-                "sub_number": str(get_val(["Sub Number", "sub_number"])) if get_val(["Sub Number", "sub_number"]) else None,
-                "capitalized_on": get_date(get_val(["Capitalized On", "capitalized_on"])),
-                "asset_description": str(get_val(["Asset Description", "asset_description"])) if get_val(["Asset Description", "asset_description"]) else None,
+                "asset_number": str(get_val(["Asset", "Asset Number", "asset_number"])) if get_val(["Asset", "Asset Number", "asset_number"]) else None,
+                "sub_number": str(get_val(["Sub number", "Sub Number", "sub_number"])) if get_val(["Sub number", "Sub Number", "sub_number"]) else None,
+                "capitalized_on": get_date(get_val(["Capitalized on", "Capitalized On", "capitalized_on"])),
+                "asset_description": str(get_val(["Asset description", "Asset Description", "asset_description"])) if get_val(["Asset description", "Asset Description", "asset_description"]) else None,
                 "acquis_val": float(get_val(["Acquis.val.", "acquis_val"])) if get_val(["Acquis.val.", "acquis_val"]) else 0,
                 "accum_dep": float(get_val(["Accum.dep.", "accum_dep"])) if get_val(["Accum.dep.", "accum_dep"]) else 0,
                 "book_val": float(get_val(["Book val.", "book_val"])) if get_val(["Book val.", "book_val"]) else 0,
                 "currency": str(get_val(["Currency", "currency"])) if get_val(["Currency", "currency"]) else "IDR",
-                "useful_life": str(get_val(["Useful Life", "useful_life"])) if get_val(["Useful Life", "useful_life"]) else None,
-                "location_code": str(get_val(["Location Code", "location_code"])) if get_val(["Location Code", "location_code"]) else None,
+                "useful_life": str(get_val(["Useful", "Useful Life", "useful_life"])) if get_val(["Useful", "Useful Life", "useful_life"]) else None,
+                "location_code": str(get_val(["Location", "Location Code", "location_code"])) if get_val(["Location", "Location Code", "location_code"]) else None,
                 "lokasi": str(get_val(["Lokasi", "lokasi"])) if get_val(["Lokasi", "lokasi"]) else None,
                 "room": str(get_val(["Room", "room"])) if get_val(["Room", "room"]) else None,
             }
