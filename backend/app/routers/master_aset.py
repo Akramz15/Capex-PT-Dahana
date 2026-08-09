@@ -367,20 +367,34 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
                     pass
                 return s
 
+            def clean_str(val):
+                if pd.isna(val) or val is None: return None
+                s = str(val).strip()
+                if s.endswith('.0'):
+                    s = s[:-2]
+                return s if s != "nan" and s != "" else None
+
+            def get_num(val):
+                if pd.isna(val) or val is None or str(val).strip() == "": return 0
+                try:
+                    return float(val)
+                except:
+                    return 0
+
             item = {
-                "deskripsi": str(get_val(["Deskripsi", "deskripsi"])) if get_val(["Deskripsi", "deskripsi"]) else None,
-                "asset_number": str(get_val(["Asset", "Asset Number", "asset_number"])) if get_val(["Asset", "Asset Number", "asset_number"]) else None,
-                "sub_number": str(get_val(["Sub number", "Sub Number", "sub_number"])) if get_val(["Sub number", "Sub Number", "sub_number"]) else None,
+                "deskripsi": clean_str(get_val(["Deskripsi", "deskripsi"])),
+                "asset_number": clean_str(get_val(["Asset", "Asset Number", "asset_number"])),
+                "sub_number": clean_str(get_val(["Sub number", "Sub Number", "sub_number"])),
                 "capitalized_on": get_date(get_val(["Capitalized on", "Capitalized On", "capitalized_on"])),
-                "asset_description": str(get_val(["Asset description", "Asset Description", "asset_description"])) if get_val(["Asset description", "Asset Description", "asset_description"]) else None,
-                "acquis_val": float(get_val(["Acquis.val.", "acquis_val"])) if get_val(["Acquis.val.", "acquis_val"]) else 0,
-                "accum_dep": float(get_val(["Accum.dep.", "accum_dep"])) if get_val(["Accum.dep.", "accum_dep"]) else 0,
-                "book_val": float(get_val(["Book val.", "book_val"])) if get_val(["Book val.", "book_val"]) else 0,
-                "currency": str(get_val(["Currency", "currency"])) if get_val(["Currency", "currency"]) else "IDR",
-                "useful_life": str(get_val(["Useful", "Useful Life", "useful_life"])) if get_val(["Useful", "Useful Life", "useful_life"]) else None,
-                "location_code": str(get_val(["Location", "Location Code", "location_code"])) if get_val(["Location", "Location Code", "location_code"]) else None,
-                "lokasi": str(get_val(["Lokasi", "lokasi"])) if get_val(["Lokasi", "lokasi"]) else None,
-                "room": str(get_val(["Room", "room"])) if get_val(["Room", "room"]) else None,
+                "asset_description": clean_str(get_val(["Asset description", "Asset Description", "asset_description"])),
+                "acquis_val": get_num(get_val(["Acquis.val.", "acquis_val"])),
+                "accum_dep": get_num(get_val(["Accum.dep.", "accum_dep"])),
+                "book_val": get_num(get_val(["Book val.", "book_val"])),
+                "currency": clean_str(get_val(["Currency", "currency"])) or "IDR",
+                "useful_life": clean_str(get_val(["Useful", "Useful Life", "useful_life"])),
+                "location_code": clean_str(get_val(["Location", "Location Code", "location_code"])),
+                "lokasi": clean_str(get_val(["Lokasi", "lokasi"])),
+                "room": clean_str(get_val(["Room", "room"])),
             }
             if item["asset_number"] or item["asset_description"]:
                 insert_data.append(item)
