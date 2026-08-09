@@ -235,13 +235,88 @@ def upload_aset_nomor(file: UploadFile = File(...), _admin: dict = Depends(requi
 @router.get("/nomor/export")
 def export_aset_nomor(_user: dict = Depends(get_current_user)):
     client = get_supabase_admin()
-    res = client.table("aset_nomor").select("*").execute()
-    df = pd.DataFrame(res.data)
-    if "id" in df.columns: df.drop(columns=["id", "created_at", "updated_at"], inplace=True)
+    
+    all_data = []
+    chunk_size = 1000
+    start = 0
+    while True:
+        result = client.table("aset_nomor").select("*").order("created_at", desc=False).range(start, start + chunk_size - 1).execute()
+        data = result.data
+        if not data: break
+        all_data.extend(data)
+        if len(data) < chunk_size: break
+        start += chunk_size
+        
+    df = pd.DataFrame(all_data)
+    
+    if not df.empty:
+        columns_mapping = {
+            'nomor_aset': 'Nomor Aset',
+            'sub_nomor': 'Sub#',
+            'kategori': 'Kategori',
+            'nama_aset': 'Nama Aset',
+            'satuan': 'Sat',
+            'lokasi': 'Lokasi',
+            'nilai': 'Nilai',
+            'room': 'Room',
+            'tahun': 'Tahun',
+            'user_name': 'User',
+            'vendor': 'Vendor',
+            'keterangan': 'Keterangan'
+        }
+        
+        available_cols = [c for c in columns_mapping.keys() if c in df.columns]
+        df = df[available_cols].rename(columns=columns_mapping)
+        df.insert(0, 'No', range(1, len(df) + 1))
     
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Permintaan Nomor Aset')
+        worksheet = writer.sheets['Permintaan Nomor Aset']
+        
+        from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
+        
+        header_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+        header_font = Font(bold=True)
+        center_align = Alignment(horizontal="center", vertical="center")
+        left_align = Alignment(horizontal="left", vertical="center")
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+        
+        green_fill = PatternFill(start_color="C6E0B4", end_color="C6E0B4", fill_type="solid")
+        
+        col_widths = {
+            'A': 5, 'B': 18, 'C': 8, 'D': 25, 'E': 50, 
+            'F': 8, 'G': 15, 'H': 25, 'I': 15, 'J': 8, 
+            'K': 20, 'L': 30, 'M': 15
+        }
+        for col_letter, width in col_widths.items():
+            worksheet.column_dimensions[col_letter].width = width
+            
+        for cell in worksheet[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+            
+        for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column), start=2):
+            is_selesai = False
+            keterangan_cell = row[12] if len(row) > 12 else None
+            if keterangan_cell and keterangan_cell.value and str(keterangan_cell.value).strip().lower() == 'selesai':
+                is_selesai = True
+                
+            for col_idx, cell in enumerate(row):
+                cell.border = thin_border
+                
+                if col_idx in [0, 2, 5, 8, 9]: 
+                    cell.alignment = center_align
+                elif col_idx == 7: 
+                    cell.number_format = '_("Rp"* #,##0_);_("Rp"* \\(#,##0\\);_("Rp"* "-"_);_(@_)'
+                else:
+                    cell.alignment = left_align
+                    
+                if is_selesai:
+                    cell.fill = green_fill
+
     output.seek(0)
     
     headers = {
