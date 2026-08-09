@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getAsetLaporan, createAsetLaporan, updateAsetLaporan, deleteAsetLaporan, uploadAsetLaporan, exportAsetLaporan } from '../api/master_aset'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'

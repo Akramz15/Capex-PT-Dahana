@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getAsetData, createAsetData, updateAsetData, deleteAsetData } from '../api/master_aset'
 import { useAuthStore } from '../store/authStore'
 import ComplexDataTable from '../components/ui/ComplexDataTable'
