@@ -290,8 +290,8 @@ export default function RealizationPage({ tahun }) {
   };
 
   const columns = [
-    { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '60px' },
-    { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true, stickyLeft: '59px', width: '250px' },
+    { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '75px' },
+    { header: 'Daftar Capex', accessor: 'daftar_capex', sticky: true, stickyLeft: '74px', width: '250px' },
     { header: 'Anggaran', children: [
       { header: 'RKAP', render: (r) => <span className="rupiah">{r.anggaran_rkap > 0 ? fmtRupiah(r.anggaran_rkap) : '—'}</span> },
       { header: 'Perubahan', render: (r) => <span className="rupiah">{r.anggaran_perubahan != null ? fmtRupiah(r.anggaran_perubahan) : '—'}</span> }

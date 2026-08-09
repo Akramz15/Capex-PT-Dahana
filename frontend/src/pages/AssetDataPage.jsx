@@ -17,8 +17,8 @@ const EMPTY_FORM = {
 }
 
 const COLUMNS = [
-  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '60px' },
-  { header: 'Asset Number', accessor: 'asset_number', sticky: true, stickyLeft: '59px', width: '150px' },
+  { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '75px' },
+  { header: 'Asset Number', accessor: 'asset_number', sticky: true, stickyLeft: '74px', width: '150px' },
   { header: 'Sub Number', accessor: 'sub_number' },
   { header: 'Capitalized On', render: (r) => r.capitalized_on ? r.capitalized_on.split('T')[0] : '—' },
   { header: 'Asset Description', accessor: 'asset_description' },

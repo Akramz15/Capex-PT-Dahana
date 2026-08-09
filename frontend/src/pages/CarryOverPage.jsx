@@ -321,8 +321,8 @@ export default function CarryOverPage({ tahun }) {
               <table className="data-table" style={{ borderCollapse: 'collapse', minWidth: '1600px', width: '100%' }}>
                 <thead style={{ position: 'sticky', top: 0, zIndex: 10, borderBottom: '2px solid #cbd5e1' }}>
                   <tr style={{ backgroundColor: '#f8fafc', color: '#1e293b' }}>
-                    <th rowSpan={2} style={{ position: 'sticky', left: 0, zIndex: 20, backgroundColor: '#f8fafc', width: '60px', minWidth: '60px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>NO</th>
-                    <th rowSpan={2} style={{ position: 'sticky', left: '60px', zIndex: 20, backgroundColor: '#f8fafc', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>URAIAN</th>
+                    <th rowSpan={2} style={{ position: 'sticky', left: 0, zIndex: 20, backgroundColor: '#f8fafc', width: '75px', minWidth: '75px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>NO</th>
+                    <th rowSpan={2} style={{ position: 'sticky', left: '75px', zIndex: 20, backgroundColor: '#f8fafc', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>URAIAN</th>
                     <th rowSpan={2} style={{ minWidth: '150px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>Carryover N-1</th>
                     <th rowSpan={2} style={{ minWidth: '120px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>User</th>
                     {BULAN_NAMES.map(m => (
@@ -382,8 +382,8 @@ export default function CarryOverPage({ tahun }) {
                       <React.Fragment key={mk}>
                         {/* MAIN KATEGORI HEADER */}
                         <tr style={{ backgroundColor: '#002060', color: '#fff', fontWeight: 'bold' }}>
-                          <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: '#002060', width: '60px', minWidth: '60px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}></td>
-                          <td style={{ position: 'sticky', left: '60px', zIndex: 5, backgroundColor: '#002060', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', color: 'white' }}>{mk.toUpperCase()}</td>
+                          <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: '#002060', width: '75px', minWidth: '75px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}></td>
+                          <td style={{ position: 'sticky', left: '75px', zIndex: 5, backgroundColor: '#002060', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', color: 'white' }}>{mk.toUpperCase()}</td>
                           <td colSpan={isAdmin ? 29 : 28} style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}></td>
                         </tr>
                         
@@ -418,8 +418,8 @@ export default function CarryOverPage({ tahun }) {
                             <React.Fragment key={`${mk}-${kat}`}>
                               {/* SUB KATEGORI HEADER */}
                               <tr style={{ backgroundColor: '#f1f5f9', color: '#334155', fontWeight: 'bold' }}>
-                                <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: '#f1f5f9', width: '60px', minWidth: '60px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '10px 16px' }}></td>
-                                <td style={{ position: 'sticky', left: '60px', zIndex: 5, backgroundColor: '#f1f5f9', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '10px 16px' }}>{kat}</td>
+                                <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: '#f1f5f9', width: '75px', minWidth: '75px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '10px 16px' }}></td>
+                                <td style={{ position: 'sticky', left: '75px', zIndex: 5, backgroundColor: '#f1f5f9', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '10px 16px' }}>{kat}</td>
                                 <td colSpan={isAdmin ? 29 : 28} style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '10px 16px' }}></td>
                               </tr>
                               
@@ -434,8 +434,8 @@ export default function CarryOverPage({ tahun }) {
 
                                 return (
                                   <tr key={row.capex_id} className="table-row">
-                                    <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: 'var(--clr-surface)', width: '60px', minWidth: '60px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center' }}>{idx + 1}</td>
-                                    <td style={{ position: 'sticky', left: '60px', zIndex: 5, backgroundColor: 'var(--clr-surface)', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}>{row.daftar_capex}</td>
+                                    <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: 'var(--clr-surface)', width: '75px', minWidth: '75px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center' }}>{idx + 1}</td>
+                                    <td style={{ position: 'sticky', left: '75px', zIndex: 5, backgroundColor: 'var(--clr-surface)', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}>{row.daftar_capex}</td>
                                     <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right' }}>
                                       {row.anggaran_rkap > 0 ? <span className="rupiah">{fmtRupiah(row.anggaran_rkap)}</span> : '-'}
                                     </td>
@@ -489,8 +489,8 @@ export default function CarryOverPage({ tahun }) {
                               
                               {/* SUB KATEGORI FOOTER */}
                               <tr style={{ backgroundColor: '#fef3c7', fontWeight: 'bold', color: '#92400e' }}>
-                                <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: '#fef3c7', width: '60px', minWidth: '60px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}></td>
-                                <td style={{ position: 'sticky', left: '60px', zIndex: 5, backgroundColor: '#fef3c7', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'left' }}>Jumlah {kat}</td>
+                                <td style={{ position: 'sticky', left: 0, zIndex: 5, backgroundColor: '#fef3c7', width: '75px', minWidth: '75px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px' }}></td>
+                                <td style={{ position: 'sticky', left: '75px', zIndex: 5, backgroundColor: '#fef3c7', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'left' }}>Jumlah {kat}</td>
                                 <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right' }}>
                                   {groupSumCarryover > 0 ? <span className="rupiah">{fmtRupiah(groupSumCarryover)}</span> : '-'}
                                 </td>
@@ -575,8 +575,8 @@ export default function CarryOverPage({ tahun }) {
                    
                    return (
                       <tr style={{ backgroundColor: '#002060', color: 'white', fontWeight: 'bold' }}>
-                        <td style={{ position: 'sticky', left: 0, zIndex: 6, backgroundColor: '#002060', width: '60px', minWidth: '60px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', color: 'white' }}></td>
-                        <td style={{ position: 'sticky', left: '60px', zIndex: 6, backgroundColor: '#002060', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', color: 'white' }}>GRAND TOTAL INVESTASI CARRY OVER</td>
+                        <td style={{ position: 'sticky', left: 0, zIndex: 6, backgroundColor: '#002060', width: '75px', minWidth: '75px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', color: 'white' }}></td>
+                        <td style={{ position: 'sticky', left: '75px', zIndex: 6, backgroundColor: '#002060', width: '350px', minWidth: '350px', boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'center', color: 'white' }}>GRAND TOTAL INVESTASI CARRY OVER</td>
                         <td style={{ boxShadow: 'inset 0 0 0 1px var(--clr-border)', border: 'none', padding: '12px 16px', textAlign: 'right', color: 'white' }}>
                           <span className="rupiah">{fmtRupiah(grandCarryover)}</span>
                         </td>
