@@ -17,6 +17,28 @@ const EmptyChartState = ({ message = "Belum ada data tersedia" }) => (
   </div>
 )
 
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div style={{ backgroundColor: '#fff', padding: '12px 16px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', border: '1px solid rgba(0,0,0,0.05)' }}>
+        <p style={{ margin: '0 0 6px 0', fontWeight: 700, color: '#333', fontSize: '13px', borderBottom: '1px solid #eee', paddingBottom: '6px' }}>
+          {data.name}
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', fontSize: '12px', color: '#555', marginBottom: '4px' }}>
+          <span>Total Aset:</span>
+          <span style={{ fontWeight: 700, color: payload[0].fill }}>{data.value}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', fontSize: '12px', color: '#555' }}>
+          <span>Persentase:</span>
+          <span style={{ fontWeight: 700, color: payload[0].fill }}>{data.percent ? data.percent.toFixed(1) : 0}%</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function AssetDashboardPage({ tahun }) {
   const [data, setData] = useState({ laporan: [], nomor: [] })
   const [loading, setLoading] = useState(true)
@@ -82,11 +104,12 @@ export default function AssetDashboardPage({ tahun }) {
     }
     
     const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
-    let chartLocation = sortedLocations.slice(0, 10)
+    const totalLocationsCount = sortedLocations.reduce((acc, curr) => acc + curr.value, 0)
+    let chartLocation = sortedLocations.slice(0, 10).map(item => ({...item, percent: totalLocationsCount ? (item.value / totalLocationsCount) * 100 : 0}))
     const otherLocations = sortedLocations.slice(10)
     if (otherLocations.length > 0) {
       const otherValue = otherLocations.reduce((acc, curr) => acc + curr.value, 0)
-      chartLocation.push({ name: 'Lain Lain', value: otherValue })
+      chartLocation.push({ name: 'Lain Lain', value: otherValue, percent: totalLocationsCount ? (otherValue / totalLocationsCount) * 100 : 0 })
     }
 
     const chartCategory = Object.values(byCategoryMap).sort((a,b) => b.acquis_val - a.acquis_val)
@@ -331,10 +354,7 @@ export default function AssetDashboardPage({ tahun }) {
                       <Cell key={`cell-${index}`} fill={PREMIUM_COLORS[index % PREMIUM_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    formatter={(val) => `${fmtRupiah(val)}`} 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', fontSize: '12px', fontWeight: 500 }}
-                  />
+                  <Tooltip content={<CustomPieTooltip />} />
                   <Legend 
                     layout="vertical" 
                     align="right" 
