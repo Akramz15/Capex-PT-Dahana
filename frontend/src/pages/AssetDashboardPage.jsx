@@ -60,9 +60,25 @@ export default function AssetDashboardPage({ tahun }) {
     })
 
     const endYear = (tahun && tahun !== 'Semua Tahun') ? Number(tahun) : new Date().getFullYear()
-    const chartYear = Object.values(byYearMap)
-      .filter(a => a.year !== 'Unknown' && Number(a.year) >= 2015 && Number(a.year) <= endYear)
+    
+    // Sort all available years first
+    const allYearsSorted = Object.values(byYearMap)
+      .filter(a => a.year !== 'Unknown')
       .sort((a,b) => a.year - b.year)
+
+    // Calculate cumulative sum for 2015 up to endYear
+    const chartYear = []
+    for (let y = 2015; y <= endYear; y++) {
+       let sumAcquis = 0
+       let sumBook = 0
+       for (const item of allYearsSorted) {
+           if (item.year <= y) {
+               sumAcquis += item.acquis
+               sumBook += item.book
+           }
+       }
+       chartYear.push({ year: y, acquis: sumAcquis, book: sumBook })
+    }
     
     const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
     let chartLocation = sortedLocations.slice(0, 10)
@@ -269,10 +285,10 @@ export default function AssetDashboardPage({ tahun }) {
                   <YAxis tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} width={45} tickFormatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} />
                   <Tooltip formatter={(val) => fmtRupiah(val)} />
                   <Legend verticalAlign="top" align="left" height={36} wrapperStyle={{ paddingLeft: '45px', marginTop: '-10px' }} iconType="circle" />
-                  <Line type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={3} dot={{ r: 5, fill: '#126487', strokeWidth: 0 }}>
+                  <Line type="linear" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={3} dot={{ r: 5, fill: '#126487', strokeWidth: 0 }}>
                     <LabelList dataKey="acquis" position="top" offset={12} formatter={(v) => Number(v) > 0 ? Number((v / 1000000000).toFixed(0)).toLocaleString('id-ID') : ''} style={{ fontSize: '11px', fontWeight: 600, fill: '#333' }} />
                   </Line>
-                  <Line type="monotone" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={3} dot={{ r: 5, fill: '#ec6a28', strokeWidth: 0 }}>
+                  <Line type="linear" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={3} dot={{ r: 5, fill: '#ec6a28', strokeWidth: 0 }}>
                     <LabelList dataKey="book" position="bottom" offset={12} formatter={(v) => Number(v) > 0 ? Number((v / 1000000000).toFixed(0)).toLocaleString('id-ID') : ''} style={{ fontSize: '11px', fontWeight: 600, fill: '#333' }} />
                   </Line>
                 </LineChart>
