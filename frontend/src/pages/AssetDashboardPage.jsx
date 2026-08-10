@@ -35,6 +35,7 @@ export default function AssetDashboardPage({ tahun }) {
     let acquis = 0, accum = 0, book = 0
     const byYearMap = {}
     const byLocationMap = {}
+    const byCategoryMap = {}
 
     const laporanData = Array.isArray(data?.laporan) ? data.laporan : []
     laporanData.forEach(item => {
@@ -51,12 +52,26 @@ export default function AssetDashboardPage({ tahun }) {
       const loc = item.lokasi || 'Unknown'
       if (!byLocationMap[loc]) byLocationMap[loc] = { name: loc, value: 0 }
       byLocationMap[loc].value += 1
+
+      const cat = item.deskripsi || 'Lain-lain'
+      if (!byCategoryMap[cat]) byCategoryMap[cat] = { name: cat, acquis_val: 0, count: 0 }
+      byCategoryMap[cat].acquis_val += item.acquis_val || 0
+      byCategoryMap[cat].count += 1
     })
 
     const chartYear = Object.values(byYearMap).sort((a,b) => (a.year === 'Unknown' ? 1 : a.year - b.year))
-    const chartLocation = Object.values(byLocationMap).sort((a,b) => b.value - a.value).slice(0, 5)
+    
+    const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
+    let chartLocation = sortedLocations.slice(0, 10)
+    const otherLocations = sortedLocations.slice(10)
+    if (otherLocations.length > 0) {
+      const otherValue = otherLocations.reduce((acc, curr) => acc + curr.value, 0)
+      chartLocation.push({ name: 'Lain Lain', value: otherValue })
+    }
 
-    return { acquis, accum, book, chartYear, chartLocation }
+    const chartCategory = Object.values(byCategoryMap).sort((a,b) => b.acquis_val - a.acquis_val)
+
+    return { acquis, accum, book, chartYear, chartLocation, chartCategory }
   }, [data.laporan])
 
   // --- Aggregations for Permintaan Nomor Aset ---
@@ -81,11 +96,11 @@ export default function AssetDashboardPage({ tahun }) {
       userMap[u].value += 1
     })
 
-    const chartKategori = Object.values(catMap)
-    const chartUser = Object.values(userMap).sort((a,b) => b.value - a.value).slice(0, 5)
+    const chartKategori = Object.values(catMap).sort((a,b) => b.value - a.value)
+    const chartUser = Object.values(userMap).sort((a,b) => a.name.localeCompare(b.name))
     
     const peakMonth = [...byMonth].sort((a,b) => b.total - a.total)[0]
-    const topUser = chartUser[0]
+    const topUser = Object.values(userMap).sort((a,b) => b.value - a.value)[0]
 
     return { grandTotal, byMonth, chartKategori, chartUser, peakMonth, topUser }
   }, [data.nomor])
@@ -106,89 +121,109 @@ export default function AssetDashboardPage({ tahun }) {
       </h2>
       <div className="cards-grid" style={{ marginBottom: '24px' }}>
         <SummaryCard 
-          label="Grand Total Permintaan" 
+          label="GRAND TOTAL" 
           value={nomorStats.grandTotal} 
           type="items" 
           isRupiah={false}
+          sub="unit"
         />
         <SummaryCard 
-          label="Jumlah Kategori Aset" 
+          label="JUMLAH KATEGORI" 
           value={nomorStats.chartKategori.length} 
           type="sisa" 
           isRupiah={false}
+          sub="kategori"
         />
         <SummaryCard 
-          label="User Terbanyak" 
+          label="USER TERBANYAK" 
           value={nomorStats.topUser?.name || '-'} 
-          sub={`${nomorStats.topUser?.value || 0} Permintaan`}
+          sub={`(${nomorStats.topUser?.value || 0})`}
           type="realisasi" 
           isRupiah={false}
         />
         <SummaryCard 
-          label="Puncak Bulanan" 
+          label="PUNCAK BULANAN" 
           value={nomorStats.peakMonth?.name || '-'} 
-          sub={`${nomorStats.peakMonth?.total || 0} Permintaan`}
+          sub={`(${nomorStats.peakMonth?.total || 0})`}
           type="anggaran" 
           isRupiah={false}
         />
       </div>
 
-      <div className="charts-grid" style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div className="charts-grid" style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '24px' }}>
         <div className="chart-card">
           <div className="chart-header">
-            <h3 className="chart-title">Realisasi Permintaan per Bulan</h3>
+            <h3 className="chart-title">2. KOMPOSISI KATEGORI ASET</h3>
+          </div>
+          <div className="chart-body" style={{ height: '300px' }}>
+            {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={nomorStats.chartKategori} layout="vertical" margin={{ left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
+                  <Bar dataKey="value" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={15}>
+                    <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <div className="chart-header">
+            <h3 className="chart-title">3. REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
           </div>
           <div className="chart-body" style={{ height: '300px' }}>
             {nomorStats.byMonth.every(m => m.total === 0) ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={nomorStats.byMonth}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis hide />
                   <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="total" name="Jumlah" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="total" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={20}>
+                    <LabelList dataKey="total" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} />
+                  </Bar>
                 </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">Komposisi Kategori Aset</h3>
-          </div>
-          <div className="chart-body" style={{ height: '300px' }}>
-            {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={nomorStats.chartKategori} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} label>
-                    {nomorStats.chartKategori.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
               </ResponsiveContainer>
             )}
           </div>
         </div>
         
-        <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 className="chart-title">Sebaran Berdasarkan User (Top 5)</h3>
+            <h3 className="chart-title">4. SEBARAN BERDASARKAN USER</h3>
           </div>
-          <div className="chart-body" style={{ height: '250px' }}>
+          <div className="chart-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
             {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={nomorStats.chartUser} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={100} />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="value" name="Jumlah" fill="#f59e0b" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 'bold' }}>
+                    <th style={{ textAlign: 'center', padding: '8px 4px' }}>No.</th>
+                    <th style={{ textAlign: 'left', padding: '8px' }}>User</th>
+                    <th style={{ textAlign: 'center', padding: '8px' }}>Jumlah Aset (unit)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nomorStats.chartUser.map((u, idx) => (
+                    <tr key={u.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ textAlign: 'center', padding: '6px 4px' }}>{idx + 1}</td>
+                      <td style={{ padding: '6px 8px', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={u.name}>{u.name}</td>
+                      <td style={{ padding: '6px 8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ flex: 1, height: '10px', backgroundColor: '#e2e8f0', borderRadius: '2px', display: 'flex' }}>
+                            <div style={{ width: `${(u.value / nomorStats.topUser.value) * 100}%`, backgroundColor: idx % 2 === 0 ? '#1d4ed8' : '#f97316', borderRadius: '2px' }} />
+                          </div>
+                          <span style={{ minWidth: '20px', textAlign: 'right', fontWeight: 600 }}>{u.value}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
@@ -215,44 +250,105 @@ export default function AssetDashboardPage({ tahun }) {
         />
       </div>
 
-      <div className="charts-grid">
-        <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 className="chart-title">Perkembangan Nilai Aset per Tahun (Kapitalisasi)</h3>
+            <h3 className="chart-title" style={{ textAlign: 'center' }}>Laporan Aktiva Tetap PT Dahana<br/>2015-{tahun}</h3>
           </div>
           <div className="chart-body" style={{ height: '350px' }}>
             {laporanStats.chartYear.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={laporanStats.chartYear}>
+                <LineChart data={laporanStats.chartYear} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="year" />
-                  <YAxis tickFormatter={(val) => `Rp ${val / 1000000}M`} />
+                  <YAxis hide />
                   <Tooltip formatter={(val) => fmtRupiah(val)} />
-                  <Legend />
-                  <Line type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#3b82f6" strokeWidth={3} />
-                  <Line type="monotone" dataKey="book" name="Nilai Buku" stroke="#10b981" strokeWidth={3} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#1d4ed8" strokeWidth={3} dot={{ r: 4 }}>
+                    <LabelList dataKey="acquis" position="top" formatter={(v) => (v / 1000000000).toFixed(0)} style={{ fontSize: '10px' }} />
+                  </Line>
+                  <Line type="monotone" dataKey="book" name="Nilai Buku" stroke="#f97316" strokeWidth={3} dot={{ r: 4 }}>
+                    <LabelList dataKey="book" position="bottom" formatter={(v) => (v / 1000000000).toFixed(0)} style={{ fontSize: '10px' }} />
+                  </Line>
                 </LineChart>
               </ResponsiveContainer>
             )}
           </div>
         </div>
 
-        <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 className="chart-title">Sebaran Lokasi Aset (Top 5)</h3>
+            <h3 className="chart-title" style={{ textAlign: 'center' }}>LOKASI ASET PT DAHANA {tahun}</h3>
           </div>
-          <div className="chart-body" style={{ height: '300px' }}>
+          <div className="chart-body" style={{ height: '350px' }}>
             {laporanStats.chartLocation.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={laporanStats.chartLocation}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="value" name="Jumlah Aset" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                <PieChart>
+                  <Pie 
+                    data={laporanStats.chartLocation} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    cx="50%" cy="50%" 
+                    outerRadius={110} 
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={true}
+                  >
+                    {laporanStats.chartLocation.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <div className="chart-header">
+            <h3 className="chart-title" style={{ textAlign: 'center' }}>Nilai Perolehan<br/>(Dalam Miliar Rupiah)</h3>
+          </div>
+          <div className="chart-body" style={{ height: '400px' }}>
+            {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 40, top: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(val) => fmtRupiah(val)} cursor={{ fill: '#f1f5f9' }} />
+                  <Bar dataKey="acquis_val" name="Nilai Perolehan" fill="#f97316" barSize={15}>
+                    <LabelList dataKey="acquis_val" position="right" formatter={(v) => (v / 1000000000).toFixed(2).replace('.', ',')} style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}
+            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', marginTop: '12px' }}>
+              Total nilai perolehan : {fmtRupiah(laporanStats.acquis)}
+            </div>
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <div className="chart-header">
+            <h3 className="chart-title" style={{ textAlign: 'center' }}>Jumlah Aset</h3>
+          </div>
+          <div className="chart-body" style={{ height: '400px' }}>
+            {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 40, top: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
+                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
+                  <Bar dataKey="count" name="Jumlah Aset" fill="#1d4ed8" barSize={15}>
+                    <LabelList dataKey="count" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', marginTop: '12px' }}>
+              Total Jumlah Aset : {laporanStats.chartCategory.reduce((acc, curr) => acc + curr.count, 0).toLocaleString('id-ID')} Unit
+            </div>
           </div>
         </div>
       </div>
