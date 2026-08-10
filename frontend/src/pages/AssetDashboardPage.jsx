@@ -296,8 +296,8 @@ export default function AssetDashboardPage({ tahun }) {
       <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '24px' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title" style={{ justifyContent: 'center', textAlign: 'center', color: '#555', fontSize: '16px', flex: 1 }}>
-              Laporan Aktiva Tetap PT Dahana<br/>2015-{tahun === 'Semua Tahun' || !tahun ? new Date().getFullYear() : tahun}
+            <h3 className="section-title" style={{ textAlign: 'left', color: '#444', fontSize: '16px', flex: 1 }}>
+              Laporan Aktiva Tetap PT Dahana 2015-{tahun === 'Semua Tahun' || !tahun ? new Date().getFullYear() : tahun}
             </h3>
           </div>
           <div className="section-body" style={{ height: '350px' }}>
