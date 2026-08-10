@@ -59,8 +59,9 @@ export default function AssetDashboardPage({ tahun }) {
       byCategoryMap[cat].count += 1
     })
 
+    const endYear = (tahun && tahun !== 'Semua Tahun') ? Number(tahun) : new Date().getFullYear()
     const chartYear = Object.values(byYearMap)
-      .filter(a => a.year !== 'Unknown' && Number(a.year) >= 2015)
+      .filter(a => a.year !== 'Unknown' && Number(a.year) >= 2015 && Number(a.year) <= endYear)
       .sort((a,b) => a.year - b.year)
     
     const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
@@ -252,7 +253,7 @@ export default function AssetDashboardPage({ tahun }) {
         />
       </div>
 
-      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '24px' }}>
         <div className="section">
           <div className="section-header">
             <h3 className="section-title" style={{ justifyContent: 'center', textAlign: 'center', color: '#555', fontSize: '16px', flex: 1 }}>
