@@ -181,7 +181,7 @@ export default function AssetDashboardPage({ tahun }) {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={nomorStats.byMonth}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={45} interval={0} />
                   <YAxis hide />
                   <Tooltip cursor={{ fill: '#f1f5f9' }} />
                   <Bar dataKey="total" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={20}>
