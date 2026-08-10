@@ -370,24 +370,33 @@ export default function AssetDashboardPage({ tahun }) {
 
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title" style={{ textAlign: 'center' }}>Nilai Perolehan<br/>(Dalam Miliar Rupiah)</h3>
+            <h3 className="section-title" style={{ textAlign: 'center' }}>
+              Nilai Perolehan 
+              <span style={{ fontWeight: 400, color: '#888', fontSize: '13px', marginLeft: '8px' }}>(Dalam Miliar Rupiah)</span>
+            </h3>
           </div>
           <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="calc(100% - 40px)">
                 <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 80, top: 20 }}>
+                  <defs>
+                    <linearGradient id="gradientAcquis" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#fb923c" />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(val) => fmtRupiah(val)} cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="acquis_val" name="Nilai Perolehan" fill="#f97316" barSize={15}>
-                    <LabelList dataKey="acquis_val" position="right" formatter={(v) => (v / 1000000000).toFixed(2).replace('.', ',')} style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: '#666', fontWeight: 500 }} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(val) => fmtRupiah(val)} cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  <Bar dataKey="acquis_val" name="Nilai Perolehan" fill="url(#gradientAcquis)" barSize={16} radius={[0, 4, 4, 0]}>
+                    <LabelList dataKey="acquis_val" position="right" formatter={(v) => (v / 1000000000).toFixed(2).replace('.', ',')} style={{ fontSize: '11px', fontWeight: 600, fill: '#555' }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}
-            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', marginTop: '12px' }}>
-              Total nilai perolehan : {fmtRupiah(laporanStats.acquis)}
+            <div style={{ textAlign: 'center', fontWeight: 600, fontSize: '14px', marginTop: '12px', color: '#444' }}>
+              Total nilai perolehan: {fmtRupiah(laporanStats.acquis)}
             </div>
           </div>
         </div>
@@ -398,20 +407,26 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
           <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="calc(100% - 40px)">
                 <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 80, top: 20 }}>
+                  <defs>
+                    <linearGradient id="gradientCount" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#1d4ed8" />
+                      <stop offset="100%" stopColor="#3b82f6" />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="count" name="Jumlah Aset" fill="#1d4ed8" barSize={15}>
-                    <LabelList dataKey="count" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: '#666', fontWeight: 500 }} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  <Bar dataKey="count" name="Jumlah Aset" fill="url(#gradientCount)" barSize={16} radius={[0, 4, 4, 0]}>
+                    <LabelList dataKey="count" position="right" style={{ fontSize: '11px', fontWeight: 600, fill: '#555' }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}
-            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', marginTop: '12px' }}>
-              Total Jumlah Aset : {laporanStats.chartCategory.reduce((acc, curr) => acc + curr.count, 0).toLocaleString('id-ID')} Unit
+            <div style={{ textAlign: 'center', fontWeight: 600, fontSize: '14px', marginTop: '12px', color: '#444' }}>
+              Total Jumlah Aset: {laporanStats.chartCategory.reduce((acc, curr) => acc + curr.count, 0).toLocaleString('id-ID')} Unit
             </div>
           </div>
         </div>
