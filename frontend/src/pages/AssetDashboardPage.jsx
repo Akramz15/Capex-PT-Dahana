@@ -153,12 +153,12 @@ export default function AssetDashboardPage({ tahun }) {
       <div className="charts-grid" style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '24px' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">2. KOMPOSISI KATEGORI ASET</h3>
+            <h3 className="section-title">KOMPOSISI KATEGORI ASET</h3>
           </div>
           <div className="section-body" style={{ height: '300px' }}>
             {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={nomorStats.chartKategori} layout="vertical" margin={{ left: 20 }}>
+                <BarChart data={nomorStats.chartKategori} layout="vertical" margin={{ left: 20, right: 50 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
@@ -174,14 +174,14 @@ export default function AssetDashboardPage({ tahun }) {
 
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">3. REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
+            <h3 className="section-title">REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
           </div>
           <div className="section-body" style={{ height: '300px' }}>
             {nomorStats.byMonth.every(m => m.total === 0) ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={nomorStats.byMonth}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
                   <YAxis hide />
                   <Tooltip cursor={{ fill: '#f1f5f9' }} />
                   <Bar dataKey="total" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={20}>
@@ -195,7 +195,7 @@ export default function AssetDashboardPage({ tahun }) {
         
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">4. SEBARAN BERDASARKAN USER</h3>
+            <h3 className="section-title">SEBARAN BERDASARKAN USER</h3>
           </div>
           <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
             {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
@@ -311,7 +311,7 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 40, top: 20 }}>
+                <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 80, top: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
@@ -335,7 +335,7 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 40, top: 20 }}>
+                <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 80, top: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
