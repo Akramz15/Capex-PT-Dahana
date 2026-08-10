@@ -507,12 +507,26 @@ def export_aset_laporan(_user: dict = Depends(get_current_user)):
 @router.get("/dashboard")
 def get_dashboard_metrics(tahun: int = Query(2026), _user: dict = Depends(get_current_user)):
     client = get_supabase_admin()
-    # Dashboard uses Laporan Aktiva for Aktiva Tetap 2015-2025 and Lokasi Aset
-    res_laporan = client.table("aset_laporan_aktiva").select("*").execute()
-    # Dashboard uses Aset Nomor for KPI cards and composition
-    res_nomor = client.table("aset_nomor").select("*").eq("tahun", tahun).execute()
+    # Fetch all data using pagination since Supabase limits to 1000 per request
+    laporan_data = []
+    start = 0
+    while True:
+        res = client.table("aset_laporan_aktiva").select("*").range(start, start + 999).execute()
+        if not res.data: break
+        laporan_data.extend(res.data)
+        if len(res.data) < 1000: break
+        start += 1000
+
+    nomor_data = []
+    start = 0
+    while True:
+        res = client.table("aset_nomor").select("*").eq("tahun", tahun).range(start, start + 999).execute()
+        if not res.data: break
+        nomor_data.extend(res.data)
+        if len(res.data) < 1000: break
+        start += 1000
     
     return {
-        "laporan": res_laporan.data,
-        "nomor": res_nomor.data
+        "laporan": laporan_data,
+        "nomor": nomor_data
     }
