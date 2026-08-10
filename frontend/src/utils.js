@@ -13,9 +13,11 @@ export const fmtRupiah = (val) => {
 export const fmtShort = (val) => {
   if (val == null || isNaN(val)) return '—'
   const n = Number(val)
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1).replace('.', ',')} M`
-  if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(0)} Jt`
-  if (n >= 1_000)         return `${(n / 1_000).toFixed(0)} Rb`
+  const absN = Math.abs(n)
+  const sign = n < 0 ? '-' : ''
+  if (absN >= 1_000_000_000) return `${sign}${(absN / 1_000_000_000).toFixed(1).replace('.', ',')} M`
+  if (absN >= 1_000_000)     return `${sign}${(absN / 1_000_000).toFixed(0)} Jt`
+  if (absN >= 1_000)         return `${sign}${(absN / 1_000).toFixed(0)} Rb`
   return String(n)
 }
 

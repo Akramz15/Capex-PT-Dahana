@@ -253,22 +253,22 @@ export default function AssetDashboardPage({ tahun }) {
       <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title" style={{ textAlign: 'center' }}>Laporan Aktiva Tetap PT Dahana<br/>2015-{tahun}</h3>
+            <h3 className="section-title" style={{ textAlign: 'center' }}>Laporan Aktiva Tetap PT Dahana</h3>
           </div>
           <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartYear.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={laporanStats.chartYear} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="year" />
+                  <XAxis dataKey="year" minTickGap={15} tick={{ fontSize: 11 }} />
                   <YAxis hide />
                   <Tooltip formatter={(val) => fmtRupiah(val)} />
                   <Legend verticalAlign="top" height={36} />
                   <Line type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#1d4ed8" strokeWidth={3} dot={{ r: 4 }}>
-                    <LabelList dataKey="acquis" position="top" formatter={(v) => (v / 1000000000).toFixed(0)} style={{ fontSize: '10px' }} />
+                    <LabelList dataKey="acquis" position="top" formatter={(v) => Number(v) > 0 ? (v / 1000000000).toFixed(0) : ''} style={{ fontSize: '10px' }} />
                   </Line>
                   <Line type="monotone" dataKey="book" name="Nilai Buku" stroke="#f97316" strokeWidth={3} dot={{ r: 4 }}>
-                    <LabelList dataKey="book" position="bottom" formatter={(v) => (v / 1000000000).toFixed(0)} style={{ fontSize: '10px' }} />
+                    <LabelList dataKey="book" position="bottom" formatter={(v) => Number(v) > 0 ? (v / 1000000000).toFixed(0) : ''} style={{ fontSize: '10px' }} />
                   </Line>
                 </LineChart>
               </ResponsiveContainer>
@@ -289,9 +289,10 @@ export default function AssetDashboardPage({ tahun }) {
                     dataKey="value" 
                     nameKey="name" 
                     cx="50%" cy="50%" 
-                    outerRadius={110} 
+                    outerRadius={75} 
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     labelLine={true}
+                    style={{ fontSize: '11px' }}
                   >
                     {laporanStats.chartLocation.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
