@@ -6,6 +6,7 @@ import { fmtRupiah } from '../utils'
 import { CheckCircle, Users, BarChart2, Hash, TrendingUp, Inbox } from 'lucide-react'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57']
+const PREMIUM_COLORS = ['#126487', '#ec6a28', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#264653', '#8ab17d', '#e07a5f', '#3d5a80', '#6d597a']
 
 import SummaryCard from '../components/ui/SummaryCard'
 
@@ -318,17 +319,30 @@ export default function AssetDashboardPage({ tahun }) {
                     data={laporanStats.chartLocation} 
                     dataKey="value" 
                     nameKey="name" 
-                    cx="50%" cy="50%" 
-                    outerRadius={75} 
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={true}
-                    style={{ fontSize: '11px' }}
+                    cx="40%" cy="50%" 
+                    innerRadius={90}
+                    outerRadius={130} 
+                    paddingAngle={2}
+                    label={({ name, percent }) => percent > 0.04 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                    labelLine={false}
+                    style={{ fontSize: '12px', fontWeight: 500, fill: '#555' }}
+                    stroke="none"
                   >
                     {laporanStats.chartLocation.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={PREMIUM_COLORS[index % PREMIUM_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(val) => `${val} Aset`} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend 
+                    layout="vertical" 
+                    align="right" 
+                    verticalAlign="middle" 
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: '12px', color: '#444' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
