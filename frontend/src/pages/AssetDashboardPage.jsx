@@ -59,7 +59,9 @@ export default function AssetDashboardPage({ tahun }) {
       byCategoryMap[cat].count += 1
     })
 
-    const chartYear = Object.values(byYearMap).sort((a,b) => (a.year === 'Unknown' ? 1 : a.year - b.year))
+    const chartYear = Object.values(byYearMap)
+      .filter(a => a.year !== 'Unknown' && Number(a.year) >= 2015)
+      .sort((a,b) => a.year - b.year)
     
     const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
     let chartLocation = sortedLocations.slice(0, 10)
@@ -253,22 +255,24 @@ export default function AssetDashboardPage({ tahun }) {
       <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title" style={{ textAlign: 'center' }}>Laporan Aktiva Tetap PT Dahana</h3>
+            <h3 className="section-title" style={{ justifyContent: 'center', textAlign: 'center', color: '#555', fontSize: '16px', flex: 1 }}>
+              Laporan Aktiva Tetap PT Dahana<br/>2015-{tahun === 'Semua Tahun' || !tahun ? new Date().getFullYear() : tahun}
+            </h3>
           </div>
           <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartYear.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={laporanStats.chartYear} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="year" minTickGap={15} tick={{ fontSize: 11 }} />
-                  <YAxis hide />
+                <LineChart data={laporanStats.chartYear} margin={{ top: 30, right: 30, bottom: 20, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.5} />
+                  <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={10} />
+                  <YAxis tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} width={45} tickFormatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} />
                   <Tooltip formatter={(val) => fmtRupiah(val)} />
-                  <Legend verticalAlign="top" height={36} />
-                  <Line type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#1d4ed8" strokeWidth={3} dot={{ r: 4 }}>
-                    <LabelList dataKey="acquis" position="top" formatter={(v) => Number(v) > 0 ? (v / 1000000000).toFixed(0) : ''} style={{ fontSize: '10px' }} />
+                  <Legend verticalAlign="top" align="left" height={36} wrapperStyle={{ paddingLeft: '45px', marginTop: '-10px' }} iconType="circle" />
+                  <Line type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={3} dot={{ r: 5, fill: '#126487', strokeWidth: 0 }}>
+                    <LabelList dataKey="acquis" position="top" offset={12} formatter={(v) => Number(v) > 0 ? Number((v / 1000000000).toFixed(0)).toLocaleString('id-ID') : ''} style={{ fontSize: '11px', fontWeight: 600, fill: '#333' }} />
                   </Line>
-                  <Line type="monotone" dataKey="book" name="Nilai Buku" stroke="#f97316" strokeWidth={3} dot={{ r: 4 }}>
-                    <LabelList dataKey="book" position="bottom" formatter={(v) => Number(v) > 0 ? (v / 1000000000).toFixed(0) : ''} style={{ fontSize: '10px' }} />
+                  <Line type="monotone" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={3} dot={{ r: 5, fill: '#ec6a28', strokeWidth: 0 }}>
+                    <LabelList dataKey="book" position="bottom" offset={12} formatter={(v) => Number(v) > 0 ? Number((v / 1000000000).toFixed(0)).toLocaleString('id-ID') : ''} style={{ fontSize: '11px', fontWeight: 600, fill: '#333' }} />
                   </Line>
                 </LineChart>
               </ResponsiveContainer>
