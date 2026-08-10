@@ -314,18 +314,17 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartLocation.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                   <Pie 
                     data={laporanStats.chartLocation} 
                     dataKey="value" 
                     nameKey="name" 
                     cx="40%" cy="50%" 
-                    innerRadius={90}
-                    outerRadius={130} 
-                    paddingAngle={2}
-                    label={({ name, percent }) => percent > 0.04 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                    innerRadius={80}
+                    outerRadius={120} 
+                    paddingAngle={3}
+                    cornerRadius={5}
                     labelLine={false}
-                    style={{ fontSize: '12px', fontWeight: 500, fill: '#555' }}
                     stroke="none"
                   >
                     {laporanStats.chartLocation.map((entry, index) => (
@@ -333,15 +332,15 @@ export default function AssetDashboardPage({ tahun }) {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(val) => `${val} Aset`} 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    formatter={(val) => `${fmtRupiah(val)}`} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', fontSize: '12px', fontWeight: 500 }}
                   />
                   <Legend 
                     layout="vertical" 
                     align="right" 
                     verticalAlign="middle" 
                     iconType="circle"
-                    wrapperStyle={{ fontSize: '12px', color: '#444' }}
+                    wrapperStyle={{ fontSize: '12px', color: '#444', maxHeight: '300px', overflowY: 'auto' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
