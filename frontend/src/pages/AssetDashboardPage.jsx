@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { getAsetDashboard } from '../api/master_aset'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, LabelList } from 'recharts'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah } from '../utils'
 import { CheckCircle, Users, BarChart2, Hash, TrendingUp, Inbox } from 'lucide-react'
