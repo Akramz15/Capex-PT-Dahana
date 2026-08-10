@@ -193,7 +193,7 @@ export default function AssetDashboardPage({ tahun }) {
         />
       </div>
 
-      <div className="charts-grid" style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '24px' }}>
+      <div className="charts-grid" style={{ marginBottom: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '16px' }}>
         <div className="section">
           <div className="section-header">
             <h3 className="section-title">KOMPOSISI KATEGORI ASET</h3>
@@ -272,10 +272,10 @@ export default function AssetDashboardPage({ tahun }) {
         </div>
       </div>
 
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', color: 'var(--text-color)', marginTop: '24px' }}>
+      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', color: 'var(--text-color)', marginTop: '16px' }}>
         Laporan Aktiva Tetap
       </h2>
-      <div className="cards-grid" style={{ marginBottom: '24px' }}>
+      <div className="cards-grid" style={{ marginBottom: '16px' }}>
         <SummaryCard 
           label="Total Nilai Perolehan" 
           value={laporanStats.acquis} 
@@ -293,7 +293,7 @@ export default function AssetDashboardPage({ tahun }) {
         />
       </div>
 
-      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '24px' }}>
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
         <div className="section">
           <div className="section-header">
             <h3 className="section-title" style={{ textAlign: 'left', color: '#444', fontSize: '16px', flex: 1 }}>

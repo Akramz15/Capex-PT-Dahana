@@ -333,8 +333,8 @@ img, svg { display: block; }
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  margin-bottom: 28px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .summary-card {
