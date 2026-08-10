@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { getAsetDashboard } from '../api/master_aset'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, LabelList } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, LabelList, AreaChart, Area } from 'recharts'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah } from '../utils'
 import { CheckCircle, Users, BarChart2, Hash, TrendingUp, Inbox } from 'lucide-react'
@@ -279,19 +279,28 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartYear.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={laporanStats.chartYear} margin={{ top: 30, right: 30, bottom: 20, left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.5} />
-                  <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={10} />
-                  <YAxis tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} width={45} tickFormatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} />
-                  <Tooltip formatter={(val) => fmtRupiah(val)} />
-                  <Legend verticalAlign="top" align="left" height={36} wrapperStyle={{ paddingLeft: '45px', marginTop: '-10px' }} iconType="circle" />
-                  <Line type="linear" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={3} dot={{ r: 5, fill: '#126487', strokeWidth: 0 }}>
-                    <LabelList dataKey="acquis" position="top" offset={12} formatter={(v) => Number(v) > 0 ? Number((v / 1000000000).toFixed(0)).toLocaleString('id-ID') : ''} style={{ fontSize: '11px', fontWeight: 600, fill: '#333' }} />
-                  </Line>
-                  <Line type="linear" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={3} dot={{ r: 5, fill: '#ec6a28', strokeWidth: 0 }}>
-                    <LabelList dataKey="book" position="bottom" offset={12} formatter={(v) => Number(v) > 0 ? Number((v / 1000000000).toFixed(0)).toLocaleString('id-ID') : ''} style={{ fontSize: '11px', fontWeight: 600, fill: '#333' }} />
-                  </Line>
-                </LineChart>
+                <AreaChart data={laporanStats.chartYear} margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
+                  <defs>
+                    <linearGradient id="colorAcquis" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#126487" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#126487" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorBook" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ec6a28" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#ec6a28" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="year" tick={{ fontSize: 12, fill: '#666', fontWeight: 500 }} axisLine={false} tickLine={false} tickMargin={12} padding={{ left: 30, right: 30 }} />
+                  <YAxis tick={{ fontSize: 12, fill: '#666', fontWeight: 500 }} axisLine={false} tickLine={false} width={45} tickFormatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} />
+                  <Tooltip 
+                    formatter={(val) => fmtRupiah(val)} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend verticalAlign="top" align="left" height={40} wrapperStyle={{ paddingLeft: '55px', marginTop: '-15px' }} iconType="circle" />
+                  <Area type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={4} fillOpacity={1} fill="url(#colorAcquis)" activeDot={{ r: 6, strokeWidth: 0, fill: '#126487' }} dot={false} />
+                  <Area type="monotone" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={4} fillOpacity={1} fill="url(#colorBook)" activeDot={{ r: 6, strokeWidth: 0, fill: '#ec6a28' }} dot={false} />
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
