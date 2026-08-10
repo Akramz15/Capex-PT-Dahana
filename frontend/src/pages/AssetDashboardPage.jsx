@@ -151,11 +151,11 @@ export default function AssetDashboardPage({ tahun }) {
       </div>
 
       <div className="charts-grid" style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '24px' }}>
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">2. KOMPOSISI KATEGORI ASET</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title">2. KOMPOSISI KATEGORI ASET</h3>
           </div>
-          <div className="chart-body" style={{ height: '300px' }}>
+          <div className="section-body" style={{ height: '300px' }}>
             {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={nomorStats.chartKategori} layout="vertical" margin={{ left: 20 }}>
@@ -172,11 +172,11 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">3. REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title">3. REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
           </div>
-          <div className="chart-body" style={{ height: '300px' }}>
+          <div className="section-body" style={{ height: '300px' }}>
             {nomorStats.byMonth.every(m => m.total === 0) ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={nomorStats.byMonth}>
@@ -193,11 +193,11 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
         
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title">4. SEBARAN BERDASARKAN USER</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title">4. SEBARAN BERDASARKAN USER</h3>
           </div>
-          <div className="chart-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
+          <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
             {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
@@ -251,11 +251,11 @@ export default function AssetDashboardPage({ tahun }) {
       </div>
 
       <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title" style={{ textAlign: 'center' }}>Laporan Aktiva Tetap PT Dahana<br/>2015-{tahun}</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title" style={{ textAlign: 'center' }}>Laporan Aktiva Tetap PT Dahana<br/>2015-{tahun}</h3>
           </div>
-          <div className="chart-body" style={{ height: '350px' }}>
+          <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartYear.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={laporanStats.chartYear} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
@@ -276,11 +276,11 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title" style={{ textAlign: 'center' }}>LOKASI ASET PT DAHANA {tahun}</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title" style={{ textAlign: 'center' }}>LOKASI ASET PT DAHANA {tahun}</h3>
           </div>
-          <div className="chart-body" style={{ height: '350px' }}>
+          <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartLocation.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -304,11 +304,11 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title" style={{ textAlign: 'center' }}>Nilai Perolehan<br/>(Dalam Miliar Rupiah)</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title" style={{ textAlign: 'center' }}>Nilai Perolehan<br/>(Dalam Miliar Rupiah)</h3>
           </div>
-          <div className="chart-body" style={{ height: '400px' }}>
+          <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 40, top: 20 }}>
@@ -328,11 +328,11 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3 className="chart-title" style={{ textAlign: 'center' }}>Jumlah Aset</h3>
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title" style={{ textAlign: 'center' }}>Jumlah Aset</h3>
           </div>
-          <div className="chart-body" style={{ height: '400px' }}>
+          <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 40, top: 20 }}>
