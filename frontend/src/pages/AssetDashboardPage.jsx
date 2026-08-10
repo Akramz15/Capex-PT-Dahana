@@ -279,7 +279,7 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartYear.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={laporanStats.chartYear} margin={{ top: 30, right: 30, bottom: 20, left: 0 }}>
+                <LineChart data={laporanStats.chartYear} margin={{ top: 30, right: 30, bottom: 20, left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.5} />
                   <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={10} />
                   <YAxis tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }} axisLine={false} tickLine={false} width={45} tickFormatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} />
