@@ -377,7 +377,7 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
           <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="calc(100% - 40px)">
+              <ResponsiveContainer width="100%" height="85%">
                 <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 80, top: 20 }}>
                   <defs>
                     <linearGradient id="gradientAcquis" x1="0" y1="0" x2="1" y2="0">
@@ -407,7 +407,7 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
           <div className="section-body" style={{ height: '400px' }}>
             {laporanStats.chartCategory.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="calc(100% - 40px)">
+              <ResponsiveContainer width="100%" height="85%">
                 <BarChart data={laporanStats.chartCategory} layout="vertical" margin={{ left: 60, right: 80, top: 20 }}>
                   <defs>
                     <linearGradient id="gradientCount" x1="0" y1="0" x2="1" y2="0">
