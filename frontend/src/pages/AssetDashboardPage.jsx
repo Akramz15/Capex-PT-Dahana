@@ -272,7 +272,7 @@ export default function AssetDashboardPage({ tahun }) {
         </div>
       </div>
 
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: 'var(--text-color)', marginTop: '20px' }}>
+      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: 'var(--text-color)', marginTop: '40px' }}>
         Laporan Aktiva Tetap
       </h2>
       <div className="cards-grid" style={{ marginBottom: '20px' }}>
