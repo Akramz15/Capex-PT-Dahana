@@ -6,7 +6,7 @@ import { fmtRupiah } from '../utils'
 import { CheckCircle, Users, BarChart2, Hash, TrendingUp, Inbox } from 'lucide-react'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57']
-const PREMIUM_COLORS = ['#126487', '#ec6a28', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#264653', '#8ab17d', '#e07a5f', '#3d5a80', '#6d597a']
+const PREMIUM_COLORS = ['#126487', '#ec6a28', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#264653', '#8ab17d', '#e07a5f', '#3d5a80', '#6d597a', '#774936', '#a44a3f', '#5e60ce', '#48bfe3', '#64dfdf']
 
 import SummaryCard from '../components/ui/SummaryCard'
 
@@ -105,8 +105,8 @@ export default function AssetDashboardPage({ tahun }) {
     
     const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
     const totalLocationsCount = sortedLocations.reduce((acc, curr) => acc + curr.value, 0)
-    let chartLocation = sortedLocations.slice(0, 10).map(item => ({...item, percent: totalLocationsCount ? (item.value / totalLocationsCount) * 100 : 0}))
-    const otherLocations = sortedLocations.slice(10)
+    let chartLocation = sortedLocations.slice(0, 12).map(item => ({...item, percent: totalLocationsCount ? (item.value / totalLocationsCount) * 100 : 0}))
+    const otherLocations = sortedLocations.slice(12)
     if (otherLocations.length > 0) {
       const otherValue = otherLocations.reduce((acc, curr) => acc + curr.value, 0)
       chartLocation.push({ name: 'Lain Lain', value: otherValue, percent: totalLocationsCount ? (otherValue / totalLocationsCount) * 100 : 0 })
