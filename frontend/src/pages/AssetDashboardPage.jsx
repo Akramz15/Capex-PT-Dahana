@@ -121,7 +121,9 @@ export default function AssetDashboardPage({ tahun }) {
   const nomorStats = useMemo(() => {
     const nomorData = Array.isArray(data?.nomor) ? data.nomor : []
     let grandTotal = nomorData.length
-    const byMonth = Array.from({length: 12}, (_, i) => ({ name: `Bln ${i+1}`, total: 0 }))
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const yearSuffix = (tahun && tahun !== 'Semua Tahun') ? String(tahun).slice(-2) : ''
+    const byMonth = Array.from({length: 12}, (_, i) => ({ name: `${monthNames[i]}${yearSuffix ? '-' + yearSuffix : ''}`, total: 0 }))
     const catMap = {}
     const userMap = {}
 
