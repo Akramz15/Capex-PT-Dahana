@@ -26,8 +26,8 @@ const CustomPieTooltip = ({ active, payload }) => {
           {data.name}
         </p>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', fontSize: '12px', color: '#555', marginBottom: '4px' }}>
-          <span>Total Aset:</span>
-          <span style={{ fontWeight: 700, color: payload[0].fill }}>{data.value}</span>
+          <span>Nilai Aset:</span>
+          <span style={{ fontWeight: 700, color: payload[0].fill }}>{fmtRupiah(data.value)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', fontSize: '12px', color: '#555' }}>
           <span>Persentase:</span>
@@ -74,7 +74,7 @@ export default function AssetDashboardPage({ tahun }) {
 
       const loc = item.lokasi || 'Unknown'
       if (!byLocationMap[loc]) byLocationMap[loc] = { name: loc, value: 0 }
-      byLocationMap[loc].value += 1
+      byLocationMap[loc].value += item.acquis_val || 0
 
       const cat = item.deskripsi || 'Lain-lain'
       if (!byCategoryMap[cat]) byCategoryMap[cat] = { name: cat, acquis_val: 0, count: 0 }
