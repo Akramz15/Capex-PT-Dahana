@@ -525,11 +525,28 @@ export default function AssetDashboardPage({ tahun }) {
                     dataKey="value" 
                     nameKey="name" 
                     cx="50%" cy="50%" 
-                    innerRadius={0}
                     outerRadius={95} 
                     paddingAngle={0}
                     labelLine={{ stroke: '#64748b', strokeWidth: 1 }}
-                    label={{ fill: '#334155', fontSize: 11, fontWeight: 500 }}
+                    label={(props) => {
+                      const RADIAN = Math.PI / 180;
+                      const radius = 95 + 15;
+                      const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
+                      const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
+                      return (
+                        <text 
+                          x={x} 
+                          y={y} 
+                          fill="#334155" 
+                          textAnchor={x > props.cx ? 'start' : 'end'} 
+                          dominantBaseline="central" 
+                          fontSize={10} 
+                          fontWeight={600}
+                        >
+                          {props.name}
+                        </text>
+                      )
+                    }}
                     stroke="#ffffff"
                     strokeWidth={2}
                   >
