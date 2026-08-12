@@ -281,9 +281,13 @@ def export_aset_nomor(_user: dict = Depends(get_current_user)):
         available_cols = [c for c in columns_mapping.keys() if c in df.columns]
         df = df[available_cols].rename(columns=columns_mapping)
         
-        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        if 'Bulan Permintaan' in df.columns:
-            df['Bulan Permintaan'] = df['Bulan Permintaan'].apply(lambda x: month_names[int(x)-1] if pd.notna(x) and 1 <= int(x) <= 12 else x)
+        if 'Bulan Permintaan' in df.columns and 'Tahun' in df.columns:
+            def to_date(row):
+                try:
+                    return pd.to_datetime(f"{int(row['Tahun'])}-{int(row['Bulan Permintaan']):02d}-01")
+                except:
+                    return row['Bulan Permintaan']
+            df['Bulan Permintaan'] = df.apply(to_date, axis=1)
             
         df.insert(0, 'No', range(1, len(df) + 1))
     
@@ -325,8 +329,11 @@ def export_aset_nomor(_user: dict = Depends(get_current_user)):
             for col_idx, cell in enumerate(row):
                 cell.border = thin_border
                 
-                if col_idx in [0, 2, 3, 6, 10]: 
+                if col_idx in [0, 2, 6, 10]: 
                     cell.alignment = center_align
+                elif col_idx == 3:
+                    cell.alignment = center_align
+                    cell.number_format = 'mmm-yy'
                 elif col_idx == 8: 
                     cell.number_format = '_("Rp"* #,##0_);_("Rp"* \\(#,##0\\);_("Rp"* "-"_);_(@_)'
                 else:
