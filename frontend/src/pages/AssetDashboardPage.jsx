@@ -65,11 +65,28 @@ export default function AssetDashboardPage({ tahun }) {
         ref.current.style.padding = '16px'
         ref.current.style.borderRadius = '12px'
         
+        // Find inner scrollable body to expand it fully
+        const bodyEl = ref.current.querySelector('.section-body')
+        let originalHeight = ''
+        let originalOverflow = ''
+        
+        if (bodyEl) {
+          originalHeight = bodyEl.style.height
+          originalOverflow = bodyEl.style.overflowY
+          bodyEl.style.height = 'auto'
+          bodyEl.style.overflowY = 'visible'
+        }
+        
         const canvas = await html2canvas(ref.current, { backgroundColor: '#ffffff', scale: 2 })
         
+        // Restore styles
         ref.current.style.border = originalBorder
         ref.current.style.padding = originalPadding
         ref.current.style.borderRadius = ''
+        if (bodyEl) {
+          bodyEl.style.height = originalHeight
+          bodyEl.style.overflowY = originalOverflow
+        }
         
         const url = canvas.toDataURL('image/jpeg', 1.0)
         const link = document.createElement('a')
