@@ -166,11 +166,18 @@ export default function AssetDashboardPage({ tahun }) {
     
     const sortedLocations = Object.values(byLocationMap).sort((a,b) => b.value - a.value)
     const totalLocationsCount = sortedLocations.reduce((acc, curr) => acc + curr.value, 0)
-    let chartLocation = sortedLocations.slice(0, 12).map(item => ({...item, percent: totalLocationsCount ? (item.value / totalLocationsCount) * 100 : 0}))
+    
+    // Append percentage directly to name for clean pie chart rendering
+    let chartLocation = sortedLocations.slice(0, 12).map(item => {
+      const p = totalLocationsCount ? (item.value / totalLocationsCount) * 100 : 0
+      return { ...item, originalName: item.name, name: `${item.name} ${p.toFixed(0)}%`, percent: p }
+    })
+    
     const otherLocations = sortedLocations.slice(12)
     if (otherLocations.length > 0) {
       const otherValue = otherLocations.reduce((acc, curr) => acc + curr.value, 0)
-      chartLocation.push({ name: 'Lain Lain', value: otherValue, percent: totalLocationsCount ? (otherValue / totalLocationsCount) * 100 : 0 })
+      const p = totalLocationsCount ? (otherValue / totalLocationsCount) * 100 : 0
+      chartLocation.push({ name: `Lain Lain ${p.toFixed(0)}%`, originalName: 'Lain Lain', value: otherValue, percent: p })
     }
 
     const chartCategory = Object.values(byCategoryMap).sort((a,b) => b.acquis_val - a.acquis_val)
@@ -519,10 +526,10 @@ export default function AssetDashboardPage({ tahun }) {
                     nameKey="name" 
                     cx="50%" cy="50%" 
                     innerRadius={0}
-                    outerRadius={100} 
+                    outerRadius={95} 
                     paddingAngle={0}
-                    labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
-                    label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                    labelLine={{ stroke: '#64748b', strokeWidth: 1 }}
+                    label={{ fill: '#334155', fontSize: 11, fontWeight: 500 }}
                     stroke="#ffffff"
                     strokeWidth={2}
                   >
