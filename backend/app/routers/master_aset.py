@@ -200,6 +200,18 @@ def upload_aset_nomor(file: UploadFile = File(...), _admin: dict = Depends(requi
                     s = s[:-2]
                 return s if s != "nan" else None
 
+            def extract_month(val):
+                if pd.isna(val) or val is None: return 1
+                if hasattr(val, 'month'): return int(val.month)
+                try:
+                    dt = pd.to_datetime(val)
+                    return int(dt.month)
+                except:
+                    try: return int(float(str(val).strip()))
+                    except: return 1
+
+            bulan_val = get_val(["Bulan", "bulan", "Bulan Permintaan", "Bulan "])
+            
             item = {
                 "nomor_aset": clean_str(nomor),
                 "sub_nomor": clean_str(get_val(["Sub Nomor", "sub_nomor", "Sub#"])),
@@ -209,7 +221,7 @@ def upload_aset_nomor(file: UploadFile = File(...), _admin: dict = Depends(requi
                 "lokasi": clean_str(get_val(["Lokasi", "lokasi"])),
                 "room": clean_str(get_val(["Room", "room"])),
                 "tahun": int(get_val(["Tahun", "tahun"])) if get_val(["Tahun", "tahun"]) else 2026,
-                "bulan": int(get_val(["Bulan", "bulan"])) if get_val(["Bulan", "bulan"]) else 1,
+                "bulan": extract_month(bulan_val),
                 "user_name": str(get_val(["User Name", "user_name", "User"])) if get_val(["User Name", "user_name", "User"]) else None,
                 "vendor": str(get_val(["Vendor", "vendor"])) if get_val(["Vendor", "vendor"]) else None,
                 "nilai": float(get_val(["Nilai", "nilai"])) if get_val(["Nilai", "nilai"]) else 0.0,

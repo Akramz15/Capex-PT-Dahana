@@ -18,6 +18,8 @@ const EMPTY_FORM = {
   user_name: '', vendor: '', keterangan: ''
 }
 
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 const COLUMNS = [
   { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '75px' },
   { header: 'Nomor Aset', accessor: 'nomor_aset', sticky: true, stickyLeft: '74px', width: '160px' },
@@ -29,6 +31,7 @@ const COLUMNS = [
   { header: 'Nilai', render: (r) => <span className="rupiah">{fmtRupiah(r.nilai)}</span> },
   { header: 'Room', accessor: 'room' },
   { header: 'Tahun', accessor: 'tahun' },
+  { header: 'Bulan', accessor: 'bulan', render: (val) => val >= 1 && val <= 12 ? monthNames[val - 1] : val },
   { header: 'User', accessor: 'user_name' },
   { header: 'Vendor', accessor: 'vendor' },
   { header: 'Keterangan', accessor: 'keterangan' }
