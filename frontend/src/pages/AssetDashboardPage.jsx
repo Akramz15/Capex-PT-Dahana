@@ -61,9 +61,12 @@ export default function AssetDashboardPage({ tahun }) {
         // Temporarily apply a standard border and padding for the screenshot
         const originalBorder = ref.current.style.border
         const originalPadding = ref.current.style.padding
+        const originalBoxShadow = ref.current.style.boxShadow
+        
         ref.current.style.border = '1px solid #e2e8f0'
-        ref.current.style.padding = '16px'
-        ref.current.style.borderRadius = '12px'
+        ref.current.style.padding = '24px'
+        ref.current.style.borderRadius = '16px'
+        ref.current.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.05)'
         
         // Find inner scrollable body to expand it fully
         const bodyEl = ref.current.querySelector('.section-body')
@@ -83,6 +86,8 @@ export default function AssetDashboardPage({ tahun }) {
         ref.current.style.border = originalBorder
         ref.current.style.padding = originalPadding
         ref.current.style.borderRadius = ''
+        ref.current.style.boxShadow = originalBoxShadow
+        
         if (bodyEl) {
           bodyEl.style.height = originalHeight
           bodyEl.style.overflowY = originalOverflow
@@ -353,7 +358,7 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
           <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
             {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 'bold' }}>
                     <th style={{ textAlign: 'center', padding: '8px 4px' }}>No.</th>
