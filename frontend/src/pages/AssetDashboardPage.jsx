@@ -43,6 +43,7 @@ const CustomPieTooltip = ({ active, payload }) => {
 export default function AssetDashboardPage({ tahun }) {
   const [data, setData] = useState({ laporan: [], nomor: [] })
   const [loading, setLoading] = useState(true)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const chartKategoriRef = useRef(null)
   const chartBulanRef = useRef(null)
@@ -197,16 +198,46 @@ export default function AssetDashboardPage({ tahun }) {
         <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-color)', margin: 0 }}>
           Permintaan Nomor Aset s/d {tahun}
         </h2>
-        <div className="dropdown dropdown-end">
-          <div tabIndex={0} role="button" className="btn btn-sm btn-outline" style={{ fontSize: '13px' }}>
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+            className="btn btn-sm btn-outline" 
+            style={{ fontSize: '13px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          >
             <Download size={14} style={{ marginRight: '6px' }} /> Download Grafik
-          </div>
-          <ul tabIndex={0} className="dropdown-content z-[10] menu p-2 shadow bg-base-100 rounded-box w-56 mt-2" style={{ border: '1px solid var(--clr-border)' }}>
-            <li className="menu-title" style={{ padding: '0.5rem 1rem', fontSize: '11px', opacity: 0.6, fontWeight: 'bold' }}>Pilih Grafik (.jpg)</li>
-            <li><a onClick={() => downloadChart(chartKategoriRef, 'Komposisi_Kategori_Aset')}>Komposisi Kategori Aset</a></li>
-            <li><a onClick={() => downloadChart(chartBulanRef, 'Realisasi_Per_Bulan')}>Realisasi Per Bulan</a></li>
-            <li><a onClick={() => downloadChart(chartUserRef, 'Sebaran_Berdasarkan_User')}>Sebaran Berdasarkan User</a></li>
-          </ul>
+          </button>
+          
+          {isDropdownOpen && (
+            <div style={{ 
+              position: 'absolute', right: 0, top: '100%', marginTop: '8px', 
+              backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', 
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', width: '220px', zIndex: 50 
+            }}>
+              <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 'bold', color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
+                Pilih Grafik (.jpg)
+              </div>
+              <div style={{ padding: '4px' }}>
+                <button 
+                  onClick={() => { downloadChart(chartKategoriRef, 'Komposisi_Kategori_Aset'); setIsDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Komposisi Kategori Aset</button>
+                <button 
+                  onClick={() => { downloadChart(chartBulanRef, 'Realisasi_Per_Bulan'); setIsDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Realisasi Per Bulan</button>
+                <button 
+                  onClick={() => { downloadChart(chartUserRef, 'Sebaran_Berdasarkan_User'); setIsDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Sebaran Berdasarkan User</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="cards-grid" style={{ marginBottom: '24px' }}>
