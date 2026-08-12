@@ -289,7 +289,12 @@ export default function AssetDashboardPage({ tahun }) {
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
+                  <Tooltip 
+                    cursor={{ fill: '#f1f5f9' }} 
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', padding: '8px 12px' }}
+                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' }}
+                    itemStyle={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 500 }}
+                  />
                   <Bar dataKey="value" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={15}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
                   </Bar>
@@ -310,7 +315,12 @@ export default function AssetDashboardPage({ tahun }) {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} interval={0} />
                   <YAxis hide />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} />
+                  <Tooltip 
+                    cursor={{ fill: '#f1f5f9' }} 
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', padding: '8px 12px' }}
+                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' }}
+                    itemStyle={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 500 }}
+                  />
                   <Bar dataKey="total" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={20}>
                     <LabelList dataKey="total" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} />
                   </Bar>
