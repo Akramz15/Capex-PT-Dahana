@@ -533,7 +533,6 @@ export default function AssetDashboardPage({ tahun }) {
                     label={(props) => {
                       const { cx, cy, midAngle, outerRadius, percent, name } = props;
                       const RADIAN = Math.PI / 180;
-                      const pValue = percent; 
                       
                       const sin = Math.sin(-RADIAN * midAngle);
                       const cos = Math.cos(-RADIAN * midAngle);
@@ -541,14 +540,12 @@ export default function AssetDashboardPage({ tahun }) {
                       const sx = cx + outerRadius * cos;
                       const sy = cy + outerRadius * sin;
                       
-                      const isLarge = pValue >= 40;
-                      
-                      // Push small slices out slightly
-                      const radiusOffset = isLarge ? 5 : 20;
+                      // All slices get a line and elbow
+                      const radiusOffset = 20;
                       const mx = cx + (outerRadius + radiusOffset) * cos;
                       const my = cy + (outerRadius + radiusOffset) * sin;
                       
-                      const elbowLength = isLarge ? 0 : 15;
+                      const elbowLength = 15;
                       const ex = mx + (cos >= 0 ? 1 : -1) * elbowLength;
                       const ey = my;
                       
@@ -556,10 +553,10 @@ export default function AssetDashboardPage({ tahun }) {
                       
                       return (
                         <g>
-                          {!isLarge && <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#94a3b8" fill="none" strokeWidth={1} />}
+                          <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#94a3b8" fill="none" strokeWidth={1} />
                           <text 
-                            x={isLarge ? mx + (cos >= 0 ? 1 : -1) * 10 : ex + (cos >= 0 ? 1 : -1) * 6} 
-                            y={isLarge ? my : ey} 
+                            x={ex + (cos >= 0 ? 1 : -1) * 6} 
+                            y={ey} 
                             textAnchor={textAnchor} 
                             dominantBaseline="central" 
                             style={{ fontSize: '11px', fontWeight: 600, fill: '#1e293b' }}
