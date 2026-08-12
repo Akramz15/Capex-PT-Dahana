@@ -280,6 +280,11 @@ def export_aset_nomor(_user: dict = Depends(get_current_user)):
         
         available_cols = [c for c in columns_mapping.keys() if c in df.columns]
         df = df[available_cols].rename(columns=columns_mapping)
+        
+        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        if 'Bulan Permintaan' in df.columns:
+            df['Bulan Permintaan'] = df['Bulan Permintaan'].apply(lambda x: month_names[int(x)-1] if pd.notna(x) and 1 <= int(x) <= 12 else x)
+            
         df.insert(0, 'No', range(1, len(df) + 1))
     
     output = BytesIO()
@@ -298,9 +303,9 @@ def export_aset_nomor(_user: dict = Depends(get_current_user)):
         green_fill = PatternFill(start_color="C6E0B4", end_color="C6E0B4", fill_type="solid")
         
         col_widths = {
-            'A': 5, 'B': 18, 'C': 8, 'D': 25, 'E': 50, 
-            'F': 8, 'G': 15, 'H': 25, 'I': 15, 'J': 8, 
-            'K': 20, 'L': 30, 'M': 15
+            'A': 5, 'B': 18, 'C': 8, 'D': 16, 'E': 25, 
+            'F': 50, 'G': 8, 'H': 15, 'I': 25, 'J': 15, 
+            'K': 8, 'L': 20, 'M': 30, 'N': 20
         }
         for col_letter, width in col_widths.items():
             worksheet.column_dimensions[col_letter].width = width
@@ -313,16 +318,16 @@ def export_aset_nomor(_user: dict = Depends(get_current_user)):
             
         for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column), start=2):
             is_selesai = False
-            keterangan_cell = row[12] if len(row) > 12 else None
+            keterangan_cell = row[13] if len(row) > 13 else None
             if keterangan_cell and keterangan_cell.value and str(keterangan_cell.value).strip().lower() == 'selesai':
                 is_selesai = True
                 
             for col_idx, cell in enumerate(row):
                 cell.border = thin_border
                 
-                if col_idx in [0, 2, 5, 8, 9]: 
+                if col_idx in [0, 2, 3, 6, 10]: 
                     cell.alignment = center_align
-                elif col_idx == 7: 
+                elif col_idx == 8: 
                     cell.number_format = '_("Rp"* #,##0_);_("Rp"* \\(#,##0\\);_("Rp"* "-"_);_(@_)'
                 else:
                     cell.alignment = left_align
