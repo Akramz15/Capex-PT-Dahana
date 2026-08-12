@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { getAsetDashboard } from '../api/master_aset'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, LabelList, AreaChart, Area } from 'recharts'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { fmtRupiah } from '../utils'
-import { CheckCircle, Users, BarChart2, Hash, TrendingUp, Inbox } from 'lucide-react'
+import { CheckCircle, Users, BarChart2, Hash, TrendingUp, Inbox, Download } from 'lucide-react'
+import html2canvas from 'html2canvas'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57']
 const PREMIUM_COLORS = ['#126487', '#ec6a28', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#264653', '#8ab17d', '#e07a5f', '#3d5a80', '#6d597a', '#774936', '#a44a3f', '#5e60ce', '#48bfe3', '#64dfdf']
@@ -42,6 +43,25 @@ const CustomPieTooltip = ({ active, payload }) => {
 export default function AssetDashboardPage({ tahun }) {
   const [data, setData] = useState({ laporan: [], nomor: [] })
   const [loading, setLoading] = useState(true)
+
+  const chartKategoriRef = useRef(null)
+  const chartBulanRef = useRef(null)
+  const chartUserRef = useRef(null)
+
+  const downloadChart = async (ref, filename) => {
+    if (ref.current) {
+      try {
+        const canvas = await html2canvas(ref.current, { backgroundColor: '#ffffff', scale: 2 })
+        const url = canvas.toDataURL('image/png')
+        const link = document.createElement('a')
+        link.download = `${filename}.png`
+        link.href = url
+        link.click()
+      } catch (err) {
+        console.error('Failed to download chart', err)
+      }
+    }
+  }
 
   useEffect(() => {
     getAsetDashboard(tahun)
@@ -196,9 +216,12 @@ export default function AssetDashboardPage({ tahun }) {
       </div>
 
       <div className="charts-grid" style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '20px' }}>
-        <div className="section">
-          <div className="section-header">
+        <div className="section" ref={chartKategoriRef} style={{ position: 'relative' }}>
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 className="section-title">KOMPOSISI KATEGORI ASET</h3>
+            <button onClick={() => downloadChart(chartKategoriRef, 'Komposisi_Kategori_Aset')} className="btn btn-sm btn-ghost" style={{ padding: '4px', height: 'auto', minHeight: 'auto', color: 'var(--text-muted)' }} title="Download Chart">
+              <Download size={16} />
+            </button>
           </div>
           <div className="section-body" style={{ height: '300px' }}>
             {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
@@ -217,9 +240,12 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="section">
-          <div className="section-header">
+        <div className="section" ref={chartBulanRef} style={{ position: 'relative' }}>
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 className="section-title">REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
+            <button onClick={() => downloadChart(chartBulanRef, 'Realisasi_Per_Bulan')} className="btn btn-sm btn-ghost" style={{ padding: '4px', height: 'auto', minHeight: 'auto', color: 'var(--text-muted)' }} title="Download Chart">
+              <Download size={16} />
+            </button>
           </div>
           <div className="section-body" style={{ height: '300px' }}>
             {nomorStats.byMonth.every(m => m.total === 0) ? <EmptyChartState /> : (
@@ -238,9 +264,12 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
         
-        <div className="section">
-          <div className="section-header">
+        <div className="section" ref={chartUserRef} style={{ position: 'relative' }}>
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 className="section-title">SEBARAN BERDASARKAN USER</h3>
+            <button onClick={() => downloadChart(chartUserRef, 'Sebaran_Berdasarkan_User')} className="btn btn-sm btn-ghost" style={{ padding: '4px', height: 'auto', minHeight: 'auto', color: 'var(--text-muted)' }} title="Download Chart">
+              <Download size={16} />
+            </button>
           </div>
           <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
             {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
