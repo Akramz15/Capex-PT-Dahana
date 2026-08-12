@@ -168,12 +168,12 @@ export default function AssetDashboardPage({ tahun }) {
     const totalLocationsCount = sortedLocations.reduce((acc, curr) => acc + curr.value, 0)
     
     // Append percentage directly to name for clean pie chart rendering
-    let chartLocation = sortedLocations.slice(0, 12).map(item => {
+    let chartLocation = sortedLocations.slice(0, 10).map(item => {
       const p = totalLocationsCount ? (item.value / totalLocationsCount) * 100 : 0
       return { ...item, originalName: item.name, name: `${item.name} ${p.toFixed(0)}%`, percent: p }
     })
     
-    const otherLocations = sortedLocations.slice(12)
+    const otherLocations = sortedLocations.slice(10)
     if (otherLocations.length > 0) {
       const otherValue = otherLocations.reduce((acc, curr) => acc + curr.value, 0)
       const p = totalLocationsCount ? (otherValue / totalLocationsCount) * 100 : 0
@@ -525,12 +525,12 @@ export default function AssetDashboardPage({ tahun }) {
                     dataKey="value" 
                     nameKey="name" 
                     cx="50%" cy="50%" 
-                    outerRadius={95} 
+                    outerRadius={120} 
                     paddingAngle={0}
                     labelLine={{ stroke: '#64748b', strokeWidth: 1 }}
                     label={(props) => {
                       const RADIAN = Math.PI / 180;
-                      const radius = 95 + 15;
+                      const radius = 120 + 15;
                       const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
                       const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
                       return (
