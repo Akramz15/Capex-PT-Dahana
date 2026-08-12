@@ -229,183 +229,7 @@ export default function AssetDashboardPage({ tahun }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-color)', margin: 0 }}>
-          Permintaan Nomor Aset s/d {tahun}
-        </h2>
-        <div style={{ position: 'relative' }}>
-          <button 
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
-            className="btn btn-sm btn-outline" 
-            style={{ fontSize: '13px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-          >
-            <Download size={14} style={{ marginRight: '6px' }} /> Download Grafik
-          </button>
-          
-          {isDropdownOpen && (
-            <div style={{ 
-              position: 'absolute', right: 0, top: '100%', marginTop: '8px', 
-              backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', 
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', width: '220px', zIndex: 50 
-            }}>
-              <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 'bold', color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
-                Pilih Grafik (.jpg)
-              </div>
-              <div style={{ padding: '4px' }}>
-                <button 
-                  onClick={() => { downloadChart(chartKategoriRef, 'Komposisi_Kategori_Aset'); setIsDropdownOpen(false); }}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >Komposisi Kategori Aset</button>
-                <button 
-                  onClick={() => { downloadChart(chartBulanRef, 'Realisasi_Per_Bulan'); setIsDropdownOpen(false); }}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >Realisasi Per Bulan</button>
-                <button 
-                  onClick={() => { downloadChart(chartUserRef, 'Sebaran_Berdasarkan_User'); setIsDropdownOpen(false); }}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >Sebaran Berdasarkan User</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="cards-grid" style={{ marginBottom: '24px' }}>
-        <SummaryCard 
-          label="GRAND TOTAL" 
-          value={nomorStats.grandTotal} 
-          type="items" 
-          isRupiah={false}
-          sub="unit"
-        />
-        <SummaryCard 
-          label="JUMLAH KATEGORI" 
-          value={nomorStats.chartKategori.length} 
-          type="sisa" 
-          isRupiah={false}
-          sub="kategori"
-        />
-        <SummaryCard 
-          label="USER TERBANYAK" 
-          value={nomorStats.topUser?.name || '-'} 
-          sub={`(${nomorStats.topUser?.value || 0})`}
-          type="realisasi" 
-          isRupiah={false}
-        />
-        <SummaryCard 
-          label="PUNCAK BULANAN" 
-          value={nomorStats.peakMonth?.name || '-'} 
-          sub={`(${nomorStats.peakMonth?.total || 0})`}
-          type="anggaran" 
-          isRupiah={false}
-        />
-      </div>
-
-      <div className="charts-grid" style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '20px' }}>
-        <div className="section" ref={chartKategoriRef} style={{ position: 'relative' }}>
-          <div className="section-header">
-            <h3 className="section-title">KOMPOSISI KATEGORI ASET</h3>
-          </div>
-          <div className="section-body" style={{ height: '300px' }}>
-            {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={nomorStats.chartKategori} layout="vertical" margin={{ left: 20, right: 50 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    cursor={{ fill: '#f1f5f9' }} 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', padding: '8px 12px' }}
-                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' }}
-                    itemStyle={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 500 }}
-                  />
-                  <Bar dataKey="value" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={15}>
-                    <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-
-        <div className="section" ref={chartBulanRef} style={{ position: 'relative' }}>
-          <div className="section-header">
-            <h3 className="section-title">REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
-          </div>
-          <div className="section-body" style={{ height: '300px' }}>
-            {nomorStats.byMonth.every(m => m.total === 0) ? <EmptyChartState /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={nomorStats.byMonth} margin={{ top: 20, right: 10, left: 15, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} interval={0} />
-                  <YAxis hide />
-                  <Tooltip 
-                    cursor={{ fill: '#f1f5f9' }} 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', padding: '8px 12px' }}
-                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' }}
-                    itemStyle={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 500 }}
-                  />
-                  <Bar dataKey="total" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={20}>
-                    <LabelList dataKey="total" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-        
-        <div className="section" ref={chartUserRef} style={{ position: 'relative' }}>
-          <div className="section-header">
-            <h3 className="section-title">SEBARAN BERDASARKAN USER</h3>
-          </div>
-          <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
-            {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 'bold' }}>
-                    <th style={{ textAlign: 'center', padding: '8px 4px' }}>No.</th>
-                    <th style={{ textAlign: 'left', padding: '8px' }}>User</th>
-                    <th style={{ textAlign: 'center', padding: '8px' }}>Jumlah Aset (unit)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {nomorStats.chartUser.map((u, idx) => (
-                    <tr key={u.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ textAlign: 'center', padding: '6px 4px' }}>{idx + 1}</td>
-                      <td style={{ padding: '6px 8px', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={u.name}>{u.name}</td>
-                      <td style={{ padding: '6px 8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ flex: 1, height: '10px', backgroundColor: '#e2e8f0', borderRadius: '2px', display: 'flex' }}>
-                            <div style={{ width: `${(u.value / nomorStats.topUser.value) * 100}%`, backgroundColor: idx % 2 === 0 ? '#1d4ed8' : '#f97316', borderRadius: '2px' }} />
-                          </div>
-                          <span style={{ minWidth: '20px', textAlign: 'right', fontWeight: 600 }}>{u.value}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr style={{ backgroundColor: '#073c80', color: 'white', fontWeight: 'bold' }}>
-                    <td colSpan={2} style={{ padding: '10px 16px', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '0.5px' }}>
-                      GRAND TOTAL
-                    </td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', borderBottomRightRadius: '8px', paddingRight: '24px', fontSize: '14px' }}>
-                      {nomorStats.chartUser.reduce((sum, u) => sum + u.value, 0)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', marginTop: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-color)', margin: 0 }}>
           Laporan Aktiva Tetap
         </h2>
@@ -640,6 +464,182 @@ export default function AssetDashboardPage({ tahun }) {
             <div style={{ textAlign: 'center', fontWeight: 600, fontSize: '14px', marginTop: '12px', color: '#444' }}>
               Total Jumlah Aset: {laporanStats.chartCategory.reduce((acc, curr) => acc + curr.count, 0).toLocaleString('id-ID')} Unit
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', marginTop: '40px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-color)', margin: 0 }}>
+          Permintaan Nomor Aset s/d {tahun}
+        </h2>
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+            className="btn btn-sm btn-outline" 
+            style={{ fontSize: '13px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          >
+            <Download size={14} style={{ marginRight: '6px' }} /> Download Grafik
+          </button>
+          
+          {isDropdownOpen && (
+            <div style={{ 
+              position: 'absolute', right: 0, top: '100%', marginTop: '8px', 
+              backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', 
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', width: '220px', zIndex: 50 
+            }}>
+              <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 'bold', color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
+                Pilih Grafik (.jpg)
+              </div>
+              <div style={{ padding: '4px' }}>
+                <button 
+                  onClick={() => { downloadChart(chartKategoriRef, 'Komposisi_Kategori_Aset'); setIsDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Komposisi Kategori Aset</button>
+                <button 
+                  onClick={() => { downloadChart(chartBulanRef, 'Realisasi_Per_Bulan'); setIsDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Realisasi Per Bulan</button>
+                <button 
+                  onClick={() => { downloadChart(chartUserRef, 'Sebaran_Berdasarkan_User'); setIsDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Sebaran Berdasarkan User</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="cards-grid" style={{ marginBottom: '24px' }}>
+        <SummaryCard 
+          label="GRAND TOTAL" 
+          value={nomorStats.grandTotal} 
+          type="items" 
+          isRupiah={false}
+          sub="unit"
+        />
+        <SummaryCard 
+          label="JUMLAH KATEGORI" 
+          value={nomorStats.chartKategori.length} 
+          type="sisa" 
+          isRupiah={false}
+          sub="kategori"
+        />
+        <SummaryCard 
+          label="USER TERBANYAK" 
+          value={nomorStats.topUser?.name || '-'} 
+          sub={`(${nomorStats.topUser?.value || 0})`}
+          type="realisasi" 
+          isRupiah={false}
+        />
+        <SummaryCard 
+          label="PUNCAK BULANAN" 
+          value={nomorStats.peakMonth?.name || '-'} 
+          sub={`(${nomorStats.peakMonth?.total || 0})`}
+          type="anggaran" 
+          isRupiah={false}
+        />
+      </div>
+
+      <div className="charts-grid" style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '20px' }}>
+        <div className="section" ref={chartKategoriRef} style={{ position: 'relative' }}>
+          <div className="section-header">
+            <h3 className="section-title">KOMPOSISI KATEGORI ASET</h3>
+          </div>
+          <div className="section-body" style={{ height: '300px' }}>
+            {nomorStats.chartKategori.length === 0 ? <EmptyChartState /> : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={nomorStats.chartKategori} layout="vertical" margin={{ left: 20, right: 50 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    cursor={{ fill: '#f1f5f9' }} 
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', padding: '8px 12px' }}
+                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' }}
+                    itemStyle={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 500 }}
+                  />
+                  <Bar dataKey="value" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={15}>
+                    <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="section" ref={chartBulanRef} style={{ position: 'relative' }}>
+          <div className="section-header">
+            <h3 className="section-title">REALISASI PERMINTAAN NOMOR ASET PER BULAN</h3>
+          </div>
+          <div className="section-body" style={{ height: '300px' }}>
+            {nomorStats.byMonth.every(m => m.total === 0) ? <EmptyChartState /> : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={nomorStats.byMonth} margin={{ top: 20, right: 10, left: 15, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} interval={0} />
+                  <YAxis hide />
+                  <Tooltip 
+                    cursor={{ fill: '#f1f5f9' }} 
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', padding: '8px 12px' }}
+                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', marginBottom: '4px' }}
+                    itemStyle={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 500 }}
+                  />
+                  <Bar dataKey="total" name="Jumlah Aset (unit)" fill="#1d4ed8" barSize={20}>
+                    <LabelList dataKey="total" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+        
+        <div className="section" ref={chartUserRef} style={{ position: 'relative' }}>
+          <div className="section-header">
+            <h3 className="section-title">SEBARAN BERDASARKAN USER</h3>
+          </div>
+          <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
+            {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 'bold' }}>
+                    <th style={{ textAlign: 'center', padding: '8px 4px' }}>No.</th>
+                    <th style={{ textAlign: 'left', padding: '8px' }}>User</th>
+                    <th style={{ textAlign: 'center', padding: '8px' }}>Jumlah Aset (unit)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nomorStats.chartUser.map((u, idx) => (
+                    <tr key={u.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ textAlign: 'center', padding: '6px 4px' }}>{idx + 1}</td>
+                      <td style={{ padding: '6px 8px', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={u.name}>{u.name}</td>
+                      <td style={{ padding: '6px 8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ flex: 1, height: '10px', backgroundColor: '#e2e8f0', borderRadius: '2px', display: 'flex' }}>
+                            <div style={{ width: `${(u.value / nomorStats.topUser.value) * 100}%`, backgroundColor: idx % 2 === 0 ? '#1d4ed8' : '#f97316', borderRadius: '2px' }} />
+                          </div>
+                          <span style={{ minWidth: '20px', textAlign: 'right', fontWeight: 600 }}>{u.value}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: '#073c80', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '10px 16px', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '0.5px' }}>
+                      GRAND TOTAL
+                    </td>
+                    <td style={{ padding: '10px 16px', textAlign: 'right', borderBottomRightRadius: '8px', paddingRight: '24px', fontSize: '14px' }}>
+                      {nomorStats.chartUser.reduce((sum, u) => sum + u.value, 0)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            )}
           </div>
         </div>
       </div>
