@@ -24,7 +24,7 @@ const COLUMNS = [
   { header: 'No', render: (_, i) => i + 1, sticky: true, stickyLeft: '0px', width: '75px' },
   { header: 'Nomor Aset', accessor: 'nomor_aset', sticky: true, stickyLeft: '74px', width: '160px' },
   { header: 'Sub#', accessor: 'sub_nomor' },
-  { header: 'Bulan Permintaan', accessor: 'bulan', render: (row) => row.bulan >= 1 && row.bulan <= 12 ? monthNames[row.bulan - 1] : row.bulan },
+  { header: 'Bulan Permintaan', accessor: 'bulan', render: (row) => row.bulan >= 1 && row.bulan <= 12 ? `${monthNames[row.bulan - 1]}-${String(row.tahun || new Date().getFullYear()).slice(-2)}` : row.bulan },
   { header: 'Kategori', accessor: 'kategori' },
   { header: 'Nama Aset', accessor: 'nama_aset' },
   { header: 'Sat', accessor: 'satuan' },
