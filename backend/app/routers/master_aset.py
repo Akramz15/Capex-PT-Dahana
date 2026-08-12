@@ -265,6 +265,7 @@ def export_aset_nomor(_user: dict = Depends(get_current_user)):
         columns_mapping = {
             'nomor_aset': 'Nomor Aset',
             'sub_nomor': 'Sub#',
+            'bulan': 'Bulan Permintaan',
             'kategori': 'Kategori',
             'nama_aset': 'Nama Aset',
             'satuan': 'Sat',
