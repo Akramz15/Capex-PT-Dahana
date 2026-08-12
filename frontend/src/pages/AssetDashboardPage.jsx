@@ -49,6 +49,12 @@ export default function AssetDashboardPage({ tahun }) {
   const chartBulanRef = useRef(null)
   const chartUserRef = useRef(null)
 
+  const [isLaporanDropdownOpen, setIsLaporanDropdownOpen] = useState(false)
+  const chartLaporanAreaRef = useRef(null)
+  const chartLaporanLokasiRef = useRef(null)
+  const chartLaporanNilaiRef = useRef(null)
+  const chartLaporanJumlahRef = useRef(null)
+
   const downloadChart = async (ref, filename) => {
     if (ref.current) {
       try {
@@ -360,9 +366,58 @@ export default function AssetDashboardPage({ tahun }) {
         </div>
       </div>
 
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: 'var(--text-color)', marginTop: '40px' }}>
-        Laporan Aktiva Tetap
-      </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', marginTop: '40px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-color)', margin: 0 }}>
+          Laporan Aktiva Tetap
+        </h2>
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => setIsLaporanDropdownOpen(!isLaporanDropdownOpen)} 
+            className="btn btn-sm btn-outline" 
+            style={{ fontSize: '13px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          >
+            <Download size={14} style={{ marginRight: '6px' }} /> Download Grafik
+          </button>
+          
+          {isLaporanDropdownOpen && (
+            <div style={{ 
+              position: 'absolute', right: 0, top: '100%', marginTop: '8px', 
+              backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', 
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', width: '250px', zIndex: 50 
+            }}>
+              <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 'bold', color: '#64748b', borderBottom: '1px solid #f1f5f9' }}>
+                Pilih Grafik (.jpg)
+              </div>
+              <div style={{ padding: '4px' }}>
+                <button 
+                  onClick={() => { downloadChart(chartLaporanAreaRef, 'Laporan_Aktiva_Tetap'); setIsLaporanDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Laporan Aktiva Tetap PT Dahana</button>
+                <button 
+                  onClick={() => { downloadChart(chartLaporanLokasiRef, 'Lokasi_Aset'); setIsLaporanDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >LOKASI ASET PT DAHANA</button>
+                <button 
+                  onClick={() => { downloadChart(chartLaporanNilaiRef, 'Nilai_Perolehan'); setIsLaporanDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Nilai Perolehan</button>
+                <button 
+                  onClick={() => { downloadChart(chartLaporanJumlahRef, 'Jumlah_Aset'); setIsLaporanDropdownOpen(false); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#334155', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >Jumlah Aset</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
       <div className="cards-grid" style={{ marginBottom: '20px' }}>
         <SummaryCard 
           label="Total Nilai Perolehan" 
@@ -382,7 +437,7 @@ export default function AssetDashboardPage({ tahun }) {
       </div>
 
       <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
-        <div className="section">
+        <div className="section" ref={chartLaporanAreaRef} style={{ position: 'relative' }}>
           <div className="section-header">
             <h3 className="section-title" style={{ textAlign: 'left', color: '#444', fontSize: '16px', flex: 1 }}>
               Laporan Aktiva Tetap PT Dahana 2015-{tahun === 'Semua Tahun' || !tahun ? new Date().getFullYear() : tahun}
@@ -418,7 +473,7 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="section">
+        <div className="section" ref={chartLaporanLokasiRef} style={{ position: 'relative' }}>
           <div className="section-header">
             <h3 className="section-title" style={{ textAlign: 'center' }}>LOKASI ASET PT DAHANA {tahun}</h3>
           </div>
@@ -456,7 +511,7 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="section">
+        <div className="section" ref={chartLaporanNilaiRef} style={{ position: 'relative' }}>
           <div className="section-header">
             <h3 className="section-title" style={{ textAlign: 'center' }}>
               Nilai Perolehan 
@@ -489,7 +544,7 @@ export default function AssetDashboardPage({ tahun }) {
           </div>
         </div>
 
-        <div className="section">
+        <div className="section" ref={chartLaporanJumlahRef} style={{ position: 'relative' }}>
           <div className="section-header">
             <h3 className="section-title" style={{ textAlign: 'center' }}>Jumlah Aset</h3>
           </div>
