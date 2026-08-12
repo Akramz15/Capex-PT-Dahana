@@ -512,31 +512,25 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-body" style={{ height: '350px' }}>
             {laporanStats.chartLocation.length === 0 ? <EmptyChartState /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                   <Pie 
                     data={laporanStats.chartLocation} 
                     dataKey="value" 
                     nameKey="name" 
-                    cx="40%" cy="50%" 
-                    innerRadius={80}
-                    outerRadius={120} 
-                    paddingAngle={3}
-                    cornerRadius={5}
-                    labelLine={false}
-                    stroke="none"
+                    cx="50%" cy="50%" 
+                    innerRadius={0}
+                    outerRadius={100} 
+                    paddingAngle={0}
+                    labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
+                    label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                    stroke="#ffffff"
+                    strokeWidth={2}
                   >
                     {laporanStats.chartLocation.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={PREMIUM_COLORS[index % PREMIUM_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomPieTooltip />} />
-                  <Legend 
-                    layout="vertical" 
-                    align="right" 
-                    verticalAlign="middle" 
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: '12px', color: '#444', maxHeight: '300px', overflowY: 'auto' }}
-                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
