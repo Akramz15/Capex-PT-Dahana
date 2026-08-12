@@ -31,7 +31,7 @@ const COLUMNS = [
   { header: 'Nilai', render: (r) => <span className="rupiah">{fmtRupiah(r.nilai)}</span> },
   { header: 'Room', accessor: 'room' },
   { header: 'Tahun', accessor: 'tahun' },
-  { header: 'Bulan', accessor: 'bulan', render: (val) => val >= 1 && val <= 12 ? monthNames[val - 1] : val },
+  { header: 'Bulan', accessor: 'bulan', render: (row) => row.bulan >= 1 && row.bulan <= 12 ? monthNames[row.bulan - 1] : row.bulan },
   { header: 'User', accessor: 'user_name' },
   { header: 'Vendor', accessor: 'vendor' },
   { header: 'Keterangan', accessor: 'keterangan' }
