@@ -525,26 +525,48 @@ export default function AssetDashboardPage({ tahun }) {
                     dataKey="value" 
                     nameKey="name" 
                     cx="50%" cy="50%" 
-                    outerRadius={120} 
+                    startAngle={90}
+                    endAngle={-270}
+                    outerRadius={100} 
                     paddingAngle={0}
-                    labelLine={{ stroke: '#64748b', strokeWidth: 1 }}
+                    labelLine={false}
                     label={(props) => {
+                      const { cx, cy, midAngle, outerRadius, percent, name } = props;
                       const RADIAN = Math.PI / 180;
-                      const radius = 120 + 15;
-                      const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
-                      const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
+                      const pValue = percent; 
+                      
+                      const sin = Math.sin(-RADIAN * midAngle);
+                      const cos = Math.cos(-RADIAN * midAngle);
+                      
+                      const sx = cx + outerRadius * cos;
+                      const sy = cy + outerRadius * sin;
+                      
+                      const isLarge = pValue >= 40;
+                      
+                      // Push small slices out slightly
+                      const radiusOffset = isLarge ? 5 : 20;
+                      const mx = cx + (outerRadius + radiusOffset) * cos;
+                      const my = cy + (outerRadius + radiusOffset) * sin;
+                      
+                      const elbowLength = isLarge ? 0 : 15;
+                      const ex = mx + (cos >= 0 ? 1 : -1) * elbowLength;
+                      const ey = my;
+                      
+                      const textAnchor = cos >= 0 ? 'start' : 'end';
+                      
                       return (
-                        <text 
-                          x={x} 
-                          y={y} 
-                          fill="#334155" 
-                          textAnchor={x > props.cx ? 'start' : 'end'} 
-                          dominantBaseline="central" 
-                          fontSize={10} 
-                          fontWeight={600}
-                        >
-                          {props.name}
-                        </text>
+                        <g>
+                          {!isLarge && <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#94a3b8" fill="none" strokeWidth={1} />}
+                          <text 
+                            x={isLarge ? mx + (cos >= 0 ? 1 : -1) * 10 : ex + (cos >= 0 ? 1 : -1) * 6} 
+                            y={isLarge ? my : ey} 
+                            textAnchor={textAnchor} 
+                            dominantBaseline="central" 
+                            style={{ fontSize: '11px', fontWeight: 600, fill: '#1e293b' }}
+                          >
+                            {name}
+                          </text>
+                        </g>
                       )
                     }}
                     stroke="#ffffff"
