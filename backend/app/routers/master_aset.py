@@ -434,7 +434,8 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
                 item["deskripsi"] = PREFIX_MAP.get(prefix, item["deskripsi"])
 
             if item["asset_number"] or item["asset_description"]:
-                insert_data.append(item)
+                if item["acquis_val"] != 0:
+                    insert_data.append(item)
 
         if not insert_data:
             raise HTTPException(status_code=400, detail="Tidak ada data ditemukan")
