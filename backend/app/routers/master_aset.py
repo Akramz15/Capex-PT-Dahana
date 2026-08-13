@@ -406,8 +406,15 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
                 except:
                     return 0
 
+            PREFIX_MAP = {
+                "10": "TANAH", "11": "BANGUNAN", "12": "INSTALASI LISTRIK", 
+                "13": "INSTALASI KOMUNIKASI", "14": "PRASARANA", "15": "MESIN", 
+                "16": "KENDARAAN", "17": "ALAT & PERLENGKAPAN", "20": "HARTA TAK BERWUJUD", 
+                "40": "ADK", "50": "LVA"
+            }
+
             item = {
-                "deskripsi": clean_str(get_val(["Deskripsi", "deskripsi"])),
+                "deskripsi": clean_str(get_val(["Deskripsi", "deskripsi", "Asset Class Text", "Asset class text", "Asset Class", "Kategori"])),
                 "asset_number": clean_str(get_val(["Asset", "Asset Number", "asset_number"])),
                 "sub_number": clean_str(get_val(["Sub number", "Sub Number", "sub_number"])),
                 "capitalized_on": get_date(get_val(["Capitalized on", "Capitalized On", "capitalized_on"])),
@@ -418,9 +425,14 @@ def upload_aset_laporan(file: UploadFile = File(...), _admin: dict = Depends(req
                 "currency": clean_str(get_val(["Currency", "currency"])) or "IDR",
                 "useful_life": clean_str(get_val(["Useful", "Useful Life", "useful_life"])),
                 "location_code": clean_str(get_val(["Location", "Location Code", "location_code"])),
-                "lokasi": clean_str(get_val(["Lokasi", "lokasi"])),
+                "lokasi": clean_str(get_val(["Lokasi", "lokasi", "Unnamed: 11", "Unnamed: 12", "Location Text"])),
                 "room": clean_str(get_val(["Room", "room"])),
             }
+            
+            if not item["deskripsi"] and item["asset_number"]:
+                prefix = item["asset_number"][:2]
+                item["deskripsi"] = PREFIX_MAP.get(prefix, item["deskripsi"])
+
             if item["asset_number"] or item["asset_description"]:
                 insert_data.append(item)
 
