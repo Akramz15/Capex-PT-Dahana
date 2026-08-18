@@ -657,12 +657,16 @@ export default function AssetDashboardPage({ tahun }) {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ backgroundColor: '#073c80', color: 'white', fontWeight: 'bold', height: '40px' }}>
-                    <td colSpan={2} style={{ padding: '0 16px', verticalAlign: 'middle', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '1px' }}>
-                      GRAND TOTAL
+                  <tr style={{ backgroundColor: '#073c80', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '0', borderBottomLeftRadius: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '42px', letterSpacing: '1px' }}>
+                        GRAND TOTAL
+                      </div>
                     </td>
-                    <td style={{ padding: '0 16px', verticalAlign: 'middle', textAlign: 'center', borderBottomRightRadius: '8px', borderLeft: '1px solid rgba(255, 255, 255, 0.4)', fontSize: '15px' }}>
-                      {nomorStats.chartUser.reduce((sum, u) => sum + u.value, 0)}
+                    <td style={{ padding: '0', borderBottomRightRadius: '8px', borderLeft: '1px solid rgba(255, 255, 255, 0.4)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '42px', fontSize: '15px' }}>
+                        {nomorStats.chartUser.reduce((sum, u) => sum + u.value, 0)}
+                      </div>
                     </td>
                   </tr>
                 </tfoot>
