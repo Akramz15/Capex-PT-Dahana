@@ -635,19 +635,19 @@ export default function AssetDashboardPage({ tahun }) {
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 'bold' }}>
-                    <th style={{ textAlign: 'center', padding: '8px 4px' }}>No.</th>
+                    <th style={{ textAlign: 'center', padding: '8px 4px', width: '40px' }}>No.</th>
                     <th style={{ textAlign: 'left', padding: '8px' }}>User</th>
-                    <th style={{ textAlign: 'center', padding: '8px' }}>Jumlah Aset (unit)</th>
+                    <th style={{ textAlign: 'center', padding: '8px', width: '130px' }}>Jumlah Aset (unit)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {nomorStats.chartUser.map((u, idx) => (
                     <tr key={u.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ textAlign: 'center', padding: '6px 4px' }}>{idx + 1}</td>
-                      <td className="user-name-cell" style={{ padding: '6px 8px', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={u.name}>{u.name}</td>
+                      <td className="user-name-cell" style={{ padding: '6px 8px', maxWidth: '0', width: 'auto', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={u.name}>{u.name}</td>
                       <td style={{ padding: '6px 8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ flex: 1, height: '10px', backgroundColor: '#e2e8f0', borderRadius: '2px', display: 'flex' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ flex: 1, height: '10px', backgroundColor: '#e2e8f0', borderRadius: '2px', display: 'flex', marginRight: '8px' }}>
                             <div style={{ width: `${(u.value / nomorStats.topUser.value) * 100}%`, backgroundColor: idx % 2 === 0 ? '#1d4ed8' : '#f97316', borderRadius: '2px' }} />
                           </div>
                           <span style={{ minWidth: '20px', textAlign: 'right', fontWeight: 600 }}>{u.value}</span>
