@@ -658,10 +658,10 @@ export default function AssetDashboardPage({ tahun }) {
                 </tbody>
                 <tfoot>
                   <tr style={{ backgroundColor: '#073c80', color: 'white', fontWeight: 'bold' }}>
-                    <td colSpan={2} style={{ padding: '10px 16px', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '0.5px' }}>
+                    <td colSpan={2} style={{ padding: '10px 16px', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '1px' }}>
                       GRAND TOTAL
                     </td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', borderBottomRightRadius: '8px', paddingRight: '24px', fontSize: '14px' }}>
+                    <td style={{ padding: '10px 16px', textAlign: 'center', borderBottomRightRadius: '8px', borderLeft: '1px solid rgba(255, 255, 255, 0.4)', fontSize: '15px' }}>
                       {nomorStats.chartUser.reduce((sum, u) => sum + u.value, 0)}
                     </td>
                   </tr>
