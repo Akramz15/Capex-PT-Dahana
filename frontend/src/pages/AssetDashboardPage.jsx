@@ -606,38 +606,38 @@ export default function AssetDashboardPage({ tahun }) {
           <div className="section-header">
             <h3 className="section-title">SEBARAN BERDASARKAN USER</h3>
           </div>
-          <div className="section-body" style={{ height: '300px', overflowY: 'auto', padding: '0 12px' }}>
+          <div className="section-body" style={{ padding: '0' }}>
             {nomorStats.chartUser.length === 0 ? <EmptyChartState /> : (
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 'bold' }}>
-                    <th style={{ textAlign: 'center', padding: '8px 4px' }}>No.</th>
-                    <th style={{ textAlign: 'left', padding: '8px' }}>User</th>
-                    <th style={{ textAlign: 'center', padding: '8px' }}>Jumlah Aset (unit)</th>
+                  <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#1e293b', fontWeight: 'bold' }}>
+                    <th style={{ textAlign: 'center', padding: '10px 4px', width: '40px' }}>No.</th>
+                    <th style={{ textAlign: 'left', padding: '10px 8px' }}>User</th>
+                    <th style={{ textAlign: 'center', padding: '10px 8px', width: '110px' }}>Jumlah Aset<br/>(unit)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {nomorStats.chartUser.map((u, idx) => (
-                    <tr key={u.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ textAlign: 'center', padding: '6px 4px' }}>{idx + 1}</td>
-                      <td style={{ padding: '6px 8px', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={u.name}>{u.name}</td>
-                      <td style={{ padding: '6px 8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ flex: 1, height: '10px', backgroundColor: '#e2e8f0', borderRadius: '2px', display: 'flex' }}>
-                            <div style={{ width: `${(u.value / nomorStats.topUser.value) * 100}%`, backgroundColor: idx % 2 === 0 ? '#1d4ed8' : '#f97316', borderRadius: '2px' }} />
+                    <tr key={u.name} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#fff' }}>
+                      <td style={{ textAlign: 'center', padding: '8px 4px' }}>{idx + 1}</td>
+                      <td style={{ padding: '8px', lineHeight: '1.4' }}>{u.name}</td>
+                      <td style={{ padding: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', marginRight: '8px' }}>
+                            <div style={{ width: `${(u.value / nomorStats.topUser.value) * 100}%`, height: '12px', backgroundColor: idx % 2 === 0 ? '#1d4ed8' : '#ea580c' }} />
                           </div>
-                          <span style={{ minWidth: '20px', textAlign: 'right', fontWeight: 600 }}>{u.value}</span>
+                          <span style={{ width: '24px', textAlign: 'right', fontWeight: 600 }}>{u.value}</span>
                         </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ backgroundColor: '#073c80', color: 'white', fontWeight: 'bold' }}>
-                    <td colSpan={2} style={{ padding: '10px 16px', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '0.5px' }}>
+                  <tr style={{ backgroundColor: '#0f4a8a', color: 'white', fontWeight: 'bold' }}>
+                    <td colSpan={2} style={{ padding: '12px 16px', textAlign: 'center', borderBottomLeftRadius: '8px', letterSpacing: '1px' }}>
                       GRAND TOTAL
                     </td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', borderBottomRightRadius: '8px', paddingRight: '24px', fontSize: '14px' }}>
+                    <td style={{ padding: '12px 16px', textAlign: 'center', borderBottomRightRadius: '8px', borderLeft: '1px solid rgba(255,255,255,0.4)', fontSize: '16px' }}>
                       {nomorStats.chartUser.reduce((sum, u) => sum + u.value, 0)}
                     </td>
                   </tr>
