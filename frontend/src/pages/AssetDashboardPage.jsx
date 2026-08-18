@@ -328,8 +328,12 @@ export default function AssetDashboardPage({ tahun }) {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
                   <Legend verticalAlign="top" align="left" height={40} wrapperStyle={{ paddingLeft: '55px', marginTop: '-15px' }} iconType="circle" />
-                  <Area type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={4} fillOpacity={1} fill="url(#colorAcquis)" activeDot={{ r: 6, strokeWidth: 0, fill: '#126487' }} dot={false} />
-                  <Area type="monotone" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={4} fillOpacity={1} fill="url(#colorBook)" activeDot={{ r: 6, strokeWidth: 0, fill: '#ec6a28' }} dot={false} />
+                  <Area type="monotone" dataKey="acquis" name="Nilai Perolehan" stroke="#126487" strokeWidth={4} fillOpacity={1} fill="url(#colorAcquis)" activeDot={{ r: 6, strokeWidth: 0, fill: '#126487' }} dot={{ r: 3, fill: '#fff', stroke: '#126487', strokeWidth: 2 }}>
+                    <LabelList dataKey="acquis" position="top" offset={10} formatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} style={{ fontSize: '11px', fontWeight: 600, fill: '#126487' }} />
+                  </Area>
+                  <Area type="monotone" dataKey="book" name="Nilai Buku" stroke="#ec6a28" strokeWidth={4} fillOpacity={1} fill="url(#colorBook)" activeDot={{ r: 6, strokeWidth: 0, fill: '#ec6a28' }} dot={{ r: 3, fill: '#fff', stroke: '#ec6a28', strokeWidth: 2 }}>
+                    <LabelList dataKey="book" position="bottom" offset={10} formatter={(val) => Number((val / 1000000000).toFixed(0)).toLocaleString('id-ID')} style={{ fontSize: '11px', fontWeight: 600, fill: '#ec6a28' }} />
+                  </Area>
                 </AreaChart>
               </ResponsiveContainer>
             )}
